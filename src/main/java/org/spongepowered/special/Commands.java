@@ -7,15 +7,20 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 import org.spongepowered.special.map.MapRegistryModule;
 import org.spongepowered.special.map.MapType;
 import org.spongepowered.special.map.MapConfiguration;
+import org.spongepowered.special.task.RoundCountdown;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 final class Commands {
 
@@ -65,6 +70,50 @@ final class Commands {
             })
             .build();
 
+    static final CommandSpec startCommand = CommandSpec.builder()
+            .permission(Constants.Meta.ID + ".command.start")
+            .description(Text.of("Starts a game"))
+            .extendedDescription(Text.of("Starts a game")) // TODO More descriptive
+            .executor((src, args) -> {
+                final Optional<WorldProperties> optProperties = args.getOne("world");
+                final World world;
+                if (optProperties.isPresent()) {
+                    world = Sponge.getServer().getWorld(optProperties.get().getWorldName()).orElseThrow(() -> new
+                            CommandException(Text.of("World provided is not online!")));
+                } else if (src instanceof Player){
+                    world = ((Player) src).getWorld();
+                } else {
+                    throw new CommandException(Text.of("World was not provided!"));
+                }
+
+                // TODO: Start game
+
+                return CommandResult.success();
+            })
+            .build();
+
+    static final CommandSpec endCommand = CommandSpec.builder()
+            .permission(Constants.Meta.ID + ".command.end")
+            .description(Text.of("Ends a game"))
+            .extendedDescription(Text.of("Ends a game")) // TODO More descriptive
+            .executor((src, args) -> {
+                final Optional<WorldProperties> optProperties = args.getOne("world");
+                final World world;
+                if (optProperties.isPresent()) {
+                    world = Sponge.getServer().getWorld(optProperties.get().getWorldName()).orElseThrow(() -> new
+                            CommandException(Text.of("World provided is not online!")));
+                } else if (src instanceof Player){
+                    world = ((Player) src).getWorld();
+                } else {
+                    throw new CommandException(Text.of("World was not provided!"));
+                }
+
+                // TODO: End game
+
+                return CommandResult.success();
+            })
+            .build();
+
     static final CommandSpec rootCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.help")
             .description(Text.of("Displays available commands"))
@@ -74,5 +123,7 @@ final class Commands {
                 return CommandResult.success();
             })
             .child(registerCommand, "register", "r")
+            .child(startCommand, "start", "s")
+            .child(endCommand, "end", "e")
             .build();
 }
