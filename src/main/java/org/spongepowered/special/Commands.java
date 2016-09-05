@@ -1,5 +1,6 @@
 package org.spongepowered.special;
 
+import static org.spongepowered.api.command.args.GenericArguments.catalogedElement;
 import static org.spongepowered.api.command.args.GenericArguments.optional;
 import static org.spongepowered.api.command.args.GenericArguments.string;
 
@@ -10,6 +11,7 @@ import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
@@ -17,11 +19,14 @@ import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 import org.spongepowered.special.map.MapConfiguration;
 import org.spongepowered.special.map.MapRegistryModule;
 import org.spongepowered.special.map.MapType;
+import org.spongepowered.special.task.EndCountdown;
+import org.spongepowered.special.task.StartCountdown;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 final class Commands {
 
@@ -74,6 +79,7 @@ final class Commands {
             .permission(Constants.Meta.ID + ".command.start")
             .description(Text.of("Starts a game"))
             .extendedDescription(Text.of("Starts a game")) // TODO More descriptive
+            .arguments(catalogedElement(Text.of("mapTypeId"), MapType.class))
             .executor((src, args) -> {
                 final Optional<WorldProperties> optProperties = args.getOne("world");
                 final World world;
@@ -86,7 +92,13 @@ final class Commands {
                     throw new CommandException(Text.of("World was not provided!"));
                 }
 
-                // TODO: Start game
+                final MapType mapType = args.<MapType>getOne("mapTypeId").orElse(null);
+
+                Special.instance.getMapManager().putStartTask(world, Task.builder()
+                        .execute(new StartCountdown(mapType, world))
+                        .interval(1, TimeUnit.SECONDS)
+                        .name(Constants.Meta.ID + " - Start Countdown - " + world.getName())
+                        .submit(Special.instance));
 
                 return CommandResult.success();
             })
@@ -96,6 +108,7 @@ final class Commands {
             .permission(Constants.Meta.ID + ".command.end")
             .description(Text.of("Ends a game"))
             .extendedDescription(Text.of("Ends a game")) // TODO More descriptive
+            .arguments(catalogedElement(Text.of("mapTypeId"), MapType.class))
             .executor((src, args) -> {
                 final Optional<WorldProperties> optProperties = args.getOne("world");
                 final World world;
@@ -108,7 +121,9 @@ final class Commands {
                     throw new CommandException(Text.of("World was not provided!"));
                 }
 
-                // TODO: End game
+                final MapType mapType = args.<MapType>getOne("mapTypeId").orElse(null);
+
+                new EndCountdown(mapType, world, (Player) src);
 
                 return CommandResult.success();
             })

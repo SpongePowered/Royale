@@ -34,6 +34,14 @@ public final class MapManager {
         return Optional.empty();
     }
 
+    public Task putStartTask(World world, Task task) {
+        return this.startTasks.put(world.getName(), task);
+    }
+
+    public Task putEndTask(World world, Task task) {
+        return this.endTasks.put(world.getName(), task);
+    }
+
     /**
      * Prepares the {@link Server} to kick up the instance.
      *
