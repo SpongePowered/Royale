@@ -49,6 +49,7 @@ repositories {
 
 dependencies {
     compile 'org.spongepowered:spongeapi:5.+'
+    compile 'commons-io:commons-io:2.5'
 }
 
 idea {

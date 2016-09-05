@@ -22,28 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.special.task;
+package org.spongepowered.special.map.exception;
 
-import org.spongepowered.api.world.World;
-import org.spongepowered.special.map.MapType;
+import java.io.IOException;
 
-import java.lang.ref.WeakReference;
+public class InstanceAlreadyExistsException extends IOException {
 
-public abstract class RoundCountdown implements Runnable {
-
-    private final MapType mapType;
-    private final WeakReference<World> worldRef;
-
-    public RoundCountdown(MapType mapType, World world) {
-        this.mapType = mapType;
-        this.worldRef = new WeakReference<>(world);
-    }
-
-    public final MapType getMapType() {
-        return this.mapType;
-    }
-
-    public final WeakReference<World> getWorldRef() {
-        return this.worldRef;
+    public InstanceAlreadyExistsException(String instance) {
+        super("Attempt to create instance [" + instance + "] but it already exists!");
     }
 }

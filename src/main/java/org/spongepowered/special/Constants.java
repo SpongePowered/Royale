@@ -43,11 +43,11 @@ import java.util.List;
 
 public class Constants {
 
-    static final class Meta {
+    public static final class Meta {
 
         // TODO Gradle Replacements
 
-        static final String ID = "special";
+        public static final String ID = "special";
         static final String NAME = "Special";
         static final String VERSION = "1.10.2-r5.0";
         static final String AUTHORS = "SpongePowered";
@@ -60,7 +60,7 @@ public class Constants {
     public static final class Map {
 
         static final Path PATH_CONFIG_MAPS = Special.instance.configPath.resolve("maps");
-        static final Path PATH_CONFIG_TEMPLATES = Special.instance.configPath.resolve("templates");
+        public static final Path PATH_CONFIG_TEMPLATES = Special.instance.configPath.resolve("templates");
 
         public static final TextTemplate DEFAULT_TEXT_TEMPLATE_NAME = TextTemplate.of(TextTemplate.arg("name").color(TextColors.RED));
 

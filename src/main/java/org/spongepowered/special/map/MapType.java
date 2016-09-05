@@ -34,6 +34,7 @@ import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.api.util.ResettableBuilder;
 import org.spongepowered.special.Constants;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
@@ -44,6 +45,7 @@ public final class MapType implements CatalogType {
     }
 
     private final String id, name, template;
+    private final Path templatePath;
     private final long roundStartLength, roundLength, roundEndLength;
     private final TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
     private final List<ItemStackSnapshot> defaultItems;
@@ -52,6 +54,7 @@ public final class MapType implements CatalogType {
         this.id = id;
         this.name = builder.name;
         this.template = builder.template;
+        this.templatePath = Constants.Map.PATH_CONFIG_TEMPLATES.resolve(template);
         this.nameTemplate = builder.nameTemplate;
         this.roundStartTemplate = builder.roundStartTemplate;
         this.roundStartLength = builder.roundStartLength;
@@ -73,6 +76,10 @@ public final class MapType implements CatalogType {
 
     public String getTemplate() {
         return template;
+    }
+
+    public Path getTemplatePath() {
+        return this.templatePath;
     }
 
     public long getRoundStartLength() {
