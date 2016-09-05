@@ -26,18 +26,13 @@ package org.spongepowered.special.map;
 
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
-import org.spongepowered.special.Constants;
 import org.spongepowered.special.configuration.AbstractConfiguration;
 import org.spongepowered.special.map.category.GeneralCategory;
 import org.spongepowered.special.map.category.RoundCategory;
-
-import java.util.List;
 
 @ConfigSerializable
 public final class MapConfiguration extends AbstractConfiguration {
 
     @Setting public final GeneralCategory general = new GeneralCategory();
     @Setting public final RoundCategory round = new RoundCategory();
-    @Setting(value = "kits") public final List<ItemStackSnapshot> kitStacks = Constants.Map.defaultKitItems;
 }

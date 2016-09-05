@@ -26,25 +26,31 @@ package org.spongepowered.special.map.category;
 
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.configuration.AbstractConfigurationCategory;
 
+import java.util.List;
+
 @ConfigSerializable
 public final class RoundCategory extends AbstractConfigurationCategory {
 
-    @Setting(comment = "Countdown until round starts (in seconds)")
-    public long countdown = 5;
+    @Setting(comment = "Countdown until round starts (in seconds).")
+    public long start = Constants.Map.Round.DEFAULT_START_LENGTH;
 
-    @Setting(value = "countdown-template", comment = "Template used to display the round start.")
-    public TextTemplate countdownTemplate = Constants.Map.TEMPLATE_ROUND_START_TITLE;
+    @Setting(value = "start-template", comment = "Template used to display the round start.")
+    public TextTemplate startTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_START;
 
-    @Setting(value = "length", comment = "Length of the round (in seconds)")
-    public long length = 300;
+    @Setting(comment = "Length of the round (in seconds).")
+    public long length = Constants.Map.Round.DEFAULT_LENGTH;
 
-    @Setting(value = "end", comment = "Length of the time after round ends until everyone is kicked (in seconds)")
-    public long end = 10;
+    @Setting(comment = "Length of the time after round ends until everyone is kicked (in seconds).")
+    public long end = Constants.Map.Round.DEFAULT_END_LENGTH;
 
     @Setting(value = "end-template", comment = "Template used to display the winner.")
-    public TextTemplate endTemplate = Constants.Map.TEMPLATE_ANNOUNCE_WINNER_TITLE;
+    public TextTemplate endTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_END;
+
+    @Setting(value = "default-items", comment = "Default items to give players. Order of items will be inserted into the hotbar, left to right.")
+    public final List<ItemStackSnapshot> defaultItems = Constants.Map.Round.defaultItems;
 }

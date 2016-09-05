@@ -1,21 +1,22 @@
 package org.spongepowered.special;
 
+import static org.spongepowered.api.command.args.GenericArguments.optional;
+import static org.spongepowered.api.command.args.GenericArguments.string;
+
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
+import org.spongepowered.special.map.MapConfiguration;
 import org.spongepowered.special.map.MapRegistryModule;
 import org.spongepowered.special.map.MapType;
-import org.spongepowered.special.map.MapConfiguration;
-import org.spongepowered.special.task.RoundCountdown;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,44 +29,43 @@ final class Commands {
             .permission(Constants.Meta.ID + ".command.register")
             .description(Text.of())
             .extendedDescription(Text.of())
-            .arguments(GenericArguments.string(Text.of("map")), GenericArguments.string(Text.of("templatePath")))
+            .arguments(string(Text.of("id")), string(Text.of("name")), optional(string(Text.of("template"))))
             .executor((src, args) -> {
-                // TODO Exception messages
-                final String mapId = args.<String>getOne("map").orElseThrow(() -> new CommandException(Text.of("Id")));
-                if (Sponge.getRegistry().getType(MapType.class, mapId).isPresent()) {
+                final String id = args.<String>getOne("id").orElse(null);
+                if (Sponge.getRegistry().getType(MapType.class, id).isPresent()) {
                     throw new CommandException(Text.of("Map has already been registered!"));
                 }
 
-                final String mapTemplatePath = args.<String>getOne("templatePath").orElseThrow(() -> new CommandException(Text.of
-                        ("TemplatePath")));
+                final String name = args.<String>getOne("name").orElse(null);
 
-                final Path templatePath = Sponge.getGame().getGameDirectory().resolve(mapTemplatePath);
+                final String template = args.<String>getOne("template").orElse(id);
+                final Path templatePath = Constants.Map.PATH_CONFIG_TEMPLATES.resolve(template);
+
                 if (Files.notExists(templatePath)) {
-                    throw new CommandException(Text.of("Template path ", templatePath, " does not exist!"));
+                    throw new CommandException(Text.of("Failed to register map type [", id, "] as template [", template, "] does not exist in [",
+                            Constants.Map.PATH_CONFIG_TEMPLATES, "]!"));
                 }
 
-                // TODO Check if template folder has a level.dat
+                if (Files.notExists(templatePath.resolve("level.dat"))) {
+                    throw new CommandException(Text.of("Failed to register map type [", id, "] as template [", template, "] in [",
+                            Constants.Map.PATH_CONFIG_TEMPLATES, "] is not a valid world!"));
+                }
 
-                final Path configPath = Constants.Map.PATH_CONFIG_MAPS.resolve(mapId + ".conf");
+                final Path configPath = Constants.Map.PATH_CONFIG_MAPS.resolve(id + ".conf");
                 final MappedConfigurationAdapter<MapConfiguration> adapter = new MappedConfigurationAdapter<>(MapConfiguration
                         .class, ConfigurationOptions.defaults(), configPath);
+
                 try {
                     adapter.load();
-                } catch (IOException | ObjectMappingException e) {
-                    throw new CommandException(Text.of("Failed to load map configuration!"));
-                }
-
-                adapter.getConfig().general.templatePath = mapTemplatePath;
-
-                try {
+                    adapter.getConfig().general.name = name;
+                    adapter.getConfig().general.template = template;
                     adapter.save();
-                } catch (IOException | ObjectMappingException e) {
-                    throw new CommandException(Text.of("Failed to save template path information!"));
+                } catch (ObjectMappingException | IOException e) {
+                    throw new CommandException(Text.of("Failed to register map type [", id, "]!"), e);
                 }
 
-                final MapType mapType = new MapType(mapId, adapter);
-                MapRegistryModule.getInstance().registerAdditionalCatalog(mapType);
 
+                MapRegistryModule.getInstance().registerAdditionalCatalog(MapType.builder().from(adapter.getConfig()).build(id));
                 return CommandResult.success();
             })
             .build();

@@ -33,9 +33,9 @@ import org.spongepowered.api.event.game.state.GameStartedServerEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
-import org.spongepowered.special.map.MapType;
 import org.spongepowered.special.map.MapManager;
 import org.spongepowered.special.map.MapRegistryModule;
+import org.spongepowered.special.map.MapType;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -71,6 +71,7 @@ public final class Special {
         Sponge.getCommandManager().register(this.container, Commands.rootCommand, Constants.Meta.ID, Constants.Meta.ID.substring(0, 1));
 
         Sponge.getRegistry().registerModule(MapType.class, MapRegistryModule.getInstance());
+        Sponge.getRegistry().registerBuilderSupplier(MapType.Builder.class, MapType.Builder::new);
     }
 
     @Listener

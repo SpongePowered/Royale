@@ -66,7 +66,8 @@ public final class MapRegistryModule implements AdditionalCatalogRegistryModule<
         }
 
         this.maps.put(extraCatalog.getId(), extraCatalog);
-        Special.instance.getLogger().info("Registered map [{}}.", extraCatalog);
+
+        Special.instance.getLogger().info("Registered map [{}}.", extraCatalog.getId());
     }
 
     @Override

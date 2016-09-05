@@ -38,7 +38,7 @@ import org.spongepowered.api.world.difficulty.Difficulties;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Constants {
@@ -60,31 +60,52 @@ public class Constants {
     public static final class Map {
 
         static final Path PATH_CONFIG_MAPS = Special.instance.configPath.resolve("maps");
+        static final Path PATH_CONFIG_TEMPLATES = Special.instance.configPath.resolve("templates");
 
-        public static final TextTemplate TEMPLATE_NAME_TITLE = TextTemplate.of(TextTemplate.arg("name").color(TextColors.RED));
-        public static final TextTemplate TEMPLATE_ROUND_START_TITLE = TextTemplate.of(TextColors.GREEN, "Battle!");
-        public static final TextTemplate TEMPLATE_ANNOUNCE_WINNER_TITLE = TextTemplate.of(TextTemplate.arg("winner"), TextColors.YELLOW, " is the "
-                + "winner!");
-
-        public static final List<ItemStackSnapshot> defaultKitItems = new ArrayList<>();
+        public static final TextTemplate DEFAULT_TEXT_TEMPLATE_NAME = TextTemplate.of(TextTemplate.arg("name").color(TextColors.RED));
 
         static {
             if (Files.notExists(PATH_CONFIG_MAPS)) {
                 try {
                     Files.createDirectories(PATH_CONFIG_MAPS);
                 } catch (IOException e) {
-                    throw new RuntimeException("Failed to create maps configuration directory [" + PATH_CONFIG_MAPS + "]!");
+                    throw new RuntimeException("Failed to create maps directory [" + PATH_CONFIG_MAPS + "]!");
                 }
             }
 
-            defaultKitItems.add(ItemStack.of(ItemTypes.STONE_SWORD, 1).createSnapshot());
-            defaultKitItems.add(ItemStack.of(ItemTypes.BOW, 1).createSnapshot());
-            defaultKitItems.add(ItemStack.of(ItemTypes.STONE_AXE, 1).createSnapshot());
-            defaultKitItems.add(ItemStack.of(ItemTypes.STONE_PICKAXE, 1).createSnapshot());
-            defaultKitItems.add(ItemStack.of(ItemTypes.ARROW, 5).createSnapshot());
+            if (Files.notExists(PATH_CONFIG_TEMPLATES)) {
+                try {
+                    Files.createDirectories(PATH_CONFIG_TEMPLATES);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to create templates directory [" + PATH_CONFIG_TEMPLATES + "]!");
+                }
+            }
         }
 
         private Map() {}
+
+        public static final class Round {
+
+            public static final TextTemplate DEFAULT_TEXT_TEMPLATE_START = TextTemplate.of(TextColors.GREEN, "Battle!");
+            public static final TextTemplate DEFAULT_TEXT_TEMPLATE_END = TextTemplate.of(TextTemplate.arg("winner"), TextColors.YELLOW, " is the "
+                    + "winner!");
+
+            public static final List<ItemStackSnapshot> defaultItems = new LinkedList<>();
+
+            public static final int DEFAULT_START_LENGTH = 5;
+            public static final int DEFAULT_LENGTH = 300;
+            public static final int DEFAULT_END_LENGTH = 10;
+
+            static {
+                defaultItems.add(ItemStack.of(ItemTypes.STONE_SWORD, 1).createSnapshot());
+                defaultItems.add(ItemStack.of(ItemTypes.BOW, 1).createSnapshot());
+                defaultItems.add(ItemStack.of(ItemTypes.STONE_AXE, 1).createSnapshot());
+                defaultItems.add(ItemStack.of(ItemTypes.STONE_PICKAXE, 1).createSnapshot());
+                defaultItems.add(ItemStack.of(ItemTypes.ARROW, 5).createSnapshot());
+            }
+
+            private Round() {}
+        }
 
         static final class Lobby {
 

@@ -28,17 +28,37 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Objects;
 import org.spongepowered.api.CatalogType;
-import org.spongepowered.special.configuration.MappedConfigurationAdapter;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.text.TextTemplate;
+import org.spongepowered.api.util.ResettableBuilder;
+import org.spongepowered.special.Constants;
+
+import java.util.Collection;
+import java.util.List;
 
 public final class MapType implements CatalogType {
 
-    final String id;
-    final MappedConfigurationAdapter<MapConfiguration> adapter;
+    public static Builder builder() {
+        return Sponge.getRegistry().createBuilder(Builder.class);
+    }
 
-    public MapType(String id, MappedConfigurationAdapter<MapConfiguration> adapter) {
-        checkNotNull(id);
+    private final String id, name, template;
+    private final long roundStartLength, roundLength, roundEndLength;
+    private final TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
+    private final List<ItemStackSnapshot> defaultItems;
+
+    private MapType(String id, Builder builder) {
         this.id = id;
-        this.adapter = adapter;
+        this.name = builder.name;
+        this.template = builder.template;
+        this.nameTemplate = builder.nameTemplate;
+        this.roundStartTemplate = builder.roundStartTemplate;
+        this.roundStartLength = builder.roundStartLength;
+        this.roundLength = builder.roundLength;
+        this.roundEndTemplate = builder.roundEndTemplate;
+        this.roundEndLength = builder.roundEndLength;
+        this.defaultItems = builder.defaultItems;
     }
 
     @Override
@@ -48,11 +68,39 @@ public final class MapType implements CatalogType {
 
     @Override
     public String getName() {
-        return this.adapter.getConfig().general.name;
+        return this.name;
     }
 
-    public MapConfiguration getConfiguration() {
-        return this.adapter.getConfig();
+    public String getTemplate() {
+        return template;
+    }
+
+    public long getRoundStartLength() {
+        return roundStartLength;
+    }
+
+    public long getRoundLength() {
+        return roundLength;
+    }
+
+    public long getRoundEndLength() {
+        return roundEndLength;
+    }
+
+    public TextTemplate getNameTemplate() {
+        return nameTemplate;
+    }
+
+    public TextTemplate getRoundStartTemplate() {
+        return roundStartTemplate;
+    }
+
+    public TextTemplate getRoundEndTemplate() {
+        return roundEndTemplate;
+    }
+
+    public List<ItemStackSnapshot> getDefaultItems() {
+        return defaultItems;
     }
 
     @Override
@@ -76,6 +124,128 @@ public final class MapType implements CatalogType {
     public String toString() {
         return Objects.toStringHelper(this)
                 .add("id", this.id)
+                .add("name", this.name)
+                .add("template", this.template)
+                .add("nameTemplate", this.nameTemplate)
+                .add("roundStartLength", this.roundStartLength)
+                .add("roundStartTemplate", this.roundStartTemplate)
+                .add("roundLength", this.roundLength)
+                .add("roundEndLength", this.roundEndLength)
+                .add("roundEndTemplate", this.roundEndTemplate)
+                .add("defaultItems", this.defaultItems)
                 .toString();
+    }
+
+    public static final class Builder implements ResettableBuilder<MapType, Builder> {
+
+        String name, template;
+        TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
+        List<ItemStackSnapshot> defaultItems;
+        long roundStartLength, roundLength, roundEndLength;
+
+        public Builder() {
+            reset();
+        }
+
+        @Override
+        public Builder from(MapType value) {
+            this.name = value.name;
+            this.template = value.template;
+            this.nameTemplate = value.nameTemplate;
+            this.roundStartTemplate = value.roundStartTemplate;
+            this.roundEndTemplate = value.roundEndTemplate;
+            this.roundStartLength = value.roundStartLength;
+            this.roundLength = value.roundLength;
+            this.roundEndLength = value.roundEndLength;
+            return this;
+        }
+
+        public Builder from(MapConfiguration value) {
+            this.name = value.general.name;
+            this.template = value.general.template;
+            this.nameTemplate = value.general.nameTemplate;
+            this.roundStartTemplate = value.round.startTemplate;
+            this.roundEndTemplate = value.round.endTemplate;
+            this.roundStartLength = value.round.start;
+            this.roundLength = value.round.length;
+            this.roundEndLength = value.round.end;
+            return this;
+        }
+
+        @Override
+        public Builder reset() {
+            this.name = null;
+            this.template = null;
+            this.nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
+            this.roundStartTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_START;
+            this.roundEndTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_END;
+            this.roundStartLength = Constants.Map.Round.DEFAULT_START_LENGTH;
+            this.roundLength = Constants.Map.Round.DEFAULT_LENGTH;
+            this.roundEndLength = Constants.Map.Round.DEFAULT_END_LENGTH;
+            this.defaultItems = Constants.Map.Round.defaultItems;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder template(String name) {
+            this.template = name;
+            return this;
+        }
+
+        public Builder nameTemplate(TextTemplate template) {
+            this.nameTemplate = template;
+            return this;
+        }
+
+        public Builder roundStartTemplate(TextTemplate template) {
+            this.roundStartTemplate = template;
+            return this;
+        }
+
+        public Builder roundStartLength(long length) {
+            this.roundStartLength = length;
+            return this;
+        }
+
+        public Builder roundLength(long length) {
+            this.roundStartLength = length;
+            return this;
+        }
+
+        public Builder roundEndTemplate(TextTemplate template) {
+            this.roundEndTemplate = template;
+            return this;
+        }
+
+        public Builder roundEndLength(long length) {
+            this.roundEndLength = length;
+            return this;
+        }
+
+        public Builder item(ItemStackSnapshot item) {
+            this.defaultItems.add(item);
+            return this;
+        }
+
+        public Builder items(Collection<ItemStackSnapshot> items) {
+            this.defaultItems.addAll(items);
+            return this;
+        }
+
+        public MapType build(String id) {
+            checkNotNull(id);
+            checkNotNull(this.name);
+            checkNotNull(this.template);
+            checkNotNull(this.nameTemplate);
+            checkNotNull(this.roundStartTemplate);
+            checkNotNull(this.roundEndTemplate);
+            checkNotNull(this.defaultItems);
+
+            return new MapType(id, this);
+        }
     }
 }

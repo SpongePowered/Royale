@@ -30,17 +30,15 @@ import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.configuration.AbstractConfigurationCategory;
 
-import java.nio.file.Paths;
-
 @ConfigSerializable
 public final class GeneralCategory extends AbstractConfigurationCategory {
 
     @Setting(comment = "Name of this map. Used to display to clients.")
-    public String name = "Null";
+    public String name = null;
 
     @Setting(value = "name-template", comment = "Template used to display the name to the user.")
-    public TextTemplate nameTemplate = Constants.Map.TEMPLATE_NAME_TITLE;
+    public TextTemplate nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
 
-    @Setting(value = "template-path", comment = "Path to where the template world is located. Relative to the root directory of the server.")
-    public String templatePath = Paths.get(".").toString();
+    @Setting(comment = "Name of the template to use.")
+    public String template = null;
 }

@@ -1,7 +1,6 @@
 package org.spongepowered.special.task;
 
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.boss.BossBar;
 import org.spongepowered.api.boss.BossBarColors;
 import org.spongepowered.api.boss.BossBarOverlays;
 import org.spongepowered.api.boss.ServerBossBar;
@@ -45,14 +44,14 @@ public abstract class RoundCountdown implements Runnable {
                     .fadeIn(0)
                     .fadeOut(8);
 
-            for (long i = mapType.getConfiguration().round.countdown; i > 0; i--) {
+            for (long i = mapType.getRoundStartLength(); i > 0; i--) {
 
                 startTitles.add(builder.title(Text.of(TextColors.DARK_RED, i)).build());
 
                 if (i == 2) {
                     startTitles.add(builder.title(Text.of(TextColors.RED, "2")).build());
                     startTitles.add(builder.title(Text.of(TextColors.GOLD, "1")).build());
-                    startTitles.add(builder.title(mapType.getConfiguration().round.countdownTemplate.apply().build()).build());
+                    startTitles.add(builder.title(mapType.getRoundStartTemplate().apply().build()).build());
                     break;
                 }
             }
@@ -64,7 +63,6 @@ public abstract class RoundCountdown implements Runnable {
 
             // Make sure the world is still around and loaded
             if (world != null && world.isLoaded()) {
-
 
                 // Make sure a player ref isn't still here
                 world.getPlayers().stream().filter(User::isOnline).forEach(player -> {

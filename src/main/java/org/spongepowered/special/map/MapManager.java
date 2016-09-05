@@ -13,8 +13,8 @@ import java.util.UUID;
 
 public final class MapManager {
 
-    final Map<String, Task> startTasks = new HashMap<>();
-    final Map<String, Task> endTasks = new HashMap<>();
+    private final Map<String, Task> startTasks = new HashMap<>();
+    private final Map<String, Task> endTasks = new HashMap<>();
 
     public Optional<UUID> getStartTaskUniqueIdFor(World world) {
         checkNotNull(world);
@@ -35,7 +35,8 @@ public final class MapManager {
     }
 
     /**
-     * Prepares the {@link Server} to kick up the instance
+     * Prepares the {@link Server} to kick up the instance.
+     *
      * @param mapType The map type to use
      */
     public void prepareInstance(MapType mapType) {
