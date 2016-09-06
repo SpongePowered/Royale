@@ -81,7 +81,7 @@ public class RoundScoreboard {
             this.playerData.get(dead.get(i).getUniqueId()).score.setScore(i);
         }
         for (int i = 0; i < alive.size(); i++) {
-            this.playerData.get(alive.get(0).getUniqueId()).score.setScore(dead.size() + i);
+            this.playerData.get(alive.get(i).getUniqueId()).score.setScore(dead.size() + i);
         }
 
     }
