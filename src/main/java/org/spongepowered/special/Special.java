@@ -29,13 +29,13 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.state.GameConstructionEvent;
-import org.spongepowered.api.event.game.state.GameStartedServerEvent;
+import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.special.map.MapManager;
-import org.spongepowered.special.map.MapRegistryModule;
 import org.spongepowered.special.map.MapType;
+import org.spongepowered.special.map.MapTypeRegistryModule;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -55,6 +55,10 @@ public final class Special {
 
     public static Special instance;
 
+    static {
+
+    }
+
     @Inject Logger logger;
     @Inject PluginContainer container;
     @Inject @ConfigDir(sharedRoot = false) Path configPath;
@@ -67,11 +71,11 @@ public final class Special {
     }
 
     @Listener
-    public void onGamePreinitialization(GameStartedServerEvent event) {
-        Sponge.getCommandManager().register(this.container, Commands.rootCommand, Constants.Meta.ID, Constants.Meta.ID.substring(0, 1));
-
-        Sponge.getRegistry().registerModule(MapType.class, MapRegistryModule.getInstance());
+    public void onGamePreinitialization(GamePreInitializationEvent event) {
+        Sponge.getRegistry().registerModule(MapTypeRegistryModule.getInstance());
         Sponge.getRegistry().registerBuilderSupplier(MapType.Builder.class, MapType.Builder::new);
+
+        Sponge.getCommandManager().register(this.container, Commands.rootCommand, Constants.Meta.ID, Constants.Meta.ID.substring(0, 1));
     }
 
     @Listener

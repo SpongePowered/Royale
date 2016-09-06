@@ -59,8 +59,8 @@ public class Constants {
 
     public static final class Map {
 
-        static final Path PATH_CONFIG_MAPS = Special.instance.configPath.resolve("maps");
-        public static final Path PATH_CONFIG_TEMPLATES = Special.instance.configPath.resolve("templates");
+        public static final Path PATH_CONFIG_MAPS = Special.instance.getConfigPath().resolve("maps");
+        public static final Path PATH_CONFIG_TEMPLATES = Special.instance.getConfigPath().resolve("templates");
 
         public static final TextTemplate DEFAULT_TEXT_TEMPLATE_NAME = TextTemplate.of(TextTemplate.arg("name").color(TextColors.RED));
 

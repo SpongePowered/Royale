@@ -40,7 +40,7 @@ import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 import org.spongepowered.special.map.MapConfiguration;
-import org.spongepowered.special.map.MapRegistryModule;
+import org.spongepowered.special.map.MapTypeRegistryModule;
 import org.spongepowered.special.map.MapType;
 import org.spongepowered.special.task.EndCountdown;
 
@@ -91,7 +91,7 @@ final class Commands {
                 }
 
 
-                MapRegistryModule.getInstance().registerAdditionalCatalog(MapType.builder().from(adapter.getConfig()).build(id));
+                MapTypeRegistryModule.getInstance().registerAdditionalCatalog(MapType.builder().from(adapter.getConfig()).build(id));
                 return CommandResult.success();
             })
             .build();

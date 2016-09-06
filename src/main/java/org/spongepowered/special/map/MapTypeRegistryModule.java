@@ -27,25 +27,35 @@ package org.spongepowered.special.map;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Objects;
+import ninja.leaping.configurate.ConfigurationOptions;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.registry.AdditionalCatalogRegistryModule;
 import org.spongepowered.api.registry.CatalogTypeAlreadyRegisteredException;
+import org.spongepowered.api.registry.RegistrationPhase;
+import org.spongepowered.api.registry.util.DelayedRegistration;
+import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
+import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public final class MapRegistryModule implements AdditionalCatalogRegistryModule<MapType> {
+public final class MapTypeRegistryModule implements AdditionalCatalogRegistryModule<MapType> {
 
-    public static MapRegistryModule getInstance() {
+    public static MapTypeRegistryModule getInstance() {
         return Holder.INSTANCE;
     }
 
     final Map<String, MapType> maps = new HashMap<>();
 
-    private MapRegistryModule() {}
+    private MapTypeRegistryModule() {}
 
     @Override
     public Optional<MapType> getById(String id) {
@@ -67,7 +77,7 @@ public final class MapRegistryModule implements AdditionalCatalogRegistryModule<
 
         this.maps.put(extraCatalog.getId(), extraCatalog);
 
-        Special.instance.getLogger().info("Registered map [{}}.", extraCatalog.getId());
+        Special.instance.getLogger().info("Registered map [{}].", extraCatalog.getId());
     }
 
     @Override
@@ -77,8 +87,33 @@ public final class MapRegistryModule implements AdditionalCatalogRegistryModule<
                 .toString();
     }
 
+    @Override
+    @DelayedRegistration(value = RegistrationPhase.POST_INIT)
+    public void registerDefaults() {
+        try {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(Constants.Map.PATH_CONFIG_MAPS, entry -> entry.getFileName().toString()
+                    .endsWith(".conf"))) {
+                for (Path path : stream) {
+                    final MappedConfigurationAdapter<MapConfiguration> adapter = new MappedConfigurationAdapter<>(MapConfiguration.class,
+                            ConfigurationOptions.defaults(), path);
+
+                    try {
+                        adapter.load();
+                    } catch (IOException | ObjectMappingException e) {
+                        Special.instance.getLogger().error("Failed to load configuration for path [{}]!", path, e);
+                        continue;
+                    }
+
+                    this.registerAdditionalCatalog(MapType.builder().from(adapter.getConfig()).build(path.getFileName().toString().split("\\.")[0]));
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to iterate over the map type configuration files!");
+        }
+    }
+
     private static final class Holder {
 
-        static final MapRegistryModule INSTANCE = new MapRegistryModule();
+        static final MapTypeRegistryModule INSTANCE = new MapTypeRegistryModule();
     }
 }
