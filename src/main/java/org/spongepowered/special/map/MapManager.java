@@ -43,6 +43,7 @@ import org.spongepowered.special.map.exception.UnknownInstanceException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public final class MapManager {
@@ -96,6 +97,10 @@ public final class MapManager {
         instance.stop();
     }
 
+    public Optional<org.spongepowered.special.map.Map> getInstance(String instanceName) {
+        return Optional.ofNullable(this.instances.get(instanceName));
+    }
+    
     public CompletableFuture<Boolean> cleanupInstance(String instanceName) throws UnknownInstanceException {
         final Server server = Sponge.getServer();
 
