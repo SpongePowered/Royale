@@ -24,6 +24,8 @@
  */
 package org.spongepowered.special.map;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import org.apache.commons.io.FileUtils;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
@@ -41,6 +43,8 @@ import org.spongepowered.special.map.exception.InstanceAlreadyExistsException;
 import org.spongepowered.special.map.exception.UnknownInstanceException;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -97,10 +101,6 @@ public final class MapManager {
         instance.stop();
     }
 
-    public Optional<org.spongepowered.special.map.Map> getInstance(String instanceName) {
-        return Optional.ofNullable(this.instances.get(instanceName));
-    }
-    
     public CompletableFuture<Boolean> cleanupInstance(String instanceName) throws UnknownInstanceException {
         final Server server = Sponge.getServer();
 
@@ -119,6 +119,15 @@ public final class MapManager {
 
         // Delete instance
         return server.deleteWorld(instance.getProperties());
+    }
+
+    public Optional<org.spongepowered.special.map.Map> getInstance(String instanceName) {
+        checkNotNull(instanceName);
+        return Optional.ofNullable(this.instances.get(instanceName));
+    }
+
+    public Collection<org.spongepowered.special.map.Map> getAll() {
+        return Collections.unmodifiableCollection(this.instances.values());
     }
 
     @Listener(order = Order.LAST)
