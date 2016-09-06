@@ -31,10 +31,9 @@ import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.filter.cause.First;
-import org.spongepowered.api.event.filter.cause.Root;
-import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
@@ -117,32 +116,28 @@ public final class MapManager {
         return server.deleteWorld(instance.getProperties());
     }
 
-    @Listener
+    @Listener(order = Order.LAST)
     public void onClientConnectionJoin(ClientConnectionEvent.Join event, @First Player player) {
         this.adjustGameModeFor(event.getTargetEntity().getWorld(), player);
     }
 
-    @Listener
-    public void onEntityJoinWorld(MoveEntityEvent.Teleport event, @First Player player) {
-        this.adjustGameModeFor(event.getToTransform().getExtent(), player);
-    }
-
-    @Listener
-    public void onInteractInventoryOpen(InteractInventoryEvent.Open event, @Root Player player) {
-        // No accessing inventory in lobby
-        if (player.getTransform().getExtent().getName().equalsIgnoreCase(Constants.Meta.ID + "_lobby")) {
-            event.setCancelled(true);
+    @Listener(order = Order.LAST)
+    public void onMoveEntityTeleport(MoveEntityEvent.Teleport event, @First Player player) {
+        if (!event.getFromTransform().getExtent().getName().equalsIgnoreCase(event.getToTransform().getExtent().getName())) {
+            this.adjustGameModeFor(event.getToTransform().getExtent(), player);
         }
     }
 
     private void adjustGameModeFor(World world, Player player) {
         final org.spongepowered.special.map.Map instance = this.instances.get(world.getName());
         if (instance != null) {
-            // TODO Let the map config determine gamemode
+            // TODO adjust these from config
             player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
+            player.offer(Keys.CAN_FLY, false);
         } else {
             if (world.getName().equalsIgnoreCase(Constants.Meta.ID + "_lobby")) {
-                player.offer(Keys.GAME_MODE, GameModes.CREATIVE);
+                player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
+                player.offer(Keys.CAN_FLY, true);
             }
         }
     }
