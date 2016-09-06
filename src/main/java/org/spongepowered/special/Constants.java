@@ -107,7 +107,9 @@ public class Constants {
             private Round() {}
         }
 
-        static final class Lobby {
+        public static final class Lobby {
+
+            public static final String DEFAULT_LOBBY_NAME = Constants.Meta.ID + "_lobby";
 
             static final WorldArchetype lobbyArchetype = WorldArchetype.builder().from(WorldArchetypes.THE_VOID)
                     .gameMode(GameModes.ADVENTURE)

@@ -55,13 +55,9 @@ public final class Special {
 
     public static Special instance;
 
-    static {
-
-    }
-
-    @Inject Logger logger;
-    @Inject PluginContainer container;
-    @Inject @ConfigDir(sharedRoot = false) Path configPath;
+    @Inject private Logger logger;
+    @Inject private PluginContainer container;
+    @Inject @ConfigDir(sharedRoot = false) private Path configPath;
 
     private final MapManager mapManager = new MapManager();
 
@@ -76,11 +72,13 @@ public final class Special {
         Sponge.getRegistry().registerBuilderSupplier(MapType.Builder.class, MapType.Builder::new);
 
         Sponge.getCommandManager().register(this.container, Commands.rootCommand, Constants.Meta.ID, Constants.Meta.ID.substring(0, 1));
+
+        Sponge.getEventManager().registerListeners(this.container, this.mapManager);
     }
 
     @Listener
     public void onGameStartingServer(GameStartingServerEvent event) throws IOException {
-        Sponge.getServer().loadWorld(Sponge.getServer().createWorldProperties(Constants.Meta.ID + "_lobby", Constants.Map.Lobby.lobbyArchetype));
+        Sponge.getServer().loadWorld(Sponge.getServer().createWorldProperties(Constants.Map.Lobby.DEFAULT_LOBBY_NAME, Constants.Map.Lobby.lobbyArchetype));
     }
 
     public Logger getLogger() {

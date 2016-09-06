@@ -104,7 +104,7 @@ public final class MapManager {
     public CompletableFuture<Boolean> cleanupInstance(String instanceName) throws UnknownInstanceException {
         final Server server = Sponge.getServer();
 
-        final World lobby = server.getWorld(Constants.Meta.ID + "_lobby").orElseThrow(() -> new RuntimeException("Lobby world was not "
+        final World lobby = server.getWorld(Constants.Map.Lobby.DEFAULT_LOBBY_NAME).orElseThrow(() -> new RuntimeException("Lobby world was not "
                 + "found!"));
         final World instance = server.getWorld(instanceName).orElseThrow(() -> new UnknownInstanceException(instanceName));
 
@@ -149,7 +149,7 @@ public final class MapManager {
             player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
             player.offer(Keys.CAN_FLY, false);
         } else {
-            if (world.getName().equalsIgnoreCase(Constants.Meta.ID + "_lobby")) {
+            if (world.getName().equalsIgnoreCase(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
                 player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
                 player.offer(Keys.CAN_FLY, true);
             }
