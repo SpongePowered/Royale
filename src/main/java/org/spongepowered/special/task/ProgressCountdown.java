@@ -34,6 +34,7 @@ import org.spongepowered.api.world.World;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.map.MapType;
 
+import java.text.DecimalFormat;
 import java.util.UUID;
 
 public class ProgressCountdown extends RoundCountdown {
@@ -70,6 +71,15 @@ public class ProgressCountdown extends RoundCountdown {
             } else {
                 this.bossBar.setColor(BossBarColors.GREEN);
             }
+
+            int seconds = (int) this.roundLengthRemaining % 60;
+            if (this.roundLengthRemaining > 60) {
+                int minutes = (int) this.roundLengthRemaining / 60;
+                this.bossBar.setName(Text.of(String.format("Time remaining: %02d:%s", minutes, seconds));
+            } else {
+                this.bossBar.setName(Text.of(String.format("Time remaining: %s", seconds)));
+            }
+
 
             // Make sure a player ref isn't still here
             world.getPlayers().stream().filter(player -> player.isOnline() && !bossBar.getPlayers().contains(player))
