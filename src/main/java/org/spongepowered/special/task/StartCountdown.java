@@ -65,7 +65,7 @@ public final class StartCountdown extends RoundCountdown {
     }
 
     @Override
-    public void run() {
+    public void accept(Task task) {
         final World world = this.getWorldRef().get();
 
         // Make sure the world is still around and loaded
@@ -79,12 +79,7 @@ public final class StartCountdown extends RoundCountdown {
             seconds++;
 
             if (seconds >= startTitles.size()) {
-                final UUID taskUniqueId =
-                        Special.instance.getMapManager().getStartTaskUniqueIdFor(world).orElseThrow(() -> new RuntimeException("Task is "
-                                + "executing when manager has no knowledge of it!"));
-                if (taskUniqueId != null) {
-                    Sponge.getScheduler().getTaskById(taskUniqueId).ifPresent(Task::cancel);
-                }
+                task.cancel();
             }
         }
     }

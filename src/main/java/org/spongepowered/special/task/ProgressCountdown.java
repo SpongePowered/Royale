@@ -56,7 +56,7 @@ public class ProgressCountdown extends RoundCountdown {
     }
 
     @Override
-    public void run() {
+    public void accept(Task task) {
         final World world = this.getWorldRef().get();
 
         // Make sure the world is still around and loaded
@@ -75,7 +75,7 @@ public class ProgressCountdown extends RoundCountdown {
             int seconds = (int) this.roundLengthRemaining % 60;
             if (this.roundLengthRemaining > 60) {
                 int minutes = (int) this.roundLengthRemaining / 60;
-                this.bossBar.setName(Text.of(String.format("Time remaining: %02d:%s", minutes, seconds));
+                this.bossBar.setName(Text.of(String.format("Time remaining: %02d:%s", minutes, seconds)));
             } else {
                 this.bossBar.setName(Text.of(String.format("Time remaining: %s", seconds)));
             }
@@ -87,13 +87,8 @@ public class ProgressCountdown extends RoundCountdown {
 
             this.roundLengthRemaining--;
             if (this.roundLengthRemaining < 0) {
-                final UUID taskUniqueId =
-                        Special.instance.getMapManager().getEndTaskUniqueIdFor(world).orElseThrow(() -> new RuntimeException("Task is "
-                                + "executing when manager has no knowledge of it!"));
-                if (taskUniqueId != null) {
-                    this.bossBar.getPlayers().forEach(this.bossBar::removePlayer);
-                    Sponge.getScheduler().getTaskById(taskUniqueId).ifPresent(Task::cancel);
-                }
+                this.bossBar.getPlayers().forEach(this.bossBar::removePlayer);
+                task.cancel();
             }
         }
     }

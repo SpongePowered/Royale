@@ -24,12 +24,14 @@
  */
 package org.spongepowered.special.task;
 
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.map.MapType;
 
 import java.lang.ref.WeakReference;
+import java.util.function.Consumer;
 
-public abstract class RoundCountdown implements Runnable {
+public abstract class RoundCountdown implements Consumer<Task> {
 
     private final MapType mapType;
     private final WeakReference<World> worldRef;
