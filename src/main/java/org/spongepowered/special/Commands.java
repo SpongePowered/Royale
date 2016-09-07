@@ -228,5 +228,6 @@ final class Commands {
             .child(registerCommand, "register", "r")
             .child(startCommand, "start", "s")
             .child(endCommand, "end", "e")
+            .child(joinCommand, "join", "j")
             .build();
 }
