@@ -48,7 +48,7 @@ public final class ProgressCountdown extends RoundCountdown {
     public ProgressCountdown(Instance instance) {
         super(instance);
 
-        this.roundLengthTotal = instance.getInstanceType().getRoundEndLength();
+        this.roundLengthTotal = instance.getType().getRoundEndLength();
         this.roundLengthRemaining = this.roundLengthTotal;
     }
 

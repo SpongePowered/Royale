@@ -73,7 +73,7 @@ public final class Instance {
         // TODO Kickup stop code here
     }
 
-    public InstanceType getInstanceType() {
+    public InstanceType getType() {
         return this.instanceType;
     }
 

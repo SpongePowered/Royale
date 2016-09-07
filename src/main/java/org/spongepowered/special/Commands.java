@@ -31,7 +31,6 @@ import static org.spongepowered.api.command.args.GenericArguments.player;
 import static org.spongepowered.api.command.args.GenericArguments.string;
 import static org.spongepowered.api.command.args.GenericArguments.world;
 
-import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -42,11 +41,11 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
-import org.spongepowered.special.map.MapConfiguration;
-import org.spongepowered.special.map.MapType;
-import org.spongepowered.special.map.MapTypeRegistryModule;
-import org.spongepowered.special.map.exception.InstanceAlreadyExistsException;
-import org.spongepowered.special.map.exception.UnknownInstanceException;
+import org.spongepowered.special.instance.InstanceType;
+import org.spongepowered.special.instance.InstanceTypeRegistryModule;
+import org.spongepowered.special.instance.configuration.InstanceConfiguration;
+import org.spongepowered.special.instance.exception.InstanceAlreadyExistsException;
+import org.spongepowered.special.instance.exception.UnknownInstanceException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -59,12 +58,12 @@ final class Commands {
             .permission(Constants.Meta.ID + ".command.prepare")
             .description(Text.of("Prepares an instance"))
             .extendedDescription(Text.of("Prepares an instance")) // TODO More descriptive
-            .arguments(catalogedElement(Text.of("mapTypeId"), MapType.class))
+            .arguments(catalogedElement(Text.of("instanceType"), InstanceType.class))
             .executor((src, args) -> {
-                final MapType mapType = args.<MapType>getOne("mapTypeId").orElse(null);
+                final InstanceType instanceType = args.<InstanceType>getOne("instanceType").orElse(null);
 
                 try {
-                    Special.instance.getMapManager().createInstance(mapType);
+                    Special.instance.getInstanceManager().createInstance(instanceType);
                 } catch (InstanceAlreadyExistsException e) {
                     throw new CommandException(Text.of("Instance already exists!"), e);
                 } catch (IOException e) {
@@ -92,7 +91,7 @@ final class Commands {
                 }
 
                 try {
-                    Special.instance.getMapManager().startInstance(world.getName());
+                    Special.instance.getInstanceManager().startInstance(world.getName());
                 } catch (UnknownInstanceException e) {
                     throw new CommandException(Text.of("Unable to start instance [" + world.getName() + "], has it been prepared?"), e);
                 }
@@ -121,7 +120,7 @@ final class Commands {
                 final boolean force = optForce.isPresent() ? optForce.get() : false;
 
                 try {
-                    Special.instance.getMapManager().endInstance(world.getName(), force);
+                    Special.instance.getInstanceManager().endInstance(world.getName(), force);
                 } catch (UnknownInstanceException e) {
                     throw new CommandException(Text.of("Unable to end instance [" + world.getName() + "], is it running?"), e);
                 }
@@ -157,7 +156,7 @@ final class Commands {
                 }
 
                 try {
-                    Special.instance.getMapManager().placePlayerInInstance(world, player);
+                    Special.instance.getInstanceManager().placePlayerInInstance(world, player);
                 } catch (UnknownInstanceException e) {
                     throw new CommandException(Text.of("Instance [" + world.getName() + "] is not a valid instance, is it running?"), e);
                 }
@@ -169,31 +168,31 @@ final class Commands {
             .permission(Constants.Meta.ID + ".command.register")
             .description(Text.of())
             .extendedDescription(Text.of())
-            .arguments(string(Text.of("id")), string(Text.of("name")), optional(string(Text.of("template"))))
+            .arguments(string(Text.of("id")), string(Text.of("name")), optional(string(Text.of("world"))))
             .executor((src, args) -> {
                 final String id = args.<String>getOne("id").orElse(null);
-                if (Sponge.getRegistry().getType(MapType.class, id).isPresent()) {
+                if (Sponge.getRegistry().getType(InstanceType.class, id).isPresent()) {
                     throw new CommandException(Text.of("Map has already been registered!"));
                 }
 
                 final String name = args.<String>getOne("name").orElse(null);
 
-                final String template = args.<String>getOne("template").orElse(id);
-                final Path templatePath = Constants.Map.PATH_CONFIG_TEMPLATES.resolve(template);
+                final String template = args.<String>getOne("world").orElse(id);
+                final Path templatePath = Sponge.getGame().getSavesDirectory().resolve(Sponge.getServer().getDefaultWorldName()).resolve(template);
 
                 if (Files.notExists(templatePath)) {
                     throw new CommandException(Text.of("Failed to register map type [", id, "] as template [", template, "] does not exist in [",
-                            Constants.Map.PATH_CONFIG_TEMPLATES, "]!"));
+                            Sponge.getGame().getSavesDirectory().resolve(Sponge.getServer().getDefaultWorldName()), "]!"));
                 }
 
                 if (Files.notExists(templatePath.resolve("level.dat"))) {
                     throw new CommandException(Text.of("Failed to register map type [", id, "] as template [", template, "] in [",
-                            Constants.Map.PATH_CONFIG_TEMPLATES, "] is not a valid world!"));
+                            Sponge.getGame().getSavesDirectory().resolve(Sponge.getServer().getDefaultWorldName()), "] is not a valid world!"));
                 }
 
                 final Path configPath = Constants.Map.PATH_CONFIG_MAPS.resolve(id + ".conf");
-                final MappedConfigurationAdapter<MapConfiguration> adapter = new MappedConfigurationAdapter<>(MapConfiguration
-                        .class, ConfigurationOptions.defaults(), configPath);
+                final MappedConfigurationAdapter<InstanceConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceConfiguration
+                        .class, Constants.Map.DEFAULT_OPTIONS, configPath);
 
                 try {
                     adapter.load();
@@ -205,7 +204,7 @@ final class Commands {
                 }
 
 
-                MapTypeRegistryModule.getInstance().registerAdditionalCatalog(MapType.builder().from(adapter.getConfig()).build(id));
+                InstanceTypeRegistryModule.getInstance().registerAdditionalCatalog(InstanceType.builder().from(adapter.getConfig()).build(id));
                 return CommandResult.success();
             })
             .build();

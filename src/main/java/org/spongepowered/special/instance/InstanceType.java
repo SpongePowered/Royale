@@ -26,6 +26,7 @@ package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.google.common.base.Objects;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.Sponge;
@@ -35,23 +36,20 @@ import org.spongepowered.api.util.ResettableBuilder;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.instance.configuration.InstanceConfiguration;
 
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
 public final class InstanceType implements CatalogType {
 
     private final String id, name, template;
-    private final Path templatePath;
-    private final long roundStartLength, roundLength, roundEndLength;
     private final TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
     private final List<ItemStackSnapshot> defaultItems;
+    private final long roundStartLength, roundLength, roundEndLength;
 
     private InstanceType(String id, Builder builder) {
         this.id = id;
         this.name = builder.name;
         this.template = builder.template;
-        this.templatePath = Sponge.getGame().getSavesDirectory().resolve(template);
         this.nameTemplate = builder.nameTemplate;
         this.roundStartTemplate = builder.roundStartTemplate;
         this.roundStartLength = builder.roundStartLength;
@@ -77,10 +75,6 @@ public final class InstanceType implements CatalogType {
 
     public String getTemplate() {
         return template;
-    }
-
-    public Path getTemplatePath() {
-        return this.templatePath;
     }
 
     public long getRoundStartLength() {
@@ -149,6 +143,8 @@ public final class InstanceType implements CatalogType {
         String name, template;
         TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
         List<ItemStackSnapshot> defaultItems;
+        List<Vector3d> possibleSpawns;
+        int mapLength, mapWidth;
         long roundStartLength, roundLength, roundEndLength;
 
         public Builder() {

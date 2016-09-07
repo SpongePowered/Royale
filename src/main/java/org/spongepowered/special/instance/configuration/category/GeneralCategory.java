@@ -39,6 +39,14 @@ public final class GeneralCategory extends AbstractConfigurationCategory {
     @Setting(value = "name-template", comment = "Template used to display the name to the user.")
     public TextTemplate nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
 
-    @Setting(comment = "Name of the template to use (relative to the saves directory of the server).")
+    @Setting(comment = "Name of the template to use (within the saves directory of the server).")
     public String template = null;
+
+    @Setting(value = "map-length", comment = "The map's length. Used to handle unknown spawns, end of round player cleanup, and other things. "
+            + "Specifying -1 tells the plugin to treat this value as unknown. Default (" + Constants.Map.DEFAULT_MAP_LENGTH + ").")
+    public int mapLength = Constants.Map.DEFAULT_MAP_LENGTH;
+
+    @Setting(value = "map-width", comment = "The map's width. Used to handle unknown spawns, end of round player cleanup, and other things. "
+            + "Specifying -1 tells the plugin to treat this value as unknown. Default (" + Constants.Map.DEFAULT_MAP_WIDTH + ").")
+    public int mapWidth = Constants.Map.DEFAULT_MAP_WIDTH;
 }

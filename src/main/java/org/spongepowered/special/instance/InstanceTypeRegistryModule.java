@@ -27,7 +27,6 @@ package org.spongepowered.special.instance;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Objects;
-import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.registry.AdditionalCatalogRegistryModule;
 import org.spongepowered.api.registry.CatalogTypeAlreadyRegisteredException;
@@ -97,7 +96,7 @@ public final class InstanceTypeRegistryModule implements AdditionalCatalogRegist
                     .endsWith(".conf"))) {
                 for (Path path : stream) {
                     final MappedConfigurationAdapter<InstanceConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceConfiguration.class,
-                            ConfigurationOptions.defaults(), path);
+                            Constants.Map.DEFAULT_OPTIONS, path);
 
                     try {
                         adapter.load();

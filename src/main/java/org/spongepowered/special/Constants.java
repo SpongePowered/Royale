@@ -24,6 +24,10 @@
  */
 package org.spongepowered.special;
 
+import com.flowpowered.math.vector.Vector3d;
+import com.google.common.reflect.TypeToken;
+import ninja.leaping.configurate.ConfigurationOptions;
+import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -34,6 +38,7 @@ import org.spongepowered.api.world.GeneratorTypes;
 import org.spongepowered.api.world.WorldArchetype;
 import org.spongepowered.api.world.WorldArchetypes;
 import org.spongepowered.api.world.difficulty.Difficulties;
+import org.spongepowered.special.instance.configuration.serializer.Vector3dTypeSerializer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,9 +69,15 @@ public class Constants {
     public static final class Map {
 
         public static final Path PATH_CONFIG_MAPS = Special.instance.getConfigPath().resolve("maps");
-        public static final Path PATH_CONFIG_TEMPLATES = Special.instance.getConfigPath().resolve("templates");
 
         public static final TextTemplate DEFAULT_TEXT_TEMPLATE_NAME = TextTemplate.of(TextTemplate.arg("name").color(TextColors.RED));
+
+        public static final ConfigurationOptions DEFAULT_OPTIONS = ConfigurationOptions.defaults().setSerializers(
+                TypeSerializers.getDefaultSerializers().newChild()
+                        .registerType(TypeToken.of(Vector3d.class), new Vector3dTypeSerializer()));
+
+        public static final int DEFAULT_MAP_LENGTH = 500;
+        public static final int DEFAULT_MAP_WIDTH = 500;
 
         static {
             if (Files.notExists(PATH_CONFIG_MAPS)) {
@@ -74,14 +85,6 @@ public class Constants {
                     Files.createDirectories(PATH_CONFIG_MAPS);
                 } catch (IOException e) {
                     throw new RuntimeException("Failed to create maps directory [" + PATH_CONFIG_MAPS + "]!");
-                }
-            }
-
-            if (Files.notExists(PATH_CONFIG_TEMPLATES)) {
-                try {
-                    Files.createDirectories(PATH_CONFIG_TEMPLATES);
-                } catch (IOException e) {
-                    throw new RuntimeException("Failed to create templates directory [" + PATH_CONFIG_TEMPLATES + "]!");
                 }
             }
         }
@@ -100,6 +103,7 @@ public class Constants {
             public static final int DEFAULT_START_LENGTH = 5;
             public static final int DEFAULT_LENGTH = 300;
             public static final int DEFAULT_END_LENGTH = 10;
+            public static final int DEFAULT_AUTOMATIC_START_PLAYER_COUNT = 6;
 
             static {
                 defaultItems.add(ItemStack.of(ItemTypes.STONE_SWORD, 1).createSnapshot());

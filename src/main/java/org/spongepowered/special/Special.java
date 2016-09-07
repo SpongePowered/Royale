@@ -33,9 +33,9 @@ import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
-import org.spongepowered.special.map.MapManager;
-import org.spongepowered.special.map.MapType;
-import org.spongepowered.special.map.MapTypeRegistryModule;
+import org.spongepowered.special.instance.InstanceManager;
+import org.spongepowered.special.instance.InstanceType;
+import org.spongepowered.special.instance.InstanceTypeRegistryModule;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -49,12 +49,11 @@ import javax.inject.Inject;
         authors = Constants.Meta.AUTHORS,
         url = Constants.Meta.URL,
         description = Constants.Meta.DESCRIPTION
-
 )
 public final class Special {
 
     public static Special instance;
-    private final MapManager mapManager = new MapManager();
+    private final InstanceManager instanceManager = new InstanceManager();
     @Inject private Logger logger;
     @Inject private PluginContainer container;
     @Inject @ConfigDir(sharedRoot = false) private Path configPath;
@@ -66,12 +65,12 @@ public final class Special {
 
     @Listener
     public void onGamePreinitialization(GamePreInitializationEvent event) {
-        Sponge.getRegistry().registerModule(MapTypeRegistryModule.getInstance());
-        Sponge.getRegistry().registerBuilderSupplier(MapType.Builder.class, MapType.Builder::new);
+        Sponge.getRegistry().registerModule(InstanceTypeRegistryModule.getInstance());
+        Sponge.getRegistry().registerBuilderSupplier(InstanceType.Builder.class, InstanceType.Builder::new);
 
         Sponge.getCommandManager().register(this.container, Commands.rootCommand, Constants.Meta.ID, Constants.Meta.ID.substring(0, 1));
 
-        Sponge.getEventManager().registerListeners(this.container, this.mapManager);
+        Sponge.getEventManager().registerListeners(this.container, this.instanceManager);
     }
 
     @Listener
@@ -88,7 +87,7 @@ public final class Special {
         return this.configPath;
     }
 
-    public MapManager getMapManager() {
-        return this.mapManager;
+    public InstanceManager getInstanceManager() {
+        return this.instanceManager;
     }
 }

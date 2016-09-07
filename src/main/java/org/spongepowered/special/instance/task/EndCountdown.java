@@ -38,7 +38,7 @@ public final class EndCountdown {
     private final Title title;
 
     public EndCountdown(Instance instance, Player winner) {
-        final long seconds = instance.getInstanceType().getRoundEndLength();
+        final long seconds = instance.getType().getRoundEndLength();
 
         this.title = Title.builder()
                 .stay((int) ((seconds - 1) * 20))

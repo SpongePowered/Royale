@@ -24,6 +24,7 @@
  */
 package org.spongepowered.special.instance.configuration.category;
 
+import com.flowpowered.math.vector.Vector3d;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
@@ -31,6 +32,7 @@ import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.configuration.AbstractConfigurationCategory;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @ConfigSerializable
@@ -38,14 +40,31 @@ public final class RoundCategory extends AbstractConfigurationCategory {
 
     @Setting(value = "default-items", comment = "Default items to give players. Order of items will be inserted into the hotbar, left to right.")
     public final List<ItemStackSnapshot> defaultItems = Constants.Map.Round.defaultItems;
-    @Setting(comment = "Countdown until round starts (in seconds).")
+
+    @Setting(comment = "Countdown until round starts (in seconds). Specifying -1 means the round will start the moment the instance starts. Default"
+            + " (" + Constants.Map.Round.DEFAULT_START_LENGTH + ").")
     public long start = Constants.Map.Round.DEFAULT_START_LENGTH;
+
     @Setting(value = "start-template", comment = "Template used to display the round start.")
     public TextTemplate startTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_START;
-    @Setting(comment = "Length of the round (in seconds).")
+
+    @Setting(comment = "Length of the round (in seconds). Specifying -1 means the instance goes until a winner is found. Default (" + Constants.Map
+            .Round.DEFAULT_LENGTH + ").")
     public long length = Constants.Map.Round.DEFAULT_LENGTH;
-    @Setting(comment = "Length of the time after round ends until everyone is kicked (in seconds).")
+
+    @Setting(comment = "Length of the time after round ends until everyone is kicked (in seconds). Specifying -1 means the instance must be "
+            + "manually terminated. Default (" + Constants.Map.Round.DEFAULT_END_LENGTH + ").")
     public long end = Constants.Map.Round.DEFAULT_END_LENGTH;
+
     @Setting(value = "end-template", comment = "Template used to display the winner.")
     public TextTemplate endTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_END;
+
+    @Setting(value = "possible-spawns", comment = "Spawns to put players at. Make sure to have as many spawns as there can be players (or more) "
+            + "else people may spawn on top of each other! If this list is empty, players will be spawned randomly in the instance.")
+    public List<Vector3d> possibleSpawns = new LinkedList<>();
+
+    @Setting(value = "players-to-start-round-automatically", comment = "If specified, once the instance has this amount of players, it will "
+            + "automatically start. Specifying -1 means the instance must be started manually. Default (" + Constants.Map.Round
+            .DEFAULT_AUTOMATIC_START_PLAYER_COUNT + ").")
+    public int automaticStartPlayerCount = Constants.Map.Round.DEFAULT_AUTOMATIC_START_PLAYER_COUNT;
 }

@@ -32,11 +32,12 @@ import org.spongepowered.api.text.title.Title;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.instance.Instance;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 public final class StartCountdown extends RoundCountdown {
 
-    private final ArrayList<Title> startTitles = new ArrayList<>();
+    private final List<Title> startTitles = new LinkedList<>();
 
     private int seconds = 0;
 
@@ -48,14 +49,14 @@ public final class StartCountdown extends RoundCountdown {
                 .fadeIn(0)
                 .fadeOut(8);
 
-        for (long i = instance.getInstanceType().getRoundStartLength(); i > 0; i--) {
+        for (long i = instance.getType().getRoundStartLength(); i > 0; i--) {
 
             startTitles.add(builder.title(Text.of(TextColors.DARK_RED, i)).build());
 
             if (i == 3) {
                 startTitles.add(builder.title(Text.of(TextColors.RED, "2")).build());
                 startTitles.add(builder.title(Text.of(TextColors.GOLD, "1")).build());
-                startTitles.add(builder.title(instance.getInstanceType().getRoundStartTemplate().apply().build()).build());
+                startTitles.add(builder.title(instance.getType().getRoundStartTemplate().apply().build()).build());
                 break;
             }
         }

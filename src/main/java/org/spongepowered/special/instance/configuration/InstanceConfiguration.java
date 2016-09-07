@@ -34,5 +34,6 @@ import org.spongepowered.special.instance.configuration.category.RoundCategory;
 public final class InstanceConfiguration extends AbstractConfiguration {
 
     @Setting public final GeneralCategory general = new GeneralCategory();
+
     @Setting public final RoundCategory round = new RoundCategory();
 }
