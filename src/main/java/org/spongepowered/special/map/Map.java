@@ -74,6 +74,10 @@ public final class Map {
         // TODO Kickup stop code here
     }
 
+    public MapType getMapType() {
+        return this.mapType;
+    }
+
     public boolean isInstanceRunning() {
         return this.isRunning;
     }

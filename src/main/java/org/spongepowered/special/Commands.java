@@ -27,6 +27,7 @@ package org.spongepowered.special;
 import static org.spongepowered.api.command.args.GenericArguments.catalogedElement;
 import static org.spongepowered.api.command.args.GenericArguments.optional;
 import static org.spongepowered.api.command.args.GenericArguments.string;
+import static org.spongepowered.api.command.args.GenericArguments.world;
 
 import ninja.leaping.configurate.ConfigurationOptions;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -42,7 +43,8 @@ import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 import org.spongepowered.special.map.MapConfiguration;
 import org.spongepowered.special.map.MapTypeRegistryModule;
 import org.spongepowered.special.map.MapType;
-import org.spongepowered.special.task.EndCountdown;
+import org.spongepowered.special.map.exception.InstanceAlreadyExistsException;
+import org.spongepowered.special.map.exception.UnknownInstanceException;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -96,11 +98,31 @@ final class Commands {
             })
             .build();
 
+    static final CommandSpec prepareCommand = CommandSpec.builder()
+            .permission(Constants.Meta.ID + ".command.prepare")
+            .description(Text.of("Prepares a map"))
+            .extendedDescription(Text.of("Prepares a map")) // TODO More descriptive
+            .arguments(catalogedElement(Text.of("mapTypeId"), MapType.class))
+            .executor((src, args) -> {
+                final MapType mapType = args.<MapType>getOne("mapTypeId").orElse(null);
+
+                try {
+                    Special.instance.getMapManager().createInstance(mapType);
+                } catch (InstanceAlreadyExistsException e) {
+                    throw new CommandException(Text.of("Instance already exists!"), e);
+                } catch (IOException e) {
+                    throw new CommandException(Text.of("Unable to create instance!"), e);
+                }
+
+                return CommandResult.success();
+            })
+            .build();
+
     static final CommandSpec startCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.start")
-            .description(Text.of("Starts a game"))
-            .extendedDescription(Text.of("Starts a game")) // TODO More descriptive
-            .arguments(catalogedElement(Text.of("mapTypeId"), MapType.class))
+            .description(Text.of("Starts a map"))
+            .extendedDescription(Text.of("Starts a map")) // TODO More descriptive
+            .arguments(optional(world(Text.of("world"))))
             .executor((src, args) -> {
                 final Optional<WorldProperties> optProperties = args.getOne("world");
                 final World world;
@@ -113,7 +135,11 @@ final class Commands {
                     throw new CommandException(Text.of("World was not provided!"));
                 }
 
-                final MapType mapType = args.<MapType>getOne("mapTypeId").orElse(null);
+                try {
+                    Special.instance.getMapManager().startInstance(world.getName());
+                } catch (UnknownInstanceException e) {
+                    throw new CommandException(Text.of("Unable to start instance [" + world.getName() + "], has it been prepared?"), e);
+                }
 
                 return CommandResult.success();
             })
@@ -121,9 +147,9 @@ final class Commands {
 
     static final CommandSpec endCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.end")
-            .description(Text.of("Ends a game"))
-            .extendedDescription(Text.of("Ends a game")) // TODO More descriptive
-            .arguments(catalogedElement(Text.of("mapTypeId"), MapType.class))
+            .description(Text.of("Ends a map"))
+            .extendedDescription(Text.of("Ends a map")) // TODO More descriptive
+            .arguments(optional(world(Text.of("world"))))
             .executor((src, args) -> {
                 final Optional<WorldProperties> optProperties = args.getOne("world");
                 final World world;
@@ -136,9 +162,11 @@ final class Commands {
                     throw new CommandException(Text.of("World was not provided!"));
                 }
 
-                final MapType mapType = args.<MapType>getOne("mapTypeId").orElse(null);
-
-                new EndCountdown(mapType, world, (Player) src);
+                try {
+                    Special.instance.getMapManager().endInstance(world.getName());
+                } catch (UnknownInstanceException e) {
+                    throw new CommandException(Text.of("Unable to end instance [" + world.getName() + "], is it running?"), e);
+                }
 
                 return CommandResult.success();
             })

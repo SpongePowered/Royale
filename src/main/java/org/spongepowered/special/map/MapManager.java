@@ -41,6 +41,7 @@ import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.map.exception.InstanceAlreadyExistsException;
 import org.spongepowered.special.map.exception.UnknownInstanceException;
+import org.spongepowered.special.task.EndCountdown;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -92,7 +93,7 @@ public final class MapManager {
         instance.start();
     }
 
-    public void stopInstance(String instanceName) throws UnknownInstanceException {
+    public void endInstance(String instanceName) throws UnknownInstanceException {
         final org.spongepowered.special.map.Map instance = this.instances.get(instanceName);
         if (instance == null) {
             throw new UnknownInstanceException(instanceName);
