@@ -24,6 +24,7 @@
  */
 package org.spongepowered.special;
 
+import static org.spongepowered.api.command.args.GenericArguments.bool;
 import static org.spongepowered.api.command.args.GenericArguments.catalogedElement;
 import static org.spongepowered.api.command.args.GenericArguments.optional;
 import static org.spongepowered.api.command.args.GenericArguments.string;
@@ -149,7 +150,7 @@ final class Commands {
             .permission(Constants.Meta.ID + ".command.end")
             .description(Text.of("Ends an instance"))
             .extendedDescription(Text.of("Ends an instance")) // TODO More descriptive
-            .arguments(optional(world(Text.of("world"))))
+            .arguments(optional(world(Text.of("world"))), optional(bool(Text.of("force"))))
             .executor((src, args) -> {
                 final Optional<WorldProperties> optProperties = args.getOne("world");
                 final World world;
@@ -162,8 +163,11 @@ final class Commands {
                     throw new CommandException(Text.of("World was not provided!"));
                 }
 
+                final Optional<Boolean> optForce = args.getOne("force");
+                final boolean force = optForce.isPresent() ? optForce.get() : false;
+
                 try {
-                    Special.instance.getMapManager().endInstance(world.getName());
+                    Special.instance.getMapManager().endInstance(world.getName(), force);
                 } catch (UnknownInstanceException e) {
                     throw new CommandException(Text.of("Unable to end instance [" + world.getName() + "], is it running?"), e);
                 }
@@ -171,6 +175,7 @@ final class Commands {
                 return CommandResult.success();
             })
             .build();
+
 
     static final CommandSpec rootCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.help")
@@ -180,6 +185,7 @@ final class Commands {
                 src.sendMessage(Text.of("Some help should go here..."));
                 return CommandResult.success();
             })
+            .child(prepareCommand, "prepare", "p")
             .child(registerCommand, "register", "r")
             .child(startCommand, "start", "s")
             .child(endCommand, "end", "e")

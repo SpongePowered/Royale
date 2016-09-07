@@ -93,33 +93,29 @@ public final class MapManager {
         instance.start();
     }
 
-    public void endInstance(String instanceName) throws UnknownInstanceException {
+    public void endInstance(String instanceName, boolean force) throws UnknownInstanceException {
         final org.spongepowered.special.map.Map instance = this.instances.get(instanceName);
         if (instance == null) {
             throw new UnknownInstanceException(instanceName);
         }
 
-        instance.stop();
-    }
+        if (force) {
+            final Server server = Sponge.getServer();
+            final World lobby = server.getWorld(Constants.Map.Lobby.DEFAULT_LOBBY_NAME).orElseThrow(() -> new RuntimeException("Lobby world was not "
+                    + "found!"));
+            final World world = server.getWorld(instanceName).orElseThrow(() -> new UnknownInstanceException(instanceName));
 
-    public CompletableFuture<Boolean> cleanupInstance(String instanceName) throws UnknownInstanceException {
-        final Server server = Sponge.getServer();
+            // Move everyone out
+            for (Player player : world.getPlayers()) {
+                player.setLocation(lobby.getSpawnLocation());
+            }
 
-        final World lobby = server.getWorld(Constants.Map.Lobby.DEFAULT_LOBBY_NAME).orElseThrow(() -> new RuntimeException("Lobby world was not "
-                + "found!"));
-        final World instance = server.getWorld(instanceName).orElseThrow(() -> new UnknownInstanceException(instanceName));
-
-        // Move everyone out
-        for (Player player : instance.getPlayers()) {
-            player.setLocation(lobby.getSpawnLocation());
+            if (!server.unloadWorld(world)) {
+                throw new RuntimeException("Failed to unload instance world!"); // TODO Specialized exception
+            }
+        } else {
+            instance.stop();
         }
-
-        if (!server.unloadWorld(instance)) {
-            throw new RuntimeException("Failed to unload instance world!"); // TODO Specialized exception
-        }
-
-        // Delete instance
-        return server.deleteWorld(instance.getProperties());
     }
 
     public Optional<org.spongepowered.special.map.Map> getInstance(String instanceName) {
