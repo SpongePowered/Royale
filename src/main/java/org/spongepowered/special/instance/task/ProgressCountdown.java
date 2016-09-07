@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.special.task;
+package org.spongepowered.special.instance.task;
 
 import org.spongepowered.api.boss.BossBarColors;
 import org.spongepowered.api.boss.BossBarOverlays;
@@ -30,30 +30,33 @@ import org.spongepowered.api.boss.ServerBossBar;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
-import org.spongepowered.special.map.MapType;
+import org.spongepowered.special.instance.Instance;
 
-public class ProgressCountdown extends RoundCountdown {
+public final class ProgressCountdown extends RoundCountdown {
 
-    final ServerBossBar bossBar = ServerBossBar.builder()
+    private final ServerBossBar bossBar = ServerBossBar.builder()
             .color(BossBarColors.GREEN)
             .playEndBossMusic(false)
             .visible(true)
             .overlay(BossBarOverlays.PROGRESS)
             .name(Text.of("Time remaining"))
             .build();
-    final long roundLengthTotal;
-    long roundLengthRemaining;
 
-    public ProgressCountdown(MapType mapType, World world) {
-        super(mapType, world);
+    private final long roundLengthTotal;
+    private long roundLengthRemaining;
 
-        this.roundLengthTotal = mapType.getRoundEndLength();
+    public ProgressCountdown(Instance instance) {
+        super(instance);
+
+        this.roundLengthTotal = instance.getInstanceType().getRoundEndLength();
         this.roundLengthRemaining = this.roundLengthTotal;
     }
 
     @Override
     public void accept(Task task) {
-        final World world = this.getWorldRef().get();
+        final World world = this.getInstance().getHandle().orElse(null);
+
+        // TODO If world is null or not loaded, shut this task down and log it.
 
         // Make sure the world is still around and loaded
         if (world != null && world.isLoaded()) {

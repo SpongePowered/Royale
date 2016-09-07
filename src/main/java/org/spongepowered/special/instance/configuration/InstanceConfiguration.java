@@ -22,30 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.special.map.category;
+package org.spongepowered.special.instance.configuration;
 
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
-import org.spongepowered.api.text.TextTemplate;
-import org.spongepowered.special.Constants;
-import org.spongepowered.special.configuration.AbstractConfigurationCategory;
-
-import java.util.List;
+import org.spongepowered.special.configuration.AbstractConfiguration;
+import org.spongepowered.special.instance.configuration.category.GeneralCategory;
+import org.spongepowered.special.instance.configuration.category.RoundCategory;
 
 @ConfigSerializable
-public final class RoundCategory extends AbstractConfigurationCategory {
+public final class InstanceConfiguration extends AbstractConfiguration {
 
-    @Setting(value = "default-items", comment = "Default items to give players. Order of items will be inserted into the hotbar, left to right.")
-    public final List<ItemStackSnapshot> defaultItems = Constants.Map.Round.defaultItems;
-    @Setting(comment = "Countdown until round starts (in seconds).")
-    public long start = Constants.Map.Round.DEFAULT_START_LENGTH;
-    @Setting(value = "start-template", comment = "Template used to display the round start.")
-    public TextTemplate startTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_START;
-    @Setting(comment = "Length of the round (in seconds).")
-    public long length = Constants.Map.Round.DEFAULT_LENGTH;
-    @Setting(comment = "Length of the time after round ends until everyone is kicked (in seconds).")
-    public long end = Constants.Map.Round.DEFAULT_END_LENGTH;
-    @Setting(value = "end-template", comment = "Template used to display the winner.")
-    public TextTemplate endTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_END;
+    @Setting public final GeneralCategory general = new GeneralCategory();
+    @Setting public final RoundCategory round = new RoundCategory();
 }

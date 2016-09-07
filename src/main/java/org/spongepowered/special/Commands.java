@@ -42,10 +42,9 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
-import org.spongepowered.special.map.Map;
 import org.spongepowered.special.map.MapConfiguration;
-import org.spongepowered.special.map.MapTypeRegistryModule;
 import org.spongepowered.special.map.MapType;
+import org.spongepowered.special.map.MapTypeRegistryModule;
 import org.spongepowered.special.map.exception.InstanceAlreadyExistsException;
 import org.spongepowered.special.map.exception.UnknownInstanceException;
 
@@ -56,6 +55,116 @@ import java.util.Optional;
 
 final class Commands {
 
+    static final CommandSpec prepareCommand = CommandSpec.builder()
+            .permission(Constants.Meta.ID + ".command.prepare")
+            .description(Text.of("Prepares an instance"))
+            .extendedDescription(Text.of("Prepares an instance")) // TODO More descriptive
+            .arguments(catalogedElement(Text.of("mapTypeId"), MapType.class))
+            .executor((src, args) -> {
+                final MapType mapType = args.<MapType>getOne("mapTypeId").orElse(null);
+
+                try {
+                    Special.instance.getMapManager().createInstance(mapType);
+                } catch (InstanceAlreadyExistsException e) {
+                    throw new CommandException(Text.of("Instance already exists!"), e);
+                } catch (IOException e) {
+                    throw new CommandException(Text.of("Unable to create instance!"), e);
+                }
+
+                return CommandResult.success();
+            })
+            .build();
+    static final CommandSpec startCommand = CommandSpec.builder()
+            .permission(Constants.Meta.ID + ".command.start")
+            .description(Text.of("Starts an instance"))
+            .extendedDescription(Text.of("Starts an instance")) // TODO More descriptive
+            .arguments(optional(world(Text.of("world"))))
+            .executor((src, args) -> {
+                final Optional<WorldProperties> optProperties = args.getOne("world");
+                final World world;
+                if (optProperties.isPresent()) {
+                    world = Sponge.getServer().getWorld(optProperties.get().getWorldName()).orElseThrow(() -> new
+                            CommandException(Text.of("World provided is not online!")));
+                } else if (src instanceof Player) {
+                    world = ((Player) src).getWorld();
+                } else {
+                    throw new CommandException(Text.of("World was not provided!"));
+                }
+
+                try {
+                    Special.instance.getMapManager().startInstance(world.getName());
+                } catch (UnknownInstanceException e) {
+                    throw new CommandException(Text.of("Unable to start instance [" + world.getName() + "], has it been prepared?"), e);
+                }
+
+                return CommandResult.success();
+            })
+            .build();
+    static final CommandSpec endCommand = CommandSpec.builder()
+            .permission(Constants.Meta.ID + ".command.end")
+            .description(Text.of("Ends an instance"))
+            .extendedDescription(Text.of("Ends an instance")) // TODO More descriptive
+            .arguments(optional(world(Text.of("world"))), optional(bool(Text.of("force"))))
+            .executor((src, args) -> {
+                final Optional<WorldProperties> optProperties = args.getOne("world");
+                final World world;
+                if (optProperties.isPresent()) {
+                    world = Sponge.getServer().getWorld(optProperties.get().getWorldName()).orElseThrow(() -> new
+                            CommandException(Text.of("World provided is not online!")));
+                } else if (src instanceof Player) {
+                    world = ((Player) src).getWorld();
+                } else {
+                    throw new CommandException(Text.of("World was not provided!"));
+                }
+
+                final Optional<Boolean> optForce = args.getOne("force");
+                final boolean force = optForce.isPresent() ? optForce.get() : false;
+
+                try {
+                    Special.instance.getMapManager().endInstance(world.getName(), force);
+                } catch (UnknownInstanceException e) {
+                    throw new CommandException(Text.of("Unable to end instance [" + world.getName() + "], is it running?"), e);
+                }
+
+                return CommandResult.success();
+            })
+            .build();
+    static final CommandSpec joinCommand = CommandSpec.builder()
+            .permission(Constants.Meta.ID + ".command.join")
+            .description(Text.of("Joins an instance"))
+            .extendedDescription(Text.of("Joins an instance")) // TODO More descriptive
+            .arguments(world(Text.of("world")), optional(player(Text.of("player"))))
+            .executor((src, args) -> {
+                final Optional<WorldProperties> optProperties = args.getOne("world");
+                final World world;
+                if (optProperties.isPresent()) {
+                    world = Sponge.getServer().getWorld(optProperties.get().getWorldName()).orElseThrow(() -> new
+                            CommandException(Text.of("World provided is not online!")));
+                } else if (src instanceof Player) {
+                    world = ((Player) src).getWorld();
+                } else {
+                    throw new CommandException(Text.of("World was not provided!"));
+                }
+
+                final Optional<Player> optPlayer = args.getOne("player");
+                final Player player;
+                if (optPlayer.isPresent()) {
+                    player = optPlayer.get();
+                } else if (src instanceof Player) {
+                    player = (Player) src;
+                } else {
+                    throw new CommandException(Text.of("Player was not specified and source was not a player!"));
+                }
+
+                try {
+                    Special.instance.getMapManager().placePlayerInInstance(world, player);
+                } catch (UnknownInstanceException e) {
+                    throw new CommandException(Text.of("Instance [" + world.getName() + "] is not a valid instance, is it running?"), e);
+                }
+
+                return CommandResult.success();
+            })
+            .build();
     private static final CommandSpec registerCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.register")
             .description(Text.of())
@@ -100,122 +209,6 @@ final class Commands {
                 return CommandResult.success();
             })
             .build();
-
-    static final CommandSpec prepareCommand = CommandSpec.builder()
-            .permission(Constants.Meta.ID + ".command.prepare")
-            .description(Text.of("Prepares an instance"))
-            .extendedDescription(Text.of("Prepares an instance")) // TODO More descriptive
-            .arguments(catalogedElement(Text.of("mapTypeId"), MapType.class))
-            .executor((src, args) -> {
-                final MapType mapType = args.<MapType>getOne("mapTypeId").orElse(null);
-
-                try {
-                    Special.instance.getMapManager().createInstance(mapType);
-                } catch (InstanceAlreadyExistsException e) {
-                    throw new CommandException(Text.of("Instance already exists!"), e);
-                } catch (IOException e) {
-                    throw new CommandException(Text.of("Unable to create instance!"), e);
-                }
-
-                return CommandResult.success();
-            })
-            .build();
-
-    static final CommandSpec startCommand = CommandSpec.builder()
-            .permission(Constants.Meta.ID + ".command.start")
-            .description(Text.of("Starts an instance"))
-            .extendedDescription(Text.of("Starts an instance")) // TODO More descriptive
-            .arguments(optional(world(Text.of("world"))))
-            .executor((src, args) -> {
-                final Optional<WorldProperties> optProperties = args.getOne("world");
-                final World world;
-                if (optProperties.isPresent()) {
-                    world = Sponge.getServer().getWorld(optProperties.get().getWorldName()).orElseThrow(() -> new
-                            CommandException(Text.of("World provided is not online!")));
-                } else if (src instanceof Player){
-                    world = ((Player) src).getWorld();
-                } else {
-                    throw new CommandException(Text.of("World was not provided!"));
-                }
-
-                try {
-                    Special.instance.getMapManager().startInstance(world.getName());
-                } catch (UnknownInstanceException e) {
-                    throw new CommandException(Text.of("Unable to start instance [" + world.getName() + "], has it been prepared?"), e);
-                }
-
-                return CommandResult.success();
-            })
-            .build();
-
-    static final CommandSpec endCommand = CommandSpec.builder()
-            .permission(Constants.Meta.ID + ".command.end")
-            .description(Text.of("Ends an instance"))
-            .extendedDescription(Text.of("Ends an instance")) // TODO More descriptive
-            .arguments(optional(world(Text.of("world"))), optional(bool(Text.of("force"))))
-            .executor((src, args) -> {
-                final Optional<WorldProperties> optProperties = args.getOne("world");
-                final World world;
-                if (optProperties.isPresent()) {
-                    world = Sponge.getServer().getWorld(optProperties.get().getWorldName()).orElseThrow(() -> new
-                            CommandException(Text.of("World provided is not online!")));
-                } else if (src instanceof Player){
-                    world = ((Player) src).getWorld();
-                } else {
-                    throw new CommandException(Text.of("World was not provided!"));
-                }
-
-                final Optional<Boolean> optForce = args.getOne("force");
-                final boolean force = optForce.isPresent() ? optForce.get() : false;
-
-                try {
-                    Special.instance.getMapManager().endInstance(world.getName(), force);
-                } catch (UnknownInstanceException e) {
-                    throw new CommandException(Text.of("Unable to end instance [" + world.getName() + "], is it running?"), e);
-                }
-
-                return CommandResult.success();
-            })
-            .build();
-
-    static final CommandSpec joinCommand = CommandSpec.builder()
-            .permission(Constants.Meta.ID + ".command.join")
-            .description(Text.of("Joins an instance"))
-            .extendedDescription(Text.of("Joins an instance")) // TODO More descriptive
-            .arguments(world(Text.of("world")), optional(player(Text.of("player"))))
-            .executor((src, args) -> {
-                final Optional<WorldProperties> optProperties = args.getOne("world");
-                final World world;
-                if (optProperties.isPresent()) {
-                    world = Sponge.getServer().getWorld(optProperties.get().getWorldName()).orElseThrow(() -> new
-                            CommandException(Text.of("World provided is not online!")));
-                } else if (src instanceof Player){
-                    world = ((Player) src).getWorld();
-                } else {
-                    throw new CommandException(Text.of("World was not provided!"));
-                }
-
-                final Optional<Player> optPlayer = args.getOne("player");
-                final Player player;
-                if (optPlayer.isPresent()) {
-                    player = optPlayer.get();
-                } else if (src instanceof Player) {
-                    player = (Player) src;
-                } else {
-                    throw new CommandException(Text.of("Player was not specified and source was not a player!"));
-                }
-
-                try {
-                    Special.instance.getMapManager().placePlayerInInstance(world, player);
-                } catch (UnknownInstanceException e) {
-                    throw new CommandException(Text.of("Instance [" + world.getName() + "] is not a valid instance, is it running?"), e);
-                }
-
-                return CommandResult.success();
-            })
-            .build();
-
-
     static final CommandSpec rootCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.help")
             .description(Text.of("Displays available commands"))

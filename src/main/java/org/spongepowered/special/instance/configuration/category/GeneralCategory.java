@@ -22,30 +22,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.special.map.category;
+package org.spongepowered.special.instance.configuration.category;
 
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.configuration.AbstractConfigurationCategory;
 
-import java.util.List;
-
 @ConfigSerializable
-public final class RoundCategory extends AbstractConfigurationCategory {
+public final class GeneralCategory extends AbstractConfigurationCategory {
 
-    @Setting(value = "default-items", comment = "Default items to give players. Order of items will be inserted into the hotbar, left to right.")
-    public final List<ItemStackSnapshot> defaultItems = Constants.Map.Round.defaultItems;
-    @Setting(comment = "Countdown until round starts (in seconds).")
-    public long start = Constants.Map.Round.DEFAULT_START_LENGTH;
-    @Setting(value = "start-template", comment = "Template used to display the round start.")
-    public TextTemplate startTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_START;
-    @Setting(comment = "Length of the round (in seconds).")
-    public long length = Constants.Map.Round.DEFAULT_LENGTH;
-    @Setting(comment = "Length of the time after round ends until everyone is kicked (in seconds).")
-    public long end = Constants.Map.Round.DEFAULT_END_LENGTH;
-    @Setting(value = "end-template", comment = "Template used to display the winner.")
-    public TextTemplate endTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_END;
+    @Setting(comment = "Name of this instance. Used to display to clients.")
+    public String name = null;
+
+    @Setting(value = "name-template", comment = "Template used to display the name to the user.")
+    public TextTemplate nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
+
+    @Setting(comment = "Name of the template to use (relative to the saves directory of the server).")
+    public String template = null;
 }

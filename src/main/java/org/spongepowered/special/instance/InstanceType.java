@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.special.map;
+package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -33,23 +33,25 @@ import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.api.util.ResettableBuilder;
 import org.spongepowered.special.Constants;
+import org.spongepowered.special.instance.configuration.InstanceConfiguration;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
-public final class MapType implements CatalogType {
+public final class InstanceType implements CatalogType {
 
     private final String id, name, template;
     private final Path templatePath;
     private final long roundStartLength, roundLength, roundEndLength;
     private final TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
     private final List<ItemStackSnapshot> defaultItems;
-    private MapType(String id, Builder builder) {
+
+    private InstanceType(String id, Builder builder) {
         this.id = id;
         this.name = builder.name;
         this.template = builder.template;
-        this.templatePath = Constants.Map.PATH_CONFIG_TEMPLATES.resolve(template);
+        this.templatePath = Sponge.getGame().getSavesDirectory().resolve(template);
         this.nameTemplate = builder.nameTemplate;
         this.roundStartTemplate = builder.roundStartTemplate;
         this.roundStartLength = builder.roundStartLength;
@@ -117,8 +119,8 @@ public final class MapType implements CatalogType {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        MapType mapType = (MapType) o;
-        return java.util.Objects.equals(this.id, mapType.id);
+        InstanceType instanceType = (InstanceType) o;
+        return java.util.Objects.equals(this.id, instanceType.id);
     }
 
     @Override
@@ -142,7 +144,7 @@ public final class MapType implements CatalogType {
                 .toString();
     }
 
-    public static final class Builder implements ResettableBuilder<MapType, Builder> {
+    public static final class Builder implements ResettableBuilder<InstanceType, Builder> {
 
         String name, template;
         TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
@@ -154,7 +156,7 @@ public final class MapType implements CatalogType {
         }
 
         @Override
-        public Builder from(MapType value) {
+        public Builder from(InstanceType value) {
             this.name = value.name;
             this.template = value.template;
             this.nameTemplate = value.nameTemplate;
@@ -166,7 +168,7 @@ public final class MapType implements CatalogType {
             return this;
         }
 
-        public Builder from(MapConfiguration value) {
+        public Builder from(InstanceConfiguration value) {
             this.name = value.general.name;
             this.template = value.general.template;
             this.nameTemplate = value.general.nameTemplate;
@@ -233,25 +235,26 @@ public final class MapType implements CatalogType {
         }
 
         public Builder item(ItemStackSnapshot item) {
+            checkNotNull(item);
             this.defaultItems.add(item);
             return this;
         }
 
         public Builder items(Collection<ItemStackSnapshot> items) {
+            checkNotNull(items);
             this.defaultItems.addAll(items);
             return this;
         }
 
-        public MapType build(String id) {
+        public InstanceType build(String id) {
             checkNotNull(id);
             checkNotNull(this.name);
             checkNotNull(this.template);
             checkNotNull(this.nameTemplate);
             checkNotNull(this.roundStartTemplate);
             checkNotNull(this.roundEndTemplate);
-            checkNotNull(this.defaultItems);
 
-            return new MapType(id, this);
+            return new InstanceType(id, this);
         }
     }
 }

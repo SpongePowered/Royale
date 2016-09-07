@@ -22,33 +22,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.special.map;
+package org.spongepowered.special.instance;
 
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
-import org.spongepowered.special.task.StartCountdown;
+import org.spongepowered.special.instance.task.StartCountdown;
 
 import java.lang.ref.WeakReference;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Represents a running instance
- */
-public final class Map {
+public final class Instance {
 
-    final String worldName;
-    final MapType mapType;
-    final WeakReference<World> worldRef;
+    private final String worldName;
+    private final InstanceType instanceType;
+    private final WeakReference<World> worldRef;
 
-    boolean isRunning = false;
-    Task startTask, roundTask;
+    private boolean isRunning = false;
+    private Task startTask, roundTask;
 
-    public Map(String worldName, MapType mapType, World world) {
+    public Instance(String worldName, InstanceType instanceType, World world) {
         this.worldName = worldName;
-        this.mapType = mapType;
+        this.instanceType = instanceType;
         this.worldRef = new WeakReference<>(world);
     }
 
@@ -61,7 +59,7 @@ public final class Map {
         }
 
         this.startTask = Task.builder()
-                .execute(new StartCountdown(mapType, world))
+                .execute(new StartCountdown(this))
                 .interval(1, TimeUnit.SECONDS)
                 .name(Constants.Meta.ID + " - Start Countdown - " + world.getName())
                 .submit(Special.instance);
@@ -75,19 +73,40 @@ public final class Map {
         // TODO Kickup stop code here
     }
 
-    public MapType getMapType() {
-        return this.mapType;
+    public InstanceType getInstanceType() {
+        return this.instanceType;
+    }
+
+    public Optional<World> getHandle() {
+        return Optional.ofNullable(this.worldRef.get());
     }
 
     public boolean isInstanceRunning() {
         return this.isRunning;
     }
 
-    public Optional<Task> getStartTask() {
-        return Optional.ofNullable(this.startTask);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final Instance instance = (Instance) o;
+        return Objects.equals(this.worldName, instance.worldName);
     }
 
-    public Optional<Task> getRoundTask() {
-        return Optional.ofNullable(this.roundTask);
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.worldName);
+    }
+
+    @Override
+    public String toString() {
+        return com.google.common.base.Objects.toStringHelper(this)
+                .add("name", this.worldName)
+                .add("type", this.instanceType)
+                .toString();
     }
 }

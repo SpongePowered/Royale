@@ -1,4 +1,4 @@
-package org.spongepowered.special.scoreboard;
+package org.spongepowered.special.instance.scoreboard;
 
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
@@ -10,7 +10,7 @@ import org.spongepowered.api.scoreboard.objective.Objective;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.format.TextStyles;
-import org.spongepowered.special.map.Map;
+import org.spongepowered.special.instance.Instance;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -18,13 +18,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-public class RoundScoreboard {
+public final class RoundScoreboard {
 
     private Scoreboard scoreboard;
     private Objective objective;
     private java.util.Map<UUID, PlayerData> playerData = new HashMap<>();
 
-    public RoundScoreboard(Map map) {
+    public RoundScoreboard(Instance instance) {
         this.scoreboard = Scoreboard.builder().build();
         this.objective = Objective.builder().name("main").displayName(Text.of(TextColors.YELLOW, "Players")).criterion(Criteria.DUMMY).build();
     }
@@ -59,8 +59,8 @@ public class RoundScoreboard {
         List<Player> dead = new ArrayList<>();
 
         for (java.util.Map.Entry<UUID, PlayerData> entry : this.playerData.entrySet()) {
-            Player player = Sponge.getServer().getPlayer(entry.getKey())
-                    .orElseThrow(() -> new RuntimeException(String.format("No player with UUID %s found!", entry.getKey())));
+            Player player = Sponge.getServer().getPlayer(entry.getKey()).orElseThrow(() -> new RuntimeException(String.format("No player with UUID "
+                    + "%s 'found!", entry.getKey())));
             if (entry.getValue().dead) {
                 dead.add(player);
             } else {
@@ -77,10 +77,10 @@ public class RoundScoreboard {
         for (int i = 0; i < dead.size(); i++) {
             this.playerData.get(dead.get(i).getUniqueId()).score.setScore(i);
         }
+
         for (int i = 0; i < alive.size(); i++) {
             this.playerData.get(alive.get(i).getUniqueId()).score.setScore(dead.size() + i);
         }
-
     }
 
     private class PlayerData {
@@ -89,11 +89,9 @@ public class RoundScoreboard {
         Team team;
         boolean dead;
 
-        public PlayerData(Score score, Team team) {
+        PlayerData(Score score, Team team) {
             this.score = score;
             this.team = team;
-            this.dead = dead;
         }
     }
-
 }

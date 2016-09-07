@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.special.map;
+package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -36,6 +36,7 @@ import org.spongepowered.api.registry.util.DelayedRegistration;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
+import org.spongepowered.special.instance.configuration.InstanceConfiguration;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -47,30 +48,30 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public final class MapTypeRegistryModule implements AdditionalCatalogRegistryModule<MapType> {
+public final class InstanceTypeRegistryModule implements AdditionalCatalogRegistryModule<InstanceType> {
 
-    final Map<String, MapType> maps = new HashMap<>();
+    final Map<String, InstanceType> maps = new HashMap<>();
 
-    private MapTypeRegistryModule() {
+    private InstanceTypeRegistryModule() {
     }
 
-    public static MapTypeRegistryModule getInstance() {
+    public static InstanceTypeRegistryModule getInstance() {
         return Holder.INSTANCE;
     }
 
     @Override
-    public Optional<MapType> getById(String id) {
+    public Optional<InstanceType> getById(String id) {
         checkNotNull(id);
         return Optional.ofNullable(this.maps.get(id));
     }
 
     @Override
-    public Collection<MapType> getAll() {
+    public Collection<InstanceType> getAll() {
         return Collections.unmodifiableCollection(this.maps.values());
     }
 
     @Override
-    public void registerAdditionalCatalog(MapType extraCatalog) {
+    public void registerAdditionalCatalog(InstanceType extraCatalog) {
         checkNotNull(extraCatalog);
         if (this.maps.containsKey(extraCatalog.getId())) {
             throw new CatalogTypeAlreadyRegisteredException(extraCatalog.getId());
@@ -78,7 +79,7 @@ public final class MapTypeRegistryModule implements AdditionalCatalogRegistryMod
 
         this.maps.put(extraCatalog.getId(), extraCatalog);
 
-        Special.instance.getLogger().info("Registered map [{}].", extraCatalog.getId());
+        Special.instance.getLogger().info("Registered instance [{}].", extraCatalog.getId());
     }
 
     @Override
@@ -95,7 +96,7 @@ public final class MapTypeRegistryModule implements AdditionalCatalogRegistryMod
             try (DirectoryStream<Path> stream = Files.newDirectoryStream(Constants.Map.PATH_CONFIG_MAPS, entry -> entry.getFileName().toString()
                     .endsWith(".conf"))) {
                 for (Path path : stream) {
-                    final MappedConfigurationAdapter<MapConfiguration> adapter = new MappedConfigurationAdapter<>(MapConfiguration.class,
+                    final MappedConfigurationAdapter<InstanceConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceConfiguration.class,
                             ConfigurationOptions.defaults(), path);
 
                     try {
@@ -105,16 +106,17 @@ public final class MapTypeRegistryModule implements AdditionalCatalogRegistryMod
                         continue;
                     }
 
-                    this.registerAdditionalCatalog(MapType.builder().from(adapter.getConfig()).build(path.getFileName().toString().split("\\.")[0]));
+                    this.registerAdditionalCatalog(
+                            InstanceType.builder().from(adapter.getConfig()).build(path.getFileName().toString().split("\\.")[0]));
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to iterate over the map type configuration files!");
+            throw new RuntimeException("Failed to iterate over the instance type configuration files!");
         }
     }
 
     private static final class Holder {
 
-        static final MapTypeRegistryModule INSTANCE = new MapTypeRegistryModule();
+        static final InstanceTypeRegistryModule INSTANCE = new InstanceTypeRegistryModule();
     }
 }

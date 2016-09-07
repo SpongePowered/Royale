@@ -22,11 +22,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.special.map;
+package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.apache.commons.io.FileUtils;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
@@ -39,8 +38,8 @@ import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
-import org.spongepowered.special.map.exception.InstanceAlreadyExistsException;
-import org.spongepowered.special.map.exception.UnknownInstanceException;
+import org.spongepowered.special.instance.exception.InstanceAlreadyExistsException;
+import org.spongepowered.special.instance.exception.UnknownInstanceException;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -49,25 +48,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public final class MapManager {
+public final class InstanceManager {
 
     // World Name -> Instance
-    private final Map<String, org.spongepowered.special.map.Map> instances = new HashMap<>();
+    private final Map<String, Instance> instances = new HashMap<>();
 
-    public void copyTemplate(MapType type) throws IOException {
-        if (Sponge.getServer().getWorld(type.getTemplate()).isPresent()) {
-            throw new IOException("Attempt to copy over template [" + type.getTemplate() + "] but a world with the same name is still loaded!");
-        }
-
-        if (this.instances.containsKey(type.getTemplate())) {
-            throw new RuntimeException("Instance [" + type.getTemplate() + "] is still being managed and has now leaked!");
-        }
-
-        // Copy over template to worlds folder
-        FileUtils.copyDirectory(type.getTemplatePath().toFile(), Sponge.getGame().getSavesDirectory().resolve(type.getTemplate()).toFile(), true);
-    }
-
-    public void createInstance(MapType type) throws IOException {
+    public void createInstance(InstanceType type) throws IOException {
         if (Sponge.getServer().getWorld(type.getTemplate()).isPresent()) {
             throw new InstanceAlreadyExistsException(type.getTemplate());
         }
@@ -79,11 +65,11 @@ public final class MapManager {
         final World instance = Sponge.getServer().loadWorld(type.getTemplate()).orElseThrow(() -> new IOException("Failed to create instance for [" +
                 type.getId() + "] using template [" + type.getTemplate() + "]."));
 
-        this.instances.put(instance.getName(), new org.spongepowered.special.map.Map(instance.getName(), type, instance));
+        this.instances.put(instance.getName(), new Instance(instance.getName(), type, instance));
     }
 
     public void startInstance(String instanceName) throws UnknownInstanceException {
-        final org.spongepowered.special.map.Map instance = this.instances.get(instanceName);
+        final Instance instance = this.instances.get(instanceName);
         if (instance == null) {
             throw new UnknownInstanceException(instanceName);
         }
@@ -92,7 +78,7 @@ public final class MapManager {
     }
 
     public void endInstance(String instanceName, boolean force) throws UnknownInstanceException {
-        final org.spongepowered.special.map.Map instance = this.instances.get(instanceName);
+        final Instance instance = this.instances.get(instanceName);
         if (instance == null) {
             throw new UnknownInstanceException(instanceName);
         }
@@ -116,17 +102,17 @@ public final class MapManager {
         }
     }
 
-    public Optional<org.spongepowered.special.map.Map> getInstance(String instanceName) {
+    public Optional<Instance> getInstance(String instanceName) {
         checkNotNull(instanceName);
         return Optional.ofNullable(this.instances.get(instanceName));
     }
 
-    public Collection<org.spongepowered.special.map.Map> getAll() {
+    public Collection<Instance> getAll() {
         return Collections.unmodifiableCollection(this.instances.values());
     }
 
     public void placePlayerInInstance(World world, Player player) throws UnknownInstanceException {
-        final org.spongepowered.special.map.Map instance = this.instances.get(world.getName());
+        final Instance instance = this.instances.get(world.getName());
         if (instance == null) {
             throw new UnknownInstanceException(world.getName());
         }
@@ -148,7 +134,7 @@ public final class MapManager {
     }
 
     private void adjustGameModeFor(World world, Player player) {
-        final org.spongepowered.special.map.Map instance = this.instances.get(world.getName());
+        final Instance instance = this.instances.get(world.getName());
         if (instance != null) {
             // TODO adjust these from config
             player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);

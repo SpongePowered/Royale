@@ -43,6 +43,9 @@ import java.util.List;
 
 public class Constants {
 
+    private Constants() {
+    }
+
     public static final class Meta {
 
         // TODO Gradle Replacements
@@ -54,7 +57,8 @@ public class Constants {
         static final String URL = "https://www.spongepowered.org";
         static final String DESCRIPTION = "Skywars but with a Sponge twist. Anaheim, CA - Minecon 2016";
 
-        private Meta() {}
+        private Meta() {
+        }
     }
 
     public static final class Map {
@@ -82,7 +86,8 @@ public class Constants {
             }
         }
 
-        private Map() {}
+        private Map() {
+        }
 
         public static final class Round {
 
@@ -104,7 +109,8 @@ public class Constants {
                 defaultItems.add(ItemStack.of(ItemTypes.ARROW, 5).createSnapshot());
             }
 
-            private Round() {}
+            private Round() {
+            }
         }
 
         public static final class Lobby {
@@ -121,9 +127,8 @@ public class Constants {
                     .keepsSpawnLoaded(true)
                     .build(Meta.ID + ":lobby", "Lobby");
 
-            private Lobby() {}
+            private Lobby() {
+            }
         }
     }
-
-    private Constants() {}
 }

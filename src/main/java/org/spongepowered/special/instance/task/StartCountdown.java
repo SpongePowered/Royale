@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.special.task;
+package org.spongepowered.special.instance.task;
 
 import org.spongepowered.api.entity.living.player.User;
 import org.spongepowered.api.scheduler.Task;
@@ -30,7 +30,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.title.Title;
 import org.spongepowered.api.world.World;
-import org.spongepowered.special.map.MapType;
+import org.spongepowered.special.instance.Instance;
 
 import java.util.ArrayList;
 
@@ -38,24 +38,24 @@ public final class StartCountdown extends RoundCountdown {
 
     private final ArrayList<Title> startTitles = new ArrayList<>();
 
-    int seconds = 0;
+    private int seconds = 0;
 
-    public StartCountdown(MapType mapType, World world) {
-        super(mapType, world);
+    public StartCountdown(Instance instance) {
+        super(instance);
 
         final Title.Builder builder = Title.builder()
                 .stay(12)
                 .fadeIn(0)
                 .fadeOut(8);
 
-        for (long i = mapType.getRoundStartLength(); i > 0; i--) {
+        for (long i = instance.getInstanceType().getRoundStartLength(); i > 0; i--) {
 
             startTitles.add(builder.title(Text.of(TextColors.DARK_RED, i)).build());
 
             if (i == 3) {
                 startTitles.add(builder.title(Text.of(TextColors.RED, "2")).build());
                 startTitles.add(builder.title(Text.of(TextColors.GOLD, "1")).build());
-                startTitles.add(builder.title(mapType.getRoundStartTemplate().apply().build()).build());
+                startTitles.add(builder.title(instance.getInstanceType().getRoundStartTemplate().apply().build()).build());
                 break;
             }
         }
@@ -63,7 +63,9 @@ public final class StartCountdown extends RoundCountdown {
 
     @Override
     public void accept(Task task) {
-        final World world = this.getWorldRef().get();
+        final World world = this.getInstance().getHandle().orElse(null);
+
+        // TODO If world is null or not loaded, shut this task down and log it.
 
         // Make sure the world is still around and loaded
         if (world != null && world.isLoaded()) {

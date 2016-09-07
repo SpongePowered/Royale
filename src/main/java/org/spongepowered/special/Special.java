@@ -54,12 +54,10 @@ import javax.inject.Inject;
 public final class Special {
 
     public static Special instance;
-
+    private final MapManager mapManager = new MapManager();
     @Inject private Logger logger;
     @Inject private PluginContainer container;
     @Inject @ConfigDir(sharedRoot = false) private Path configPath;
-
-    private final MapManager mapManager = new MapManager();
 
     @Listener
     public void onGameConstruction(GameConstructionEvent event) {
@@ -78,7 +76,8 @@ public final class Special {
 
     @Listener
     public void onGameStartingServer(GameStartingServerEvent event) throws IOException {
-        Sponge.getServer().loadWorld(Sponge.getServer().createWorldProperties(Constants.Map.Lobby.DEFAULT_LOBBY_NAME, Constants.Map.Lobby.lobbyArchetype));
+        Sponge.getServer()
+                .loadWorld(Sponge.getServer().createWorldProperties(Constants.Map.Lobby.DEFAULT_LOBBY_NAME, Constants.Map.Lobby.lobbyArchetype));
     }
 
     public Logger getLogger() {
