@@ -127,6 +127,16 @@ public final class MapManager {
         return Collections.unmodifiableCollection(this.instances.values());
     }
 
+    public void placePlayerInInstance(World world, Player player) throws UnknownInstanceException {
+        final org.spongepowered.special.map.Map instance = this.instances.get(world.getName());
+        if (instance == null) {
+            throw new UnknownInstanceException(world.getName());
+        }
+
+        // TODO: Set to one of the pre-determined locations
+        player.setLocationSafely(world.getSpawnLocation());
+    }
+
     @Listener(order = Order.LAST)
     public void onClientConnectionJoin(ClientConnectionEvent.Join event, @First Player player) {
         this.adjustGameModeFor(event.getTargetEntity().getWorld(), player);
