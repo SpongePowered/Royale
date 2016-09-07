@@ -100,8 +100,8 @@ final class Commands {
 
     static final CommandSpec prepareCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.prepare")
-            .description(Text.of("Prepares a map"))
-            .extendedDescription(Text.of("Prepares a map")) // TODO More descriptive
+            .description(Text.of("Prepares an instance"))
+            .extendedDescription(Text.of("Prepares an instance")) // TODO More descriptive
             .arguments(catalogedElement(Text.of("mapTypeId"), MapType.class))
             .executor((src, args) -> {
                 final MapType mapType = args.<MapType>getOne("mapTypeId").orElse(null);
@@ -120,8 +120,8 @@ final class Commands {
 
     static final CommandSpec startCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.start")
-            .description(Text.of("Starts a map"))
-            .extendedDescription(Text.of("Starts a map")) // TODO More descriptive
+            .description(Text.of("Starts an instance"))
+            .extendedDescription(Text.of("Starts an instance")) // TODO More descriptive
             .arguments(optional(world(Text.of("world"))))
             .executor((src, args) -> {
                 final Optional<WorldProperties> optProperties = args.getOne("world");
@@ -147,8 +147,8 @@ final class Commands {
 
     static final CommandSpec endCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.end")
-            .description(Text.of("Ends a map"))
-            .extendedDescription(Text.of("Ends a map")) // TODO More descriptive
+            .description(Text.of("Ends an instance"))
+            .extendedDescription(Text.of("Ends an instance")) // TODO More descriptive
             .arguments(optional(world(Text.of("world"))))
             .executor((src, args) -> {
                 final Optional<WorldProperties> optProperties = args.getOne("world");
