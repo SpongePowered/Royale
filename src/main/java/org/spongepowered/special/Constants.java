@@ -98,7 +98,7 @@ public class Constants {
             public static final TextTemplate DEFAULT_TEXT_TEMPLATE_END = TextTemplate.of(TextTemplate.arg("winner"), TextColors.YELLOW, " is the "
                     + "winner!");
 
-            public static final List<ItemStackSnapshot> defaultItems = new LinkedList<>();
+            public static final List<ItemStackSnapshot> DEFAULT_ITEMS = new LinkedList<>();
 
             public static final int DEFAULT_START_LENGTH = 5;
             public static final int DEFAULT_LENGTH = 300;
@@ -106,11 +106,11 @@ public class Constants {
             public static final int DEFAULT_AUTOMATIC_START_PLAYER_COUNT = 6;
 
             static {
-                defaultItems.add(ItemStack.of(ItemTypes.STONE_SWORD, 1).createSnapshot());
-                defaultItems.add(ItemStack.of(ItemTypes.BOW, 1).createSnapshot());
-                defaultItems.add(ItemStack.of(ItemTypes.STONE_AXE, 1).createSnapshot());
-                defaultItems.add(ItemStack.of(ItemTypes.STONE_PICKAXE, 1).createSnapshot());
-                defaultItems.add(ItemStack.of(ItemTypes.ARROW, 5).createSnapshot());
+                DEFAULT_ITEMS.add(ItemStack.of(ItemTypes.STONE_SWORD, 1).createSnapshot());
+                DEFAULT_ITEMS.add(ItemStack.of(ItemTypes.BOW, 1).createSnapshot());
+                DEFAULT_ITEMS.add(ItemStack.of(ItemTypes.STONE_AXE, 1).createSnapshot());
+                DEFAULT_ITEMS.add(ItemStack.of(ItemTypes.STONE_PICKAXE, 1).createSnapshot());
+                DEFAULT_ITEMS.add(ItemStack.of(ItemTypes.ARROW, 5).createSnapshot());
             }
 
             private Round() {

@@ -28,6 +28,7 @@ import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
+import org.spongepowered.special.instance.gen.MapMutatorPipeline;
 import org.spongepowered.special.instance.task.StartCountdown;
 
 import java.lang.ref.WeakReference;
@@ -57,6 +58,9 @@ public final class Instance {
         if (world == null) {
             throw new RuntimeException("Attempt to start an instance whose world no longer exists!");
         }
+        
+        MapMutatorPipeline pipeline = this.instanceType.getMutatorPipeline();
+        pipeline.mutate(world, this);
 
         this.startTask = Task.builder()
                 .execute(new StartCountdown(this))

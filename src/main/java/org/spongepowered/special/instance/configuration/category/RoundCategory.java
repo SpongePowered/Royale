@@ -39,7 +39,7 @@ import java.util.List;
 public final class RoundCategory extends AbstractConfigurationCategory {
 
     @Setting(value = "default-items", comment = "Default items to give players. Order of items will be inserted into the hotbar, left to right.")
-    public final List<ItemStackSnapshot> defaultItems = Constants.Map.Round.defaultItems;
+    public final List<ItemStackSnapshot> defaultItems = Constants.Map.Round.DEFAULT_ITEMS;
 
     @Setting(comment = "Countdown until round starts (in seconds). Specifying -1 means the round will start the moment the instance starts. Default"
             + " (" + Constants.Map.Round.DEFAULT_START_LENGTH + ").")

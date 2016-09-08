@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.game.state.GameConstructionEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
@@ -53,6 +54,8 @@ import javax.inject.Inject;
 public final class Special {
 
     public static Special instance;
+    public static Cause plugin_cause;
+
     private final InstanceManager instanceManager = new InstanceManager();
     @Inject private Logger logger;
     @Inject private PluginContainer container;
@@ -61,6 +64,7 @@ public final class Special {
     @Listener
     public void onGameConstruction(GameConstructionEvent event) {
         instance = this;
+        plugin_cause = Cause.builder().named("plugin", this.container).build();
     }
 
     @Listener
