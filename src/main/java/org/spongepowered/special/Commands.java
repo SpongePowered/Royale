@@ -41,6 +41,7 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
+import org.spongepowered.special.instance.Instance;
 import org.spongepowered.special.instance.InstanceType;
 import org.spongepowered.special.instance.InstanceTypeRegistryModule;
 import org.spongepowered.special.instance.configuration.InstanceConfiguration;
@@ -155,11 +156,11 @@ final class Commands {
                     throw new CommandException(Text.of("Player was not specified and source was not a player!"));
                 }
 
-                try {
-                    Special.instance.getInstanceManager().placePlayerInInstance(world, player);
-                } catch (UnknownInstanceException e) {
-                    throw new CommandException(Text.of("Instance [" + world.getName() + "] is not a valid instance, is it running?"), e);
+                Optional<Instance> instance = Special.instance.getInstanceManager().getInstance(world.getName());
+                if(!instance.isPresent()) {
+                    throw new CommandException(Text.of("Instance [" + world.getName() + "] is not a valid instance, is it running?"));
                 }
+                instance.get().spawnPlayer(player);
 
                 return CommandResult.success();
             })

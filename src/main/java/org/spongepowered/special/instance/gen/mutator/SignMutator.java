@@ -24,47 +24,46 @@
  */
 package org.spongepowered.special.instance.gen.mutator;
 
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.block.tileentity.TileEntity;
-import org.spongepowered.api.block.tileentity.carrier.Chest;
-import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.text.Text;
-import org.spongepowered.api.util.weighted.LootTable;
 import org.spongepowered.api.world.extent.Extent;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
-import org.spongepowered.special.instance.gen.loot.ItemArchetype;
-import org.spongepowered.special.instance.gen.loot.Loot;
+import org.spongepowered.special.instance.gen.MapMutator;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
-public class ChestMutator extends SignMutator {
+public abstract class SignMutator extends MapMutator {
 
-    private Random rand = new Random();
+    private final String sign_id;
 
-    public ChestMutator() {
-        super("chest", "Chest Mutator", "chest");
+    public SignMutator(String id, String name, String sign_id) {
+        super(id, name);
+        this.sign_id = sign_id;
     }
 
-    public boolean visitSign(Extent extent, Instance instance, int x, int y, int z, List<Text> lines) {
-        String loot_table_id = lines.get(1).toPlain();
-        LootTable<ItemArchetype> loot_table = Loot.getTable(loot_table_id);
-        List<ItemArchetype> items = loot_table.get(this.rand);
+    public abstract boolean visitSign(Extent extent, Instance instance, int x, int y, int z, List<Text> signText);
 
-        extent.setBlock(x, y, z, BlockTypes.CHEST.getDefaultState(), Special.plugin_cause);
-        Optional<TileEntity> chestTile = extent.getTileEntity(x, y, z);
-        if (!chestTile.isPresent() || !(chestTile.get() instanceof Chest)) {
-            Special.instance.getLogger().error("Something is very wrong... (Expected a chest but was: " + (chestTile.isPresent() ? "null"
-                    : chestTile.get().getClass().getSimpleName()) + ")");
+    public final boolean visitBlock(Extent extent, Instance instance, BlockState state, int x, int y, int z) {
+        if (state.getType() != BlockTypes.STANDING_SIGN && state.getType() != BlockTypes.WALL_SIGN) {
             return false;
         }
-        Chest chest = (Chest) chestTile.get();
-        for (ItemArchetype item : items) {
-            ItemStack stack = item.create(this.rand);
-            chest.getInventory().offer(stack);
+        Optional<TileEntity> tile = extent.getTileEntity(x, y, z);
+        if (!tile.isPresent() || !(tile.get() instanceof Sign)) {
+            Special.instance.getLogger().error("Something is very wrong... (Expected a sign but was: " + (tile.isPresent() ? "null"
+                    : tile.get().getClass().getSimpleName()) + ")");
+            return false;
         }
+        Sign sign = (Sign) tile.get();
+        List<Text> lines = sign.lines().get();
+        if (!lines.get(0).toPlain().equalsIgnoreCase(this.sign_id)) {
+            return false;
+        }
+        visitSign(extent, instance, x, y, z, lines);
         return true;
     }
 

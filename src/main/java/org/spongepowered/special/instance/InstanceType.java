@@ -26,7 +26,6 @@ package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
@@ -176,7 +175,6 @@ public final class InstanceType implements CatalogType {
         String name, template;
         TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
         List<ItemStackSnapshot> defaultItems;
-        List<Vector3d> possibleSpawns;
         int mapLength, mapWidth;
         long roundStartLength, roundLength, roundEndLength;
         List<MapMutator> mutators;

@@ -24,7 +24,14 @@
  */
 package org.spongepowered.special.instance;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import com.flowpowered.math.vector.Vector3d;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Queues;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
@@ -32,8 +39,11 @@ import org.spongepowered.special.instance.gen.MapMutatorPipeline;
 import org.spongepowered.special.instance.task.StartCountdown;
 
 import java.lang.ref.WeakReference;
+import java.util.Deque;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public final class Instance {
@@ -41,6 +51,8 @@ public final class Instance {
     private final String worldName;
     private final InstanceType instanceType;
     private final WeakReference<World> worldRef;
+    private final Deque<Vector3d> unusedSpawns = Queues.newArrayDeque();
+    private final Map<UUID, Vector3d> playerSpawns = Maps.newHashMap();
 
     private boolean isRunning = false;
     private Task startTask, roundTask;
@@ -53,12 +65,12 @@ public final class Instance {
 
     public void start() {
 
-        final World world = worldRef.get();
+        final World world = this.worldRef.get();
 
         if (world == null) {
             throw new RuntimeException("Attempt to start an instance whose world no longer exists!");
         }
-        
+
         MapMutatorPipeline pipeline = this.instanceType.getMutatorPipeline();
         pipeline.mutate(world, this);
 
@@ -68,7 +80,7 @@ public final class Instance {
                 .name(Constants.Meta.ID + " - Start Countdown - " + world.getName())
                 .submit(Special.instance);
 
-        isRunning = true;
+        this.isRunning = true;
 
         // Kickup round task here
     }
@@ -87,6 +99,19 @@ public final class Instance {
 
     public boolean isInstanceRunning() {
         return this.isRunning;
+    }
+
+    public void addPlayerSpawn(Vector3d spawn) {
+        this.unusedSpawns.push(spawn);
+    }
+
+    public void spawnPlayer(Player player) {
+        checkState(this.isRunning, "Instance is not running");
+        checkState(!this.unusedSpawns.isEmpty(), "No spawn available for player");
+        Vector3d player_spawn = this.unusedSpawns.pop();
+        this.playerSpawns.put(player.getUniqueId(), player_spawn);
+
+        player.setLocation(new Location<>(this.worldRef.get(), player_spawn));
     }
 
     @Override
