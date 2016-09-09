@@ -32,10 +32,11 @@ import org.spongepowered.api.registry.AdditionalCatalogRegistryModule;
 import org.spongepowered.api.registry.CatalogTypeAlreadyRegisteredException;
 import org.spongepowered.api.registry.RegistrationPhase;
 import org.spongepowered.api.registry.util.DelayedRegistration;
+import org.spongepowered.api.registry.util.RegisterCatalog;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
-import org.spongepowered.special.instance.configuration.InstanceConfiguration;
+import org.spongepowered.special.instance.configuration.InstanceTypeConfiguration;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -49,7 +50,8 @@ import java.util.Optional;
 
 public final class InstanceTypeRegistryModule implements AdditionalCatalogRegistryModule<InstanceType> {
 
-    final Map<String, InstanceType> maps = new HashMap<>();
+    @RegisterCatalog(InstanceType.class)
+    final Map<String, InstanceType> types = new HashMap<>();
 
     private InstanceTypeRegistryModule() {
     }
@@ -61,41 +63,48 @@ public final class InstanceTypeRegistryModule implements AdditionalCatalogRegist
     @Override
     public Optional<InstanceType> getById(String id) {
         checkNotNull(id);
-        return Optional.ofNullable(this.maps.get(id));
+        return Optional.ofNullable(this.types.get(id));
     }
 
     @Override
     public Collection<InstanceType> getAll() {
-        return Collections.unmodifiableCollection(this.maps.values());
+        return Collections.unmodifiableCollection(this.types.values());
     }
 
     @Override
     public void registerAdditionalCatalog(InstanceType extraCatalog) {
         checkNotNull(extraCatalog);
-        if (this.maps.containsKey(extraCatalog.getId())) {
+        if (this.types.containsKey(extraCatalog.getId())) {
             throw new CatalogTypeAlreadyRegisteredException(extraCatalog.getId());
         }
 
-        this.maps.put(extraCatalog.getId(), extraCatalog);
+        this.types.put(extraCatalog.getId(), extraCatalog);
 
-        Special.instance.getLogger().info("Registered instance [{}].", extraCatalog.getId());
+        Special.instance.getLogger().info("Registered instance type [{}].", extraCatalog.getId());
     }
 
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-                .add("maps", this.getAll())
+                .add("types", this.getAll())
                 .toString();
     }
 
     @Override
     @DelayedRegistration(value = RegistrationPhase.POST_INIT)
     public void registerDefaults() {
+        // TODO Aaron, pretty sure you said I'm limited to 16 characters here for Scoreboard
         try {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(Constants.Map.PATH_CONFIG_MAPS, entry -> entry.getFileName().toString()
+            this.registerAdditionalCatalog(InstanceType.builder().build("last_man_standing", "Free For All"));
+        } catch (IOException | ObjectMappingException e) {
+            throw new RuntimeException("Failed to register default instance types!");
+        }
+
+        try {
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(Constants.Map.PATH_CONFIG_INSTANCE_TYPES, entry -> entry.getFileName().toString()
                     .endsWith(".conf"))) {
                 for (Path path : stream) {
-                    final MappedConfigurationAdapter<InstanceConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceConfiguration.class,
+                    final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration.class,
                             Constants.Map.DEFAULT_OPTIONS, path);
 
                     try {
@@ -105,8 +114,16 @@ public final class InstanceTypeRegistryModule implements AdditionalCatalogRegist
                         continue;
                     }
 
-                    this.registerAdditionalCatalog(
-                            InstanceType.builder().from(adapter.getConfig()).build(path.getFileName().toString().split("\\.")[0]));
+                    final String instanceId = path.getFileName().toString().split("\\.")[0];
+
+                    // If the instance is already registered (aka a default), inject config changes
+                    final InstanceType defaultType = this.types.get(instanceId);
+                    if (defaultType != null) {
+                        defaultType.injectFromConfig(adapter.getConfig());
+                    } else {
+                        this.registerAdditionalCatalog(
+                                InstanceType.builder().from(adapter.getConfig()).build(instanceId));
+                    }
                 }
             }
         } catch (IOException e) {

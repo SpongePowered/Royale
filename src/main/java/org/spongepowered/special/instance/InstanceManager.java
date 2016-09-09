@@ -53,17 +53,17 @@ public final class InstanceManager {
     // World Name -> Instance
     private final Map<String, Instance> instances = new HashMap<>();
 
-    public void createInstance(InstanceType type) throws IOException {
-        if (Sponge.getServer().getWorld(type.getTemplate()).isPresent()) {
-            throw new InstanceAlreadyExistsException(type.getTemplate());
+    public void createInstance(String instanceName, InstanceType type) throws IOException {
+        if (Sponge.getServer().getWorld(instanceName).isPresent()) {
+            throw new InstanceAlreadyExistsException(instanceName);
         }
 
-        if (this.instances.containsKey(type.getTemplate())) {
-            throw new RuntimeException("Instance [" + type.getTemplate() + "] is still being managed and has now leaked!");
+        if (this.instances.containsKey(instanceName)) {
+            throw new RuntimeException("Instance [" + instanceName + "] is still being managed and has now leaked!");
         }
 
-        final World instance = Sponge.getServer().loadWorld(type.getTemplate()).orElseThrow(() -> new IOException("Failed to create instance for [" +
-                type.getId() + "] using template [" + type.getTemplate() + "]."));
+        final World instance = Sponge.getServer().loadWorld(instanceName).orElseThrow(() -> new IOException("Failed to create instance [" +
+                instanceName + "] for [" + type.getId() + "]."));
 
         this.instances.put(instance.getName(), new Instance(instance.getName(), type, instance));
     }

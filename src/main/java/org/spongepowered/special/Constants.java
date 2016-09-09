@@ -32,6 +32,7 @@ import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.GeneratorTypes;
+import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.WorldArchetype;
 import org.spongepowered.api.world.WorldArchetypes;
 import org.spongepowered.api.world.difficulty.Difficulties;
@@ -64,7 +65,7 @@ public class Constants {
 
     public static final class Map {
 
-        public static final Path PATH_CONFIG_MAPS = Special.instance.getConfigPath().resolve("maps");
+        public static final Path PATH_CONFIG_INSTANCE_TYPES = Special.instance.getConfigPath().resolve("types");
 
         public static final TextTemplate DEFAULT_TEXT_TEMPLATE_NAME = TextTemplate.of(TextTemplate.arg("name").color(TextColors.RED));
 
@@ -74,11 +75,11 @@ public class Constants {
         public static final int DEFAULT_MAP_WIDTH = 500;
 
         static {
-            if (Files.notExists(PATH_CONFIG_MAPS)) {
+            if (Files.notExists(PATH_CONFIG_INSTANCE_TYPES)) {
                 try {
-                    Files.createDirectories(PATH_CONFIG_MAPS);
+                    Files.createDirectories(PATH_CONFIG_INSTANCE_TYPES);
                 } catch (IOException e) {
-                    throw new RuntimeException("Failed to create maps directory [" + PATH_CONFIG_MAPS + "]!");
+                    throw new RuntimeException("Failed to create maps directory [" + PATH_CONFIG_INSTANCE_TYPES + "]!");
                 }
             }
         }
@@ -123,6 +124,7 @@ public class Constants {
                     .generator(GeneratorTypes.THE_END) // TODO Remove when Inscrutable has Lobby map
                     .pvp(false)
                     .keepsSpawnLoaded(true)
+                    .serializationBehavior(SerializationBehaviors.NONE)
                     .build(Meta.ID + ":lobby", "Lobby");
 
             private Lobby() {

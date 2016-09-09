@@ -29,34 +29,39 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.api.util.ResettableBuilder;
+import org.spongepowered.api.util.annotation.CatalogedBy;
 import org.spongepowered.special.Constants;
-import org.spongepowered.special.instance.configuration.InstanceConfiguration;
+import org.spongepowered.special.configuration.MappedConfigurationAdapter;
+import org.spongepowered.special.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.special.instance.gen.MapMutator;
 import org.spongepowered.special.instance.gen.MapMutatorPipeline;
 import org.spongepowered.special.instance.gen.MapMutatorRegistryModule;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+@CatalogedBy(InstanceTypes.class)
 public final class InstanceType implements CatalogType {
 
-    private final String id, name, template;
-    private final TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
-    private final List<ItemStackSnapshot> defaultItems;
-    private final long roundStartLength, roundLength, roundEndLength;
+    private String id, name;
+    private TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
+    private List<ItemStackSnapshot> defaultItems;
+    private long roundStartLength, roundLength, roundEndLength;
     private Vector3i min, max, size;
     private MapMutatorPipeline mutatorPipeline;
 
     private InstanceType(String id, Builder builder) {
         this.id = id;
-        this.name = builder.name;
-        this.template = builder.template;
+        this.name = builder.name == null ? id : builder.name;
         this.nameTemplate = builder.nameTemplate;
         this.roundStartTemplate = builder.roundStartTemplate;
         this.roundStartLength = builder.roundStartLength;
@@ -81,10 +86,6 @@ public final class InstanceType implements CatalogType {
     @Override
     public String getName() {
         return this.name;
-    }
-
-    public String getTemplate() {
-        return this.template;
     }
 
     public long getRoundStartLength() {
@@ -137,6 +138,19 @@ public final class InstanceType implements CatalogType {
         return this.mutatorPipeline;
     }
 
+    protected void injectFromConfig(InstanceTypeConfiguration value) {
+        this.name = value.general.name;
+        this.nameTemplate = value.general.nameTemplate;
+        this.roundStartTemplate = value.round.startTemplate;
+        this.roundEndTemplate = value.round.endTemplate;
+        this.roundStartLength = value.round.start;
+        this.roundLength = value.round.length;
+        this.roundEndLength = value.round.end;
+        this.size = new Vector3i(value.general.mapWidth, 256, value.general.mapLength);
+        this.min = new Vector3i(-value.general.mapWidth / 2, 0, -value.general.mapLength / 2);
+        this.max = this.min.add(this.size).sub(1, 1, 1);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -159,7 +173,6 @@ public final class InstanceType implements CatalogType {
         return Objects.toStringHelper(this)
                 .add("id", this.id)
                 .add("name", this.name)
-                .add("template", this.template)
                 .add("nameTemplate", this.nameTemplate)
                 .add("roundStartLength", this.roundStartLength)
                 .add("roundStartTemplate", this.roundStartTemplate)
@@ -172,7 +185,7 @@ public final class InstanceType implements CatalogType {
 
     public static final class Builder implements ResettableBuilder<InstanceType, Builder> {
 
-        String name, template;
+        String name;
         TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
         List<ItemStackSnapshot> defaultItems;
         int mapLength, mapWidth;
@@ -186,7 +199,6 @@ public final class InstanceType implements CatalogType {
         @Override
         public Builder from(InstanceType value) {
             this.name = value.name;
-            this.template = value.template;
             this.nameTemplate = value.nameTemplate;
             this.roundStartTemplate = value.roundStartTemplate;
             this.roundEndTemplate = value.roundEndTemplate;
@@ -199,9 +211,8 @@ public final class InstanceType implements CatalogType {
             return this;
         }
 
-        public Builder from(InstanceConfiguration value) {
+        public Builder from(InstanceTypeConfiguration value) {
             this.name = value.general.name;
-            this.template = value.general.template;
             this.nameTemplate = value.general.nameTemplate;
             this.roundStartTemplate = value.round.startTemplate;
             this.roundEndTemplate = value.round.endTemplate;
@@ -217,7 +228,6 @@ public final class InstanceType implements CatalogType {
         @Override
         public Builder reset() {
             this.name = null;
-            this.template = null;
             this.nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
             this.roundStartTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_START;
             this.roundEndTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_END;
@@ -233,11 +243,6 @@ public final class InstanceType implements CatalogType {
 
         public Builder name(String name) {
             this.name = name;
-            return this;
-        }
-
-        public Builder template(String name) {
-            this.template = name;
             return this;
         }
 
@@ -314,11 +319,28 @@ public final class InstanceType implements CatalogType {
 
         public InstanceType build(String id) {
             checkNotNull(id);
-            checkNotNull(this.name);
-            checkNotNull(this.template);
             checkNotNull(this.nameTemplate);
             checkNotNull(this.roundStartTemplate);
             checkNotNull(this.roundEndTemplate);
+
+            return new InstanceType(id, this);
+        }
+
+        public InstanceType build(String id, String name) throws IOException, ObjectMappingException {
+            checkNotNull(id);
+            checkNotNull(this.nameTemplate);
+            checkNotNull(this.roundStartTemplate);
+            checkNotNull(this.roundEndTemplate);
+
+            // Create the config for this type
+
+            final Path configPath = Constants.Map.PATH_CONFIG_INSTANCE_TYPES.resolve(id + ".conf");
+            final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
+                    .class, Constants.Map.DEFAULT_OPTIONS, configPath);
+
+            adapter.load();
+            adapter.getConfig().general.name = name;
+            adapter.save();
 
             return new InstanceType(id, this);
         }

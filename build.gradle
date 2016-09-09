@@ -90,7 +90,8 @@ jar {
                 'Created-By': System.properties['java.vm.version'] + ' (' + System.properties['java.vm.vendor'] + ')',
                 'Implementation-Title': project.name,
                 'Implementation-Version': version,
-                'Implementation-Vendor': url
+                'Implementation-Vendor': url,
+                'FMLAT': 'special_at.cfg'
         )
     }
 }

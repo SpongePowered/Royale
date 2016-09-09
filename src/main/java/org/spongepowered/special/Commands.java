@@ -40,33 +40,53 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
-import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 import org.spongepowered.special.instance.Instance;
 import org.spongepowered.special.instance.InstanceType;
 import org.spongepowered.special.instance.InstanceTypeRegistryModule;
-import org.spongepowered.special.instance.configuration.InstanceConfiguration;
 import org.spongepowered.special.instance.exception.InstanceAlreadyExistsException;
 import org.spongepowered.special.instance.exception.UnknownInstanceException;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 
 final class Commands {
 
-    static final CommandSpec prepareCommand = CommandSpec.builder()
-            .permission(Constants.Meta.ID + ".command.prepare")
-            .description(Text.of("Prepares an instance"))
-            .extendedDescription(Text.of("Prepares an instance")) // TODO More descriptive
-            .arguments(catalogedElement(Text.of("instanceType"), InstanceType.class))
+    private static final CommandSpec registerCommand = CommandSpec.builder()
+            .permission(Constants.Meta.ID + ".command.register")
+            .description(Text.of())
+            .extendedDescription(Text.of())
+            .arguments(string(Text.of("id")), optional(string(Text.of("name"))))
             .executor((src, args) -> {
-                final InstanceType instanceType = args.<InstanceType>getOne("instanceType").orElse(null);
+                final String id = args.<String>getOne("id").orElse(null);
+                if (Sponge.getRegistry().getType(InstanceType.class, id).isPresent()) {
+                    throw new CommandException(Text.of("Map has already been registered!"));
+                }
+
+                final String name = args.<String>getOne("name").orElse(id);
 
                 try {
-                    Special.instance.getInstanceManager().createInstance(instanceType);
+                    InstanceTypeRegistryModule.getInstance().registerAdditionalCatalog(InstanceType.builder().build(id, name));
+                } catch (IOException | ObjectMappingException e) {
+                    throw new CommandException(Text.of("Failed to create instance type [", id, "]!", e));
+                }
+
+                return CommandResult.success();
+            })
+            .build();
+
+    private static final CommandSpec createCommand = CommandSpec.builder()
+            .permission(Constants.Meta.ID + ".command.create")
+            .description(Text.of("Creates an instance"))
+            .extendedDescription(Text.of("Creates an instance")) // TODO More descriptive
+            .arguments(catalogedElement(Text.of("instanceType"), InstanceType.class), world(Text.of("world")))
+            .executor((src, args) -> {
+                final InstanceType instanceType = args.<InstanceType>getOne("instanceType").orElse(null);
+                final WorldProperties instanceProperties = args.<WorldProperties>getOne("world").orElse(null);
+
+                try {
+                    Special.instance.getInstanceManager().createInstance(instanceProperties.getWorldName(), instanceType);
                 } catch (InstanceAlreadyExistsException e) {
-                    throw new CommandException(Text.of("Instance already exists!"), e);
+                    throw new CommandException(Text.of(e));
                 } catch (IOException e) {
                     throw new CommandException(Text.of("Unable to create instance!"), e);
                 }
@@ -74,7 +94,8 @@ final class Commands {
                 return CommandResult.success();
             })
             .build();
-    static final CommandSpec startCommand = CommandSpec.builder()
+
+    private static final CommandSpec startCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.start")
             .description(Text.of("Starts an instance"))
             .extendedDescription(Text.of("Starts an instance")) // TODO More descriptive
@@ -100,7 +121,8 @@ final class Commands {
                 return CommandResult.success();
             })
             .build();
-    static final CommandSpec endCommand = CommandSpec.builder()
+
+    private static final CommandSpec endCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.end")
             .description(Text.of("Ends an instance"))
             .extendedDescription(Text.of("Ends an instance")) // TODO More descriptive
@@ -129,7 +151,7 @@ final class Commands {
                 return CommandResult.success();
             })
             .build();
-    static final CommandSpec joinCommand = CommandSpec.builder()
+    private static final CommandSpec joinCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.join")
             .description(Text.of("Joins an instance"))
             .extendedDescription(Text.of("Joins an instance")) // TODO More descriptive
@@ -165,50 +187,7 @@ final class Commands {
                 return CommandResult.success();
             })
             .build();
-    private static final CommandSpec registerCommand = CommandSpec.builder()
-            .permission(Constants.Meta.ID + ".command.register")
-            .description(Text.of())
-            .extendedDescription(Text.of())
-            .arguments(string(Text.of("id")), string(Text.of("name")), optional(string(Text.of("world"))))
-            .executor((src, args) -> {
-                final String id = args.<String>getOne("id").orElse(null);
-                if (Sponge.getRegistry().getType(InstanceType.class, id).isPresent()) {
-                    throw new CommandException(Text.of("Map has already been registered!"));
-                }
 
-                final String name = args.<String>getOne("name").orElse(null);
-
-                final String template = args.<String>getOne("world").orElse(id);
-                final Path templatePath = Sponge.getGame().getSavesDirectory().resolve(Sponge.getServer().getDefaultWorldName()).resolve(template);
-
-                if (Files.notExists(templatePath)) {
-                    throw new CommandException(Text.of("Failed to register map type [", id, "] as template [", template, "] does not exist in [",
-                            Sponge.getGame().getSavesDirectory().resolve(Sponge.getServer().getDefaultWorldName()), "]!"));
-                }
-
-                if (Files.notExists(templatePath.resolve("level.dat"))) {
-                    throw new CommandException(Text.of("Failed to register map type [", id, "] as template [", template, "] in [",
-                            Sponge.getGame().getSavesDirectory().resolve(Sponge.getServer().getDefaultWorldName()), "] is not a valid world!"));
-                }
-
-                final Path configPath = Constants.Map.PATH_CONFIG_MAPS.resolve(id + ".conf");
-                final MappedConfigurationAdapter<InstanceConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceConfiguration
-                        .class, Constants.Map.DEFAULT_OPTIONS, configPath);
-
-                try {
-                    adapter.load();
-                    adapter.getConfig().general.name = name;
-                    adapter.getConfig().general.template = template;
-                    adapter.save();
-                } catch (ObjectMappingException | IOException e) {
-                    throw new CommandException(Text.of("Failed to register map type [", id, "]!"), e);
-                }
-
-
-                InstanceTypeRegistryModule.getInstance().registerAdditionalCatalog(InstanceType.builder().from(adapter.getConfig()).build(id));
-                return CommandResult.success();
-            })
-            .build();
     static final CommandSpec rootCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.help")
             .description(Text.of("Displays available commands"))
@@ -217,8 +196,8 @@ final class Commands {
                 src.sendMessage(Text.of("Some help should go here..."));
                 return CommandResult.success();
             })
-            .child(prepareCommand, "prepare", "p")
             .child(registerCommand, "register", "r")
+            .child(createCommand, "create", "c")
             .child(startCommand, "start", "s")
             .child(endCommand, "end", "e")
             .child(joinCommand, "join", "j")

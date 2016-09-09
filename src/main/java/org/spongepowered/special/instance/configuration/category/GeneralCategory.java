@@ -36,14 +36,11 @@ import java.util.List;
 @ConfigSerializable
 public final class GeneralCategory extends AbstractConfigurationCategory {
 
-    @Setting(comment = "Name of this instance. Used to display to clients.")
+    @Setting(comment = "Name of this type. Shown on the in-game scoreboard, etc.")
     public String name = null;
 
     @Setting(value = "name-template", comment = "Template used to display the name to the user.")
     public TextTemplate nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
-
-    @Setting(comment = "Name of the template to use (within the saves directory of the server).")
-    public String template = null;
 
     @Setting(value = "map-length", comment = "The map's length. Used to handle unknown spawns, end of round player cleanup, and other things. "
             + "Specifying -1 tells the plugin to treat this value as unknown. Default (" + Constants.Map.DEFAULT_MAP_LENGTH + ").")
