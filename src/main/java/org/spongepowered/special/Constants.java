@@ -24,10 +24,7 @@
  */
 package org.spongepowered.special;
 
-import com.flowpowered.math.vector.Vector3d;
-import com.google.common.reflect.TypeToken;
 import ninja.leaping.configurate.ConfigurationOptions;
-import ninja.leaping.configurate.objectmapping.serialize.TypeSerializers;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -38,7 +35,6 @@ import org.spongepowered.api.world.GeneratorTypes;
 import org.spongepowered.api.world.WorldArchetype;
 import org.spongepowered.api.world.WorldArchetypes;
 import org.spongepowered.api.world.difficulty.Difficulties;
-import org.spongepowered.special.instance.configuration.serializer.Vector3dTypeSerializer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -72,9 +68,7 @@ public class Constants {
 
         public static final TextTemplate DEFAULT_TEXT_TEMPLATE_NAME = TextTemplate.of(TextTemplate.arg("name").color(TextColors.RED));
 
-        public static final ConfigurationOptions DEFAULT_OPTIONS = ConfigurationOptions.defaults().setSerializers(
-                TypeSerializers.getDefaultSerializers().newChild()
-                        .registerType(TypeToken.of(Vector3d.class), new Vector3dTypeSerializer()));
+        public static final ConfigurationOptions DEFAULT_OPTIONS = ConfigurationOptions.defaults();
 
         public static final int DEFAULT_MAP_LENGTH = 500;
         public static final int DEFAULT_MAP_WIDTH = 500;
