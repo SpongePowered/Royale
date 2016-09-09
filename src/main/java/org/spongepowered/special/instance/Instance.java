@@ -107,6 +107,10 @@ public final class Instance {
 
     public void spawnPlayer(Player player) {
         checkState(this.isRunning, "Instance is not running");
+        if(this.playerSpawns.containsKey(player.getUniqueId())) {
+            player.setLocation(new Location<>(this.worldRef.get(), this.playerSpawns.get(player.getUniqueId())));
+            return;
+        }        
         checkState(!this.unusedSpawns.isEmpty(), "No spawn available for player");
         Vector3d player_spawn = this.unusedSpawns.pop();
         this.playerSpawns.put(player.getUniqueId(), player_spawn);
