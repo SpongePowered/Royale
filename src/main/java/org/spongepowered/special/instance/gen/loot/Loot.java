@@ -44,22 +44,34 @@ import java.util.Map;
 
 public class Loot {
 
+    // @formatter:off
+
     public static final LootTable<ItemArchetype> low_level = new LootTable<>();
     public static final LootTable<ItemArchetype> mid_level = new LootTable<>();
     public static final LootTable<ItemArchetype> high_level = new LootTable<>();
     public static final LootTable<ItemArchetype> super_rare = new LootTable<>();
+
     public static final WeightedTable<ItemArchetype> basic_food = new WeightedTable<>();
     public static final WeightedTable<ItemArchetype> high_food = new WeightedTable<>();
+
     public static final WeightedTable<ItemArchetype> basic_combat = new WeightedTable<>();
     public static final WeightedTable<ItemArchetype> basic_ranged = new WeightedTable<>();
+
     public static final WeightedTable<ItemArchetype> mid_combat = new WeightedTable<>();
     public static final WeightedTable<ItemArchetype> mid_ranged = new WeightedTable<>();
+
     public static final ChanceTable<ItemArchetype> high_combat = new ChanceTable<>();
+
     public static final WeightedTable<ItemArchetype> super_rare_items = new WeightedTable<>();
+
     public static final ChanceTable<ItemArchetype> wierd_items = new ChanceTable<>();
+
     public static final WeightedTable<ItemArchetype> basic_potions = new WeightedTable<>();
     public static final ChanceTable<ItemArchetype> high_potions = new ChanceTable<>();
+
     private static final Map<String, LootTable<ItemArchetype>> loot_tables = Maps.newHashMap();
+
+    // @formatter:on
 
     static {
         loot_tables.put("low_level", low_level);
