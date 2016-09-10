@@ -47,6 +47,8 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -54,6 +56,9 @@ public final class InstanceManager {
 
     // World Name -> Instance
     private final Map<String, Instance> instances = new HashMap<>();
+
+    // Instance Type -> List(Instances)
+    private final Map<InstanceType, List<Instance>> instancesByTypes = new HashMap<>();
 
     public void createInstance(String instanceName, InstanceType type) throws Exception {
         if (this.instances.containsKey(instanceName)) {
@@ -74,6 +79,13 @@ public final class InstanceManager {
             final Instance instance = new Instance(instanceName, type, world);
 
             this.instances.put(world.getName(), instance);
+            List<Instance> instances = this.instancesByTypes.get(type);
+            if (instances == null) {
+                instances = new LinkedList<>();
+                this.instancesByTypes.put(type, instances);
+
+            }
+            instances.add(instance);
 
             final MapMutatorPipeline pipeline = type.getMutatorPipeline();
             pipeline.mutate(world, instance);
@@ -81,7 +93,15 @@ public final class InstanceManager {
             world.setSerializationBehavior(SerializationBehaviors.NONE);
             world.setKeepSpawnLoaded(true);
             final Instance instance = new Instance(instanceName, type, world);
+
             this.instances.put(world.getName(), instance);
+            List<Instance> instances = this.instancesByTypes.get(type);
+            if (instances == null) {
+                instances = new LinkedList<>();
+                this.instancesByTypes.put(type, instances);
+
+            }
+            instances.add(instance);
         }
     }
 
@@ -116,6 +136,14 @@ public final class InstanceManager {
             }
 
             this.instances.remove(instanceName);
+            final List<Instance> instances = this.instancesByTypes.get(instance.getType());
+            if (instances != null) {
+                instances.remove(instance);
+
+                if (instances.size() == 0) {
+                    this.instancesByTypes.remove(instance.getType());
+                }
+            }
         } else {
             instance.stop();
         }
@@ -124,6 +152,15 @@ public final class InstanceManager {
     public Optional<Instance> getInstance(String instanceName) {
         checkNotNull(instanceName);
         return Optional.ofNullable(this.instances.get(instanceName));
+    }
+
+    public Collection<Instance> getInstances(InstanceType type) {
+        checkNotNull(type);
+        List<Instance> instances = this.instancesByTypes.get(type);
+        if (instances == null) {
+            instances = new LinkedList<>();
+        }
+        return Collections.unmodifiableCollection(instances);
     }
 
     public Collection<Instance> getAll() {

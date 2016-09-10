@@ -26,8 +26,11 @@ package org.spongepowered.special;
 
 import static org.spongepowered.api.command.args.GenericArguments.bool;
 import static org.spongepowered.api.command.args.GenericArguments.catalogedElement;
+import static org.spongepowered.api.command.args.GenericArguments.onlyOne;
 import static org.spongepowered.api.command.args.GenericArguments.optional;
 import static org.spongepowered.api.command.args.GenericArguments.player;
+import static org.spongepowered.api.command.args.GenericArguments.playerOrSource;
+import static org.spongepowered.api.command.args.GenericArguments.seq;
 import static org.spongepowered.api.command.args.GenericArguments.string;
 import static org.spongepowered.api.command.args.GenericArguments.world;
 
@@ -39,6 +42,7 @@ import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.special.instance.Instance;
@@ -194,6 +198,25 @@ final class Commands {
             })
             .build();
 
+    private static final CommandSpec tpWorldCommand = CommandSpec.builder()
+            .description(Text.of("Teleports a player to another world"))
+            .arguments(seq(playerOrSource(Text.of("target")), onlyOne(world(Text.of("world")))))
+            .permission(Constants.Meta.ID + ".command.tpworld")
+            .executor((src, args) -> {
+                final Optional<WorldProperties> optWorldProperties = args.getOne("world");
+                final Optional<World> optWorld = Sponge.getServer().getWorld(optWorldProperties.get().getWorldName());
+                if (!optWorld.isPresent()) {
+                    throw new CommandException(Text.of("World [", Text.of(TextColors.AQUA, optWorldProperties.get().getWorldName()),
+                            "] was not found."));
+                }
+                for (Player target : args.<Player>getAll("target")) {
+                    target.setLocation(new Location<>(optWorld.get(), optWorld.get().getProperties()
+                            .getSpawnPosition()));
+                }
+                return CommandResult.success();
+            })
+            .build();
+
     static final CommandSpec rootCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.help")
             .description(Text.of("Displays available commands"))
@@ -207,5 +230,6 @@ final class Commands {
             .child(startCommand, "start", "s")
             .child(endCommand, "end", "e")
             .child(joinCommand, "join", "j")
+            .child(tpWorldCommand, "tpworld", "tpw")
             .build();
 }
