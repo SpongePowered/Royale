@@ -72,6 +72,8 @@ public final class InstanceType implements CatalogType {
         this.size = new Vector3i(builder.mapWidth, 256, builder.mapLength);
         this.min = new Vector3i(-builder.mapWidth / 2, 0, -builder.mapLength / 2);
         this.max = this.min.add(this.size).sub(1, 1, 1);
+        this.mutatorPipeline = new MapMutatorPipeline();
+        this.mutatorPipeline.getMutators().addAll(builder.mutators);
     }
 
     public static Builder builder() {
@@ -138,7 +140,7 @@ public final class InstanceType implements CatalogType {
         return this.mutatorPipeline;
     }
 
-    protected void injectFromConfig(InstanceTypeConfiguration value) {
+    void injectFromConfig(InstanceTypeConfiguration value) {
         this.name = value.general.name;
         this.nameTemplate = value.general.nameTemplate;
         this.roundStartTemplate = value.round.startTemplate;
@@ -180,6 +182,7 @@ public final class InstanceType implements CatalogType {
                 .add("roundEndLength", this.roundEndLength)
                 .add("roundEndTemplate", this.roundEndTemplate)
                 .add("defaultItems", this.defaultItems)
+                .add("mutatorPipeline", this.mutatorPipeline)
                 .toString();
     }
 
@@ -237,7 +240,7 @@ public final class InstanceType implements CatalogType {
             this.defaultItems = Constants.Map.Round.DEFAULT_ITEMS;
             this.mapLength = Constants.Map.DEFAULT_MAP_LENGTH;
             this.mapWidth = Constants.Map.DEFAULT_MAP_WIDTH;
-            this.mutators = Lists.newArrayList();
+            this.mutators = Constants.Map.DEFAULT_MAP_MUTATORS;
             return this;
         }
 

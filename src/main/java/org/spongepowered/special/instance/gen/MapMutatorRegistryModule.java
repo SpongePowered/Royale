@@ -32,6 +32,7 @@ import org.spongepowered.api.registry.AdditionalCatalogRegistryModule;
 import org.spongepowered.api.registry.CatalogTypeAlreadyRegisteredException;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.gen.mutator.ChestMutator;
+import org.spongepowered.special.instance.gen.mutator.PlayerSpawnMutator;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -83,6 +84,7 @@ public final class MapMutatorRegistryModule implements AdditionalCatalogRegistry
 
     @Override
     public void registerDefaults() {
+        registerAdditionalCatalog(new PlayerSpawnMutator());
         registerAdditionalCatalog(new ChestMutator());
     }
 

@@ -36,10 +36,13 @@ import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.WorldArchetype;
 import org.spongepowered.api.world.WorldArchetypes;
 import org.spongepowered.api.world.difficulty.Difficulties;
+import org.spongepowered.special.instance.gen.MapMutator;
+import org.spongepowered.special.instance.gen.MapMutatorRegistryModule;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -71,6 +74,8 @@ public class Constants {
 
         public static final ConfigurationOptions DEFAULT_OPTIONS = ConfigurationOptions.defaults();
 
+        public static final List<MapMutator> DEFAULT_MAP_MUTATORS = new ArrayList<>();
+
         public static final int DEFAULT_MAP_LENGTH = 500;
         public static final int DEFAULT_MAP_WIDTH = 500;
 
@@ -82,6 +87,8 @@ public class Constants {
                     throw new RuntimeException("Failed to create maps directory [" + PATH_CONFIG_INSTANCE_TYPES + "]!");
                 }
             }
+
+            DEFAULT_MAP_MUTATORS.add(MapMutatorRegistryModule.getInstance().getById("player_spawn").get());
         }
 
         private Map() {
@@ -94,6 +101,7 @@ public class Constants {
                     + "winner!");
 
             public static final List<ItemStackSnapshot> DEFAULT_ITEMS = new LinkedList<>();
+
 
             public static final int DEFAULT_START_LENGTH = 5;
             public static final int DEFAULT_LENGTH = 300;

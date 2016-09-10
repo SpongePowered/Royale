@@ -95,7 +95,10 @@ public final class InstanceTypeRegistryModule implements AdditionalCatalogRegist
     public void registerDefaults() {
         // TODO Aaron, pretty sure you said I'm limited to 16 characters here for Scoreboard
         try {
-            this.registerAdditionalCatalog(InstanceType.builder().build("last_man_standing", "Free For All"));
+            this.registerAdditionalCatalog(InstanceType.builder()
+                    .mutator("player_spawn")
+                    .mutator("chest")
+                    .build("last_man_standing", "Last Man Standing"));
         } catch (IOException | ObjectMappingException e) {
             throw new RuntimeException("Failed to register default instance types!");
         }

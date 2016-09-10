@@ -66,7 +66,7 @@ public final class InstanceManager {
         }
 
         instance.setSerializationBehavior(SerializationBehaviors.NONE);
-        
+
         this.instances.put(instance.getName(), new Instance(instance.getName(), type, instance));
     }
 

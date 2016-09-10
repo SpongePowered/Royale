@@ -82,5 +82,4 @@ public class PotionItemArchetype implements ItemArchetype {
                 .build();
         return stack;
     }
-
 }

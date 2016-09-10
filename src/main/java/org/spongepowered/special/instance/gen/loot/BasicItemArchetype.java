@@ -47,5 +47,4 @@ public class BasicItemArchetype implements ItemArchetype {
         int amount = this.quantity.getFlooredAmount(rand);
         return ItemStack.builder().itemType(this.type).quantity(amount).build();
     }
-
 }
