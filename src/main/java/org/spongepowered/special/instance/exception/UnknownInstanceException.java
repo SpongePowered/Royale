@@ -24,9 +24,7 @@
  */
 package org.spongepowered.special.instance.exception;
 
-import java.io.IOException;
-
-public class UnknownInstanceException extends IOException {
+public class UnknownInstanceException extends Exception {
 
     public UnknownInstanceException(String instance) {
         super("Instance [" + instance + "] does not exist!");

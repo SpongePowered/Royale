@@ -36,7 +36,6 @@ import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.instance.exception.InstanceAlreadyExistsException;
@@ -54,18 +53,16 @@ public final class InstanceManager {
     // World Name -> Instance
     private final Map<String, Instance> instances = new HashMap<>();
 
-    public void createInstance(String instanceName, InstanceType type) throws IOException {
-        if (Sponge.getServer().getWorld(instanceName).isPresent()) {
+    public void createInstance(String instanceName, InstanceType type) throws Exception {
+        if (this.instances.containsKey(instanceName)) {
             throw new InstanceAlreadyExistsException(instanceName);
         }
 
-        if (this.instances.containsKey(instanceName)) {
-            throw new RuntimeException("Instance [" + instanceName + "] is still being managed and has now leaked!");
-        }
+        final World instance = Sponge.getServer().getWorld(instanceName).orElseGet(() -> Sponge.getServer().loadWorld(instanceName).orElse(null));
 
-        final World instance = Sponge.getServer().loadWorld(instanceName).orElseThrow(() -> new IOException("Failed to create instance [" +
-                instanceName + "] for [" + type.getId() + "]."));
-        instance.setSerializationBehavior(SerializationBehaviors.NONE);
+        if (instance == null) {
+            throw new IOException("Failed to load instance [" + instanceName + "]!");
+        }
 
         this.instances.put(instance.getName(), new Instance(instance.getName(), type, instance));
     }

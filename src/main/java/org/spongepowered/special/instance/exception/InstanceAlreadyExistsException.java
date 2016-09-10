@@ -24,9 +24,7 @@
  */
 package org.spongepowered.special.instance.exception;
 
-import java.io.IOException;
-
-public class InstanceAlreadyExistsException extends IOException {
+public class InstanceAlreadyExistsException extends Exception {
 
     public InstanceAlreadyExistsException(String instance) {
         super("Attempt to create instance [" + instance + "] but it already exists!");

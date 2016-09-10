@@ -43,7 +43,6 @@ import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.special.instance.Instance;
 import org.spongepowered.special.instance.InstanceType;
 import org.spongepowered.special.instance.InstanceTypeRegistryModule;
-import org.spongepowered.special.instance.exception.InstanceAlreadyExistsException;
 import org.spongepowered.special.instance.exception.UnknownInstanceException;
 
 import java.io.IOException;
@@ -85,10 +84,8 @@ final class Commands {
 
                 try {
                     Special.instance.getInstanceManager().createInstance(instanceProperties.getWorldName(), instanceType);
-                } catch (InstanceAlreadyExistsException e) {
+                } catch (Exception e) {
                     throw new CommandException(Text.of(e));
-                } catch (IOException e) {
-                    throw new CommandException(Text.of("Unable to create instance!"), e);
                 }
 
                 return CommandResult.success();
