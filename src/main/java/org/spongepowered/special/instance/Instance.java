@@ -75,6 +75,7 @@ public final class Instance {
         pipeline.mutate(world, this);
 
         this.startTask = Task.builder()
+                .delayTicks(0)
                 .execute(new StartCountdown(this))
                 .interval(1, TimeUnit.SECONDS)
                 .name(Constants.Meta.ID + " - Start Countdown - " + world.getName())

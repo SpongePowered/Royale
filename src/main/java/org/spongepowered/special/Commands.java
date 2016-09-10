@@ -69,6 +69,7 @@ final class Commands {
                     throw new CommandException(Text.of("Failed to create instance type [", id, "]!", e));
                 }
 
+                // TODO Send user a message saying that the instance type has been created
                 return CommandResult.success();
             })
             .build();
@@ -115,6 +116,7 @@ final class Commands {
                     throw new CommandException(Text.of("Unable to start instance [" + world.getName() + "], has it been prepared?"), e);
                 }
 
+                // TODO Send user a message saying instance is starting...
                 return CommandResult.success();
             })
             .build();
@@ -145,6 +147,7 @@ final class Commands {
                     throw new CommandException(Text.of("Unable to end instance [" + world.getName() + "], is it running?"), e);
                 }
 
+                // TODO Send user a message saying the instance is ending (or has ended if forced)
                 return CommandResult.success();
             })
             .build();

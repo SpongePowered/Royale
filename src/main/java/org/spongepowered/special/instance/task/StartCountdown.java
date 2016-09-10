@@ -72,9 +72,7 @@ public final class StartCountdown extends RoundCountdown {
         if (world != null && world.isLoaded()) {
 
             // Make sure a player ref isn't still here
-            world.getPlayers().stream().filter(User::isOnline).forEach(player -> {
-                player.sendTitle(startTitles.get(seconds));
-            });
+            world.getPlayers().stream().filter(User::isOnline).forEach(player -> player.sendTitle(startTitles.get(seconds)));
 
             seconds++;
 

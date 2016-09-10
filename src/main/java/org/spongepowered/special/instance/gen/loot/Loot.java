@@ -42,7 +42,7 @@ import org.spongepowered.api.util.weighted.WeightedTable;
 
 import java.util.Map;
 
-public class Loot {
+public final class Loot {
 
     // @formatter:off
 
