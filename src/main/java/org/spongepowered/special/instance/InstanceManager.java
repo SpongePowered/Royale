@@ -41,6 +41,7 @@ import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.instance.exception.InstanceAlreadyExistsException;
 import org.spongepowered.special.instance.exception.UnknownInstanceException;
+import org.spongepowered.special.instance.gen.MapMutatorPipeline;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -59,15 +60,29 @@ public final class InstanceManager {
             throw new InstanceAlreadyExistsException(instanceName);
         }
 
-        final World instance = Sponge.getServer().getWorld(instanceName).orElseGet(() -> Sponge.getServer().loadWorld(instanceName).orElse(null));
+        World world = Sponge.getServer().getWorld(instanceName).orElse(null);
 
-        if (instance == null) {
-            throw new IOException("Failed to load instance [" + instanceName + "]!");
+        if (world == null) {
+            world = Sponge.getServer().loadWorld(instanceName).orElse(null);
+            if (world == null) {
+                throw new IOException("Failed to load instance [" + instanceName + "]!");
+            }
+
+            world.setSerializationBehavior(SerializationBehaviors.NONE);
+            world.setKeepSpawnLoaded(true);
+
+            final Instance instance = new Instance(instanceName, type, world);
+
+            this.instances.put(world.getName(), instance);
+
+            final MapMutatorPipeline pipeline = type.getMutatorPipeline();
+            pipeline.mutate(world, instance);
+        } else {
+            world.setSerializationBehavior(SerializationBehaviors.NONE);
+            world.setKeepSpawnLoaded(true);
+            final Instance instance = new Instance(instanceName, type, world);
+            this.instances.put(world.getName(), instance);
         }
-
-        instance.setSerializationBehavior(SerializationBehaviors.NONE);
-
-        this.instances.put(instance.getName(), new Instance(instance.getName(), type, instance));
     }
 
     public void startInstance(String instanceName) throws UnknownInstanceException {
@@ -99,6 +114,8 @@ public final class InstanceManager {
             if (!server.unloadWorld(world)) {
                 throw new RuntimeException("Failed to unload instance world!"); // TODO Specialized exception
             }
+
+            this.instances.remove(instanceName);
         } else {
             instance.stop();
         }

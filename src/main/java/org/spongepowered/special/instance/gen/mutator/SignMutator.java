@@ -55,7 +55,7 @@ public abstract class SignMutator extends MapMutator {
         }
         Optional<TileEntity> tile = extent.getTileEntity(x, y, z);
         if (!tile.isPresent() || !(tile.get() instanceof Sign)) {
-            Special.instance.getLogger().error("Something is very wrong... (Expected a sign but was: " + (tile.isPresent() ? "null"
+            Special.instance.getLogger().error("Something is very wrong... (Expected a sign but was: " + (!tile.isPresent() ? "null"
                     : tile.get().getClass().getSimpleName()) + ")");
             return false;
         }

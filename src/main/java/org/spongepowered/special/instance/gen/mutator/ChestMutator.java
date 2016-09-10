@@ -56,7 +56,7 @@ public class ChestMutator extends SignMutator {
         extent.setBlock(x, y, z, BlockTypes.CHEST.getDefaultState(), Special.plugin_cause);
         Optional<TileEntity> chestTile = extent.getTileEntity(x, y, z);
         if (!chestTile.isPresent() || !(chestTile.get() instanceof Chest)) {
-            Special.instance.getLogger().error("Something is very wrong... (Expected a chest but was: " + (chestTile.isPresent() ? "null"
+            Special.instance.getLogger().error("Something is very wrong... (Expected a chest but was: " + (!chestTile.isPresent() ? "null"
                     : chestTile.get().getClass().getSimpleName()) + ")");
             return false;
         }
