@@ -38,6 +38,7 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.special.instance.Instance;
@@ -69,7 +70,7 @@ final class Commands {
                     throw new CommandException(Text.of("Failed to create instance type [", id, "]!", e));
                 }
 
-                // TODO Send user a message saying that the instance type has been created
+                src.sendMessage(Text.of("Instance [", TextColors.GREEN, id, TextColors.RESET, "] has been created."));
                 return CommandResult.success();
             })
             .build();
@@ -83,12 +84,16 @@ final class Commands {
                 final InstanceType instanceType = args.<InstanceType>getOne("instanceType").orElse(null);
                 final WorldProperties instanceProperties = args.<WorldProperties>getOne("world").orElse(null);
 
+                src.sendMessage(Text.of("Creating instance [", TextColors.GREEN, instanceProperties.getWorldName(), TextColors.RESET,
+                        "] with type [", TextColors.YELLOW, instanceType.getName(), TextColors.RESET, "] please wait..."));
+
                 try {
                     Special.instance.getInstanceManager().createInstance(instanceProperties.getWorldName(), instanceType);
                 } catch (Exception e) {
                     throw new CommandException(Text.of(e));
                 }
 
+                src.sendMessage(Text.of("Instance [", TextColors.GREEN, instanceProperties.getWorldName(), TextColors.RESET, "] has been created."));
                 return CommandResult.success();
             })
             .build();
@@ -111,12 +116,12 @@ final class Commands {
                 }
 
                 try {
+                    src.sendMessage(Text.of("Starting instance [", TextColors.GREEN, world.getName(), TextColors.RESET, "]."));
                     Special.instance.getInstanceManager().startInstance(world.getName());
                 } catch (UnknownInstanceException e) {
                     throw new CommandException(Text.of("Unable to start instance [" + world.getName() + "], has it been prepared?"), e);
                 }
 
-                // TODO Send user a message saying instance is starting...
                 return CommandResult.success();
             })
             .build();
@@ -147,10 +152,11 @@ final class Commands {
                     throw new CommandException(Text.of("Unable to end instance [" + world.getName() + "], is it running?"), e);
                 }
 
-                // TODO Send user a message saying the instance is ending (or has ended if forced)
+                src.sendMessage(Text.of((force ? "Forcibly e" : "E"), "nded instance [", TextColors.GREEN, world.getName(), TextColors.RESET, "]."));
                 return CommandResult.success();
             })
             .build();
+
     private static final CommandSpec joinCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.join")
             .description(Text.of("Joins an instance"))
