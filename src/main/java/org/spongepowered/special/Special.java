@@ -37,6 +37,10 @@ import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.special.instance.InstanceManager;
 import org.spongepowered.special.instance.InstanceType;
 import org.spongepowered.special.instance.InstanceTypeRegistryModule;
+import org.spongepowered.special.instance.InstanceTypes;
+import org.spongepowered.special.instance.gen.MapMutator;
+import org.spongepowered.special.instance.gen.MapMutatorRegistryModule;
+import org.spongepowered.special.instance.gen.MapMutators;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -69,7 +73,9 @@ public final class Special {
 
     @Listener
     public void onGamePreinitialization(GamePreInitializationEvent event) {
+        Sponge.getRegistry().registerModule(MapMutator.class, MapMutatorRegistryModule.getInstance());
         Sponge.getRegistry().registerModule(InstanceType.class, InstanceTypeRegistryModule.getInstance());
+
         Sponge.getRegistry().registerBuilderSupplier(InstanceType.Builder.class, InstanceType.Builder::new);
 
         Sponge.getCommandManager().register(this.container, Commands.rootCommand, Constants.Meta.ID, Constants.Meta.ID.substring(0, 1));
@@ -79,6 +85,10 @@ public final class Special {
 
     @Listener
     public void onGameStartingServer(GameStartingServerEvent event) throws IOException {
+        this.logger.error(MapMutators.PLAYER_SPAWN.toString());
+        this.logger.error(MapMutators.CHEST_MUTATOR.toString());
+        this.logger.error(InstanceTypes.LAST_MAN_STANDING.toString());
+
         Sponge.getServer()
                 .loadWorld(Sponge.getServer().createWorldProperties(Constants.Map.Lobby.DEFAULT_LOBBY_NAME, Constants.Map.Lobby.lobbyArchetype));
     }

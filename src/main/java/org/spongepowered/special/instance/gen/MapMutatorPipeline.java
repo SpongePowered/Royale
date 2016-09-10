@@ -25,23 +25,23 @@
 package org.spongepowered.special.instance.gen;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.extent.Extent;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Mutates the map templates after loading into the final form.
  */
-public class MapMutatorPipeline {
+public final class MapMutatorPipeline {
 
-    private final List<MapMutator> mutators = Lists.newArrayList();
+    private final Set<MapMutator> mutators = new HashSet<>();
 
-    public List<MapMutator> getMutators() {
+    public Set<MapMutator> getMutators() {
         return this.mutators;
     }
 

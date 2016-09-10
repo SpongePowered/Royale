@@ -29,6 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.Sponge;
@@ -48,6 +49,8 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @CatalogedBy(InstanceTypes.class)
 public final class InstanceType implements CatalogType {
@@ -56,6 +59,7 @@ public final class InstanceType implements CatalogType {
     private TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
     private List<ItemStackSnapshot> defaultItems;
     private long roundStartLength, roundLength, roundEndLength;
+    private int mapWidth, mapLength;
     private Vector3i min, max, size;
     private MapMutatorPipeline mutatorPipeline;
 
@@ -63,17 +67,19 @@ public final class InstanceType implements CatalogType {
         this.id = id;
         this.name = builder.name == null ? id : builder.name;
         this.nameTemplate = builder.nameTemplate;
+        this.mapWidth = builder.mapWidth;
+        this.mapLength = builder.mapLength;
+        this.mutatorPipeline = new MapMutatorPipeline();
+        this.mutatorPipeline.getMutators().addAll(builder.mutators);
+        this.defaultItems = builder.defaultItems;
         this.roundStartTemplate = builder.roundStartTemplate;
         this.roundStartLength = builder.roundStartLength;
         this.roundLength = builder.roundLength;
         this.roundEndTemplate = builder.roundEndTemplate;
         this.roundEndLength = builder.roundEndLength;
-        this.defaultItems = builder.defaultItems;
         this.size = new Vector3i(builder.mapWidth, 256, builder.mapLength);
         this.min = new Vector3i(-builder.mapWidth / 2, 0, -builder.mapLength / 2);
         this.max = this.min.add(this.size).sub(1, 1, 1);
-        this.mutatorPipeline = new MapMutatorPipeline();
-        this.mutatorPipeline.getMutators().addAll(builder.mutators);
     }
 
     public static Builder builder() {
@@ -143,13 +149,19 @@ public final class InstanceType implements CatalogType {
     void injectFromConfig(InstanceTypeConfiguration value) {
         this.name = value.general.name;
         this.nameTemplate = value.general.nameTemplate;
+        this.mapWidth = value.general.mapWidth;
+        this.mapLength = value.general.mapLength;
+        this.mutatorPipeline.getMutators().clear();
+        this.mutatorPipeline.getMutators().addAll(MapMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators));
+        this.defaultItems.clear();
+        this.defaultItems.addAll(value.round.defaultItems);
         this.roundStartTemplate = value.round.startTemplate;
         this.roundEndTemplate = value.round.endTemplate;
         this.roundStartLength = value.round.start;
         this.roundLength = value.round.length;
         this.roundEndLength = value.round.end;
-        this.size = new Vector3i(value.general.mapWidth, 256, value.general.mapLength);
-        this.min = new Vector3i(-value.general.mapWidth / 2, 0, -value.general.mapLength / 2);
+        this.size = new Vector3i(this.mapWidth, 256, this.mapLength);
+        this.min = new Vector3i(-this.mapWidth / 2, 0, -this.mapLength / 2);
         this.max = this.min.add(this.size).sub(1, 1, 1);
     }
 
@@ -176,13 +188,15 @@ public final class InstanceType implements CatalogType {
                 .add("id", this.id)
                 .add("name", this.name)
                 .add("nameTemplate", this.nameTemplate)
+                .add("mapWidth", this.mapWidth)
+                .add("mapLength", this.mapLength)
+                .add("mutatorPipeline", this.mutatorPipeline)
+                .add("defaultItems", this.defaultItems)
                 .add("roundStartLength", this.roundStartLength)
                 .add("roundStartTemplate", this.roundStartTemplate)
                 .add("roundLength", this.roundLength)
                 .add("roundEndLength", this.roundEndLength)
                 .add("roundEndTemplate", this.roundEndTemplate)
-                .add("defaultItems", this.defaultItems)
-                .add("mutatorPipeline", this.mutatorPipeline)
                 .toString();
     }
 
@@ -193,7 +207,7 @@ public final class InstanceType implements CatalogType {
         List<ItemStackSnapshot> defaultItems;
         int mapLength, mapWidth;
         long roundStartLength, roundLength, roundEndLength;
-        List<MapMutator> mutators;
+        Set<MapMutator> mutators;
 
         public Builder() {
             reset();
@@ -203,28 +217,30 @@ public final class InstanceType implements CatalogType {
         public Builder from(InstanceType value) {
             this.name = value.name;
             this.nameTemplate = value.nameTemplate;
+            this.mapWidth = value.size.getX();
+            this.mapLength = value.size.getZ();
+            this.mutators = Sets.newHashSet(value.mutatorPipeline.getMutators());
+            this.defaultItems = Lists.newLinkedList(value.defaultItems);
             this.roundStartTemplate = value.roundStartTemplate;
             this.roundEndTemplate = value.roundEndTemplate;
             this.roundStartLength = value.roundStartLength;
             this.roundLength = value.roundLength;
             this.roundEndLength = value.roundEndLength;
-            this.mapWidth = value.size.getX();
-            this.mapLength = value.size.getZ();
-            this.mutators = Lists.newArrayList(value.mutatorPipeline.getMutators());
             return this;
         }
 
         public Builder from(InstanceTypeConfiguration value) {
             this.name = value.general.name;
             this.nameTemplate = value.general.nameTemplate;
+            this.mapWidth = value.general.mapWidth;
+            this.mapLength = value.general.mapLength;
+            this.mutators = MapMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators);
+            this.defaultItems = Lists.newLinkedList(value.round.defaultItems);
             this.roundStartTemplate = value.round.startTemplate;
             this.roundEndTemplate = value.round.endTemplate;
             this.roundStartLength = value.round.start;
             this.roundLength = value.round.length;
             this.roundEndLength = value.round.end;
-            this.mapLength = value.general.mapLength;
-            this.mapWidth = value.general.mapWidth;
-            this.mutators = MapMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators);
             return this;
         }
 
@@ -232,15 +248,15 @@ public final class InstanceType implements CatalogType {
         public Builder reset() {
             this.name = null;
             this.nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
+            this.mapWidth = Constants.Map.DEFAULT_MAP_WIDTH;
+            this.mapLength = Constants.Map.DEFAULT_MAP_LENGTH;
+            this.mutators = Constants.Map.DEFAULT_MAP_MUTATORS;
+            this.defaultItems = Constants.Map.Round.DEFAULT_ITEMS;
             this.roundStartTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_START;
             this.roundEndTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_END;
             this.roundStartLength = Constants.Map.Round.DEFAULT_START_LENGTH;
             this.roundLength = Constants.Map.Round.DEFAULT_LENGTH;
             this.roundEndLength = Constants.Map.Round.DEFAULT_END_LENGTH;
-            this.defaultItems = Constants.Map.Round.DEFAULT_ITEMS;
-            this.mapLength = Constants.Map.DEFAULT_MAP_LENGTH;
-            this.mapWidth = Constants.Map.DEFAULT_MAP_WIDTH;
-            this.mutators = Constants.Map.DEFAULT_MAP_MUTATORS;
             return this;
         }
 
@@ -320,29 +336,42 @@ public final class InstanceType implements CatalogType {
             return this;
         }
 
-        public InstanceType build(String id) {
-            checkNotNull(id);
-            checkNotNull(this.nameTemplate);
-            checkNotNull(this.roundStartTemplate);
-            checkNotNull(this.roundEndTemplate);
-
-            return new InstanceType(id, this);
-        }
-
         public InstanceType build(String id, String name) throws IOException, ObjectMappingException {
             checkNotNull(id);
             checkNotNull(this.nameTemplate);
             checkNotNull(this.roundStartTemplate);
             checkNotNull(this.roundEndTemplate);
+            this.name(name);
 
-            // Create the config for this type
+            return this.build(id);
+        }
+
+        public InstanceType build(String id) throws IOException, ObjectMappingException {
+            checkNotNull(id);
+            checkNotNull(this.nameTemplate);
+            checkNotNull(this.roundStartTemplate);
+            checkNotNull(this.roundEndTemplate);
 
             final Path configPath = Constants.Map.PATH_CONFIG_INSTANCE_TYPES.resolve(id + ".conf");
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
                     .class, Constants.Map.DEFAULT_OPTIONS, configPath);
 
             adapter.load();
-            adapter.getConfig().general.name = name;
+            final InstanceTypeConfiguration config = adapter.getConfig();
+            config.general.name = this.name;
+            config.general.nameTemplate = this.nameTemplate;
+            config.general.mapWidth = this.mapWidth;
+            config.general.mapLength = this.mapLength;
+            config.general.mapMutators.clear();
+            config.general.mapMutators.addAll(this.mutators.stream().map(MapMutator::getId).collect(Collectors.toList()));
+
+            config.round.defaultItems.clear();
+            config.round.defaultItems.addAll(this.defaultItems);
+            config.round.start = this.roundStartLength;
+            config.round.startTemplate = this.roundStartTemplate;
+            config.round.length = this.roundLength;
+            config.round.end = this.roundEndLength;
+            config.round.endTemplate = this.roundEndTemplate;
             adapter.save();
 
             return new InstanceType(id, this);

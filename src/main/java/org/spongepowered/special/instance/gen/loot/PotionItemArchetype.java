@@ -40,28 +40,11 @@ import java.util.Random;
 
 public class PotionItemArchetype implements ItemArchetype {
 
-    public static enum Type {
-        NORMAL(ItemTypes.POTION),
-        SPLASH(ItemTypes.SPLASH_POTION),
-        LINGERING(ItemTypes.LINGERING_POTION);
-
-        private ItemType itemType;
-
-        Type(ItemType type) {
-            this.itemType = type;
-        }
-
-        public ItemType getItemType() {
-            return this.itemType;
-        }
-    }
-
     private final Type type;
     private final VariableAmount quantity;
     private final VariableAmount power;
     private final VariableAmount duration;
     private final PotionEffectType effect;
-
     public PotionItemArchetype(Type type, VariableAmount quantity, PotionEffectType effect, VariableAmount power, VariableAmount duration) {
         this.type = checkNotNull(type);
         this.quantity = checkNotNull(quantity);
@@ -81,5 +64,21 @@ public class PotionItemArchetype implements ItemArchetype {
                 .keyValue(Keys.POTION_EFFECTS, itemEffects)
                 .build();
         return stack;
+    }
+
+    public static enum Type {
+        NORMAL(ItemTypes.POTION),
+        SPLASH(ItemTypes.SPLASH_POTION),
+        LINGERING(ItemTypes.LINGERING_POTION);
+
+        private ItemType itemType;
+
+        Type(ItemType type) {
+            this.itemType = type;
+        }
+
+        public ItemType getItemType() {
+            return this.itemType;
+        }
     }
 }

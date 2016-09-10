@@ -27,9 +27,10 @@ package org.spongepowered.special.instance.gen;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
 import org.spongepowered.api.registry.AdditionalCatalogRegistryModule;
 import org.spongepowered.api.registry.CatalogTypeAlreadyRegisteredException;
+import org.spongepowered.api.registry.RegistrationPhase;
+import org.spongepowered.api.registry.util.DelayedRegistration;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.gen.mutator.ChestMutator;
 import org.spongepowered.special.instance.gen.mutator.PlayerSpawnMutator;
@@ -37,13 +38,15 @@ import org.spongepowered.special.instance.gen.mutator.PlayerSpawnMutator;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public final class MapMutatorRegistryModule implements AdditionalCatalogRegistryModule<MapMutator> {
 
-    final Map<String, MapMutator> maps = new HashMap<>();
+    private final Map<String, MapMutator> maps = new HashMap<>();
 
     private MapMutatorRegistryModule() {
     }
@@ -83,22 +86,18 @@ public final class MapMutatorRegistryModule implements AdditionalCatalogRegistry
     }
 
     @Override
+    @DelayedRegistration(value = RegistrationPhase.POST_INIT)
     public void registerDefaults() {
         registerAdditionalCatalog(new PlayerSpawnMutator());
         registerAdditionalCatalog(new ChestMutator());
     }
 
-    public List<MapMutator> mapStrings(List<String> mutatorIds) {
-        List<MapMutator> mutators = Lists.newArrayList();
-        for(String id: mutatorIds) {
-            Optional<MapMutator> omut = getById(id);
-            if(omut.isPresent()) {
-                mutators.add(omut.get());
-            } else {
-                throw new IllegalArgumentException("Unknown map mutator: " + id);
-            }
+    public Set<MapMutator> mapStrings(List<String> mutatorIds) {
+        final Set<MapMutator> mutators = new HashSet<>();
+        for (String id : mutatorIds) {
+            mutators.add(getById(id).orElseThrow(() -> new IllegalArgumentException("Unknown map mutator: " + id)));
         }
-        return null;
+        return mutators;
     }
 
     private static final class Holder {

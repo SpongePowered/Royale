@@ -44,47 +44,22 @@ import java.util.Map;
 
 public class Loot {
 
-    private static final Map<String, LootTable<ItemArchetype>> loot_tables = Maps.newHashMap();
-
-    public static LootTable<ItemArchetype> getTable(String id) {
-        LootTable<ItemArchetype> table = loot_tables.get(id);
-        if (table == null) {
-            throw new IllegalArgumentException("Loot table: " + id + " not found");
-        }
-        return table;
-    }
-
     public static final LootTable<ItemArchetype> low_level = new LootTable<>();
     public static final LootTable<ItemArchetype> mid_level = new LootTable<>();
     public static final LootTable<ItemArchetype> high_level = new LootTable<>();
     public static final LootTable<ItemArchetype> super_rare = new LootTable<>();
-
     public static final WeightedTable<ItemArchetype> basic_food = new WeightedTable<>();
     public static final WeightedTable<ItemArchetype> high_food = new WeightedTable<>();
-
     public static final WeightedTable<ItemArchetype> basic_combat = new WeightedTable<>();
     public static final WeightedTable<ItemArchetype> basic_ranged = new WeightedTable<>();
-
     public static final WeightedTable<ItemArchetype> mid_combat = new WeightedTable<>();
     public static final WeightedTable<ItemArchetype> mid_ranged = new WeightedTable<>();
-
     public static final ChanceTable<ItemArchetype> high_combat = new ChanceTable<>();
-
     public static final WeightedTable<ItemArchetype> super_rare_items = new WeightedTable<>();
-
     public static final ChanceTable<ItemArchetype> wierd_items = new ChanceTable<>();
-
     public static final WeightedTable<ItemArchetype> basic_potions = new WeightedTable<>();
     public static final ChanceTable<ItemArchetype> high_potions = new ChanceTable<>();
-
-    private static ItemArchetype item(ItemType type, VariableAmount quantity) {
-        return new BasicItemArchetype(type, quantity);
-    }
-
-    private static ItemArchetype potion(PotionItemArchetype.Type type, VariableAmount quantity, PotionEffectType effect,
-            VariableAmount power, VariableAmount duration) {
-        return new PotionItemArchetype(type, quantity, effect, power, duration);
-    }
+    private static final Map<String, LootTable<ItemArchetype>> loot_tables = Maps.newHashMap();
 
     static {
         loot_tables.put("low_level", low_level);
@@ -180,5 +155,22 @@ public class Loot {
     }
 
     private Loot() {
+    }
+
+    public static LootTable<ItemArchetype> getTable(String id) {
+        LootTable<ItemArchetype> table = loot_tables.get(id);
+        if (table == null) {
+            throw new IllegalArgumentException("Loot table: " + id + " not found");
+        }
+        return table;
+    }
+
+    private static ItemArchetype item(ItemType type, VariableAmount quantity) {
+        return new BasicItemArchetype(type, quantity);
+    }
+
+    private static ItemArchetype potion(PotionItemArchetype.Type type, VariableAmount quantity, PotionEffectType effect,
+            VariableAmount power, VariableAmount duration) {
+        return new PotionItemArchetype(type, quantity, effect, power, duration);
     }
 }

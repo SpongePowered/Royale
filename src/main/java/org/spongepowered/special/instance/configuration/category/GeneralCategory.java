@@ -30,7 +30,6 @@ import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.configuration.AbstractConfigurationCategory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @ConfigSerializable
@@ -50,7 +49,7 @@ public final class GeneralCategory extends AbstractConfigurationCategory {
             + "Specifying -1 tells the plugin to treat this value as unknown. Default (" + Constants.Map.DEFAULT_MAP_WIDTH + ").")
     public int mapWidth = Constants.Map.DEFAULT_MAP_WIDTH;
 
-    @Setting(value = "map-mutators", comment = "Map Mutators to apply after the template is loaded.")
-    public List<String> mapMutators = new ArrayList<>();
+    @Setting(value = "map-mutators", comment = "Map Mutators to apply after the instance is loaded.")
+    public List<String> mapMutators = Constants.Map.DEFAULT_MAP_MUTATOR_IDS;
 
 }

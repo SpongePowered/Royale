@@ -24,23 +24,26 @@
  */
 package org.spongepowered.special.instance.gen;
 
+import com.google.common.base.Objects;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.block.BlockState;
+import org.spongepowered.api.util.annotation.CatalogedBy;
 import org.spongepowered.api.world.extent.Extent;
 import org.spongepowered.special.instance.Instance;
 
+@CatalogedBy(MapMutators.class)
 public abstract class MapMutator implements CatalogType {
 
     private final String id;
     private final String name;
-    
+
     protected MapMutator(String id, String name) {
         this.id = id;
         this.name = name;
     }
-    
+
     @Override
-    public String getId() {
+    public final String getId() {
         return this.id;
     }
 
@@ -48,11 +51,36 @@ public abstract class MapMutator implements CatalogType {
     public String getName() {
         return this.name;
     }
-    
-    public void visitExtent(Extent extent, Instance instance) {}
-    
+
+    public void visitExtent(Extent extent, Instance instance) {
+    }
+
     public boolean visitBlock(Extent extent, Instance instance, BlockState state, int x, int y, int z) {
         return false;
     }
-    
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final MapMutator that = (MapMutator) o;
+        return java.util.Objects.equals(id, that.id);
+    }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("id", this.id)
+                .add("name", this.name)
+                .toString();
+    }
 }

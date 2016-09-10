@@ -43,8 +43,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class Constants {
 
@@ -74,7 +76,9 @@ public class Constants {
 
         public static final ConfigurationOptions DEFAULT_OPTIONS = ConfigurationOptions.defaults();
 
-        public static final List<MapMutator> DEFAULT_MAP_MUTATORS = new ArrayList<>();
+        public static final List<String> DEFAULT_MAP_MUTATOR_IDS = new ArrayList<>();
+
+        public static final Set<MapMutator> DEFAULT_MAP_MUTATORS = new HashSet<>();
 
         public static final int DEFAULT_MAP_LENGTH = 500;
         public static final int DEFAULT_MAP_WIDTH = 500;
@@ -87,6 +91,8 @@ public class Constants {
                     throw new RuntimeException("Failed to create maps directory [" + PATH_CONFIG_INSTANCE_TYPES + "]!");
                 }
             }
+
+            DEFAULT_MAP_MUTATOR_IDS.add("player_spawn");
 
             DEFAULT_MAP_MUTATORS.add(MapMutatorRegistryModule.getInstance().getById("player_spawn").get());
         }

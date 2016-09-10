@@ -32,11 +32,12 @@ import org.spongepowered.api.registry.AdditionalCatalogRegistryModule;
 import org.spongepowered.api.registry.CatalogTypeAlreadyRegisteredException;
 import org.spongepowered.api.registry.RegistrationPhase;
 import org.spongepowered.api.registry.util.DelayedRegistration;
-import org.spongepowered.api.registry.util.RegisterCatalog;
+import org.spongepowered.api.registry.util.RegistrationDependency;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 import org.spongepowered.special.instance.configuration.InstanceTypeConfiguration;
+import org.spongepowered.special.instance.gen.MapMutatorRegistryModule;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -48,10 +49,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@RegistrationDependency(MapMutatorRegistryModule.class)
 public final class InstanceTypeRegistryModule implements AdditionalCatalogRegistryModule<InstanceType> {
 
-    @RegisterCatalog(InstanceType.class)
-    final Map<String, InstanceType> types = new HashMap<>();
+    private final Map<String, InstanceType> types = new HashMap<>();
 
     private InstanceTypeRegistryModule() {
     }
@@ -93,44 +94,42 @@ public final class InstanceTypeRegistryModule implements AdditionalCatalogRegist
     @Override
     @DelayedRegistration(value = RegistrationPhase.POST_INIT)
     public void registerDefaults() {
-        // TODO Aaron, pretty sure you said I'm limited to 16 characters here for Scoreboard
-        try {
-            this.registerAdditionalCatalog(InstanceType.builder()
-                    .mutator("player_spawn")
-                    .mutator("chest")
-                    .build("last_man_standing", "Last Man Standing"));
+
+        // Load all from config
+        try (DirectoryStream<Path> stream = Files
+                .newDirectoryStream(Constants.Map.PATH_CONFIG_INSTANCE_TYPES, entry -> entry.getFileName().toString()
+                        .endsWith(".conf"))) {
+            for (Path path : stream) {
+                final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter =
+                        new MappedConfigurationAdapter<>(InstanceTypeConfiguration.class,
+                                Constants.Map.DEFAULT_OPTIONS, path);
+
+                try {
+                    adapter.load();
+                } catch (IOException | ObjectMappingException e) {
+                    Special.instance.getLogger().error("Failed to load configuration for path [{}]!", path, e);
+                    continue;
+                }
+
+                final String instanceId = path.getFileName().toString().split("\\.")[0];
+
+                this.registerAdditionalCatalog(
+                        InstanceType.builder().from(adapter.getConfig()).build(instanceId));
+            }
+
         } catch (IOException | ObjectMappingException e) {
-            throw new RuntimeException("Failed to register default instance types!");
+            throw new RuntimeException("Failed to iterate over the instance type configuration files!");
         }
 
-        try {
-            try (DirectoryStream<Path> stream = Files.newDirectoryStream(Constants.Map.PATH_CONFIG_INSTANCE_TYPES, entry -> entry.getFileName().toString()
-                    .endsWith(".conf"))) {
-                for (Path path : stream) {
-                    final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration.class,
-                            Constants.Map.DEFAULT_OPTIONS, path);
-
-                    try {
-                        adapter.load();
-                    } catch (IOException | ObjectMappingException e) {
-                        Special.instance.getLogger().error("Failed to load configuration for path [{}]!", path, e);
-                        continue;
-                    }
-
-                    final String instanceId = path.getFileName().toString().split("\\.")[0];
-
-                    // If the instance is already registered (aka a default), inject config changes
-                    final InstanceType defaultType = this.types.get(instanceId);
-                    if (defaultType != null) {
-                        defaultType.injectFromConfig(adapter.getConfig());
-                    } else {
-                        this.registerAdditionalCatalog(
-                                InstanceType.builder().from(adapter.getConfig()).build(instanceId));
-                    }
-                }
+        // Load shipped defaults if we found no config file for it
+        if (!this.types.containsKey("last_man_standing")) {
+            try {
+                this.registerAdditionalCatalog(InstanceType.builder()
+                        .mutator("chest")
+                        .build("last_man_standing", "Last Man Standing"));
+            } catch (IOException | ObjectMappingException e) {
+                throw new RuntimeException("Failed to register default instance types!");
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to iterate over the instance type configuration files!");
         }
     }
 

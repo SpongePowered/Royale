@@ -24,6 +24,7 @@
  */
 package org.spongepowered.special.instance.gen.mutator;
 
+import com.google.common.base.Objects;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Sign;
@@ -67,4 +68,12 @@ public abstract class SignMutator extends MapMutator {
         return true;
     }
 
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                .add("id", this.getId())
+                .add("name", this.getName())
+                .add("signId", this.sign_id)
+                .toString();
+    }
 }

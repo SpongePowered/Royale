@@ -176,7 +176,7 @@ final class Commands {
                 }
 
                 Optional<Instance> instance = Special.instance.getInstanceManager().getInstance(world.getName());
-                if(!instance.isPresent()) {
+                if (!instance.isPresent()) {
                     throw new CommandException(Text.of("Instance [" + world.getName() + "] is not a valid instance, is it running?"));
                 }
                 instance.get().spawnPlayer(player);
