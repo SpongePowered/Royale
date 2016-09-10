@@ -36,6 +36,7 @@ import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.instance.exception.InstanceAlreadyExistsException;
@@ -64,6 +65,8 @@ public final class InstanceManager {
             throw new IOException("Failed to load instance [" + instanceName + "]!");
         }
 
+        instance.setSerializationBehavior(SerializationBehaviors.NONE);
+        
         this.instances.put(instance.getName(), new Instance(instance.getName(), type, instance));
     }
 
