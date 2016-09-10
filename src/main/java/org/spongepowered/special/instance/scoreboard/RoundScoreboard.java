@@ -47,7 +47,7 @@ import java.util.UUID;
  *
  *          Instance_Name (Bastian)
  *          Instance_Type_Name (Deathmatch, Free-For-All, etc)
- *      -------------------- (TODO Aaron, can we add this separation?)
+ *      --------------------
  *
  *          PlayerA
  *          PlayerB

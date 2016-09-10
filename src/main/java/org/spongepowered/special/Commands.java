@@ -59,7 +59,7 @@ final class Commands {
             .executor((src, args) -> {
                 final String id = args.<String>getOne("id").orElse(null);
                 if (Sponge.getRegistry().getType(InstanceType.class, id).isPresent()) {
-                    throw new CommandException(Text.of("Map has already been registered!"));
+                    throw new CommandException(Text.of("Instance type has already been registered!"));
                 }
 
                 final String name = args.<String>getOne("name").orElse(id);
