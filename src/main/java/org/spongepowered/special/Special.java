@@ -69,7 +69,7 @@ public final class Special {
 
     @Listener
     public void onGamePreinitialization(GamePreInitializationEvent event) {
-        Sponge.getRegistry().registerModule(InstanceTypeRegistryModule.getInstance());
+        Sponge.getRegistry().registerModule(InstanceType.class, InstanceTypeRegistryModule.getInstance());
         Sponge.getRegistry().registerBuilderSupplier(InstanceType.Builder.class, InstanceType.Builder::new);
 
         Sponge.getCommandManager().register(this.container, Commands.rootCommand, Constants.Meta.ID, Constants.Meta.ID.substring(0, 1));
