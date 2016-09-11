@@ -32,10 +32,6 @@ import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.game.state.GameConstructionEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
-import org.spongepowered.api.event.item.inventory.ClickInventoryEvent;
-import org.spongepowered.api.event.item.inventory.InteractInventoryEvent;
-import org.spongepowered.api.item.ItemTypes;
-import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.special.instance.InstanceManager;
@@ -95,22 +91,6 @@ public final class Special {
 
         Sponge.getServer()
                 .loadWorld(Sponge.getServer().createWorldProperties(Constants.Map.Lobby.DEFAULT_LOBBY_NAME, Constants.Map.Lobby.lobbyArchetype));
-    }
-
-    @Listener
-    public void onInteractInventoryOpen(InteractInventoryEvent.Open event) {
-        this.logger.error("open");
-        event.getTargetInventory().offer(ItemStack.of(ItemTypes.STONE_PICKAXE, 1));
-    }
-
-    @Listener
-    public void onInteractInventoryClose(InteractInventoryEvent.Close event) {
-        this.logger.error("close");
-    }
-
-    @Listener
-    public void onClickInventoryPrimary(ClickInventoryEvent.Primary event) {
-        this.logger.error("hi");
     }
 
     public Logger getLogger() {

@@ -31,6 +31,7 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.api.text.format.TextColors;
+import org.spongepowered.api.world.DimensionTypes;
 import org.spongepowered.api.world.GeneratorTypes;
 import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.WorldArchetype;
@@ -130,11 +131,12 @@ public class Constants {
 
             public static final String DEFAULT_LOBBY_NAME = Constants.Meta.ID + "_lobby";
 
-            static final WorldArchetype lobbyArchetype = WorldArchetype.builder().from(WorldArchetypes.THE_VOID)
+            static final WorldArchetype lobbyArchetype = WorldArchetype.builder().from(WorldArchetypes.THE_END)
                     .gameMode(GameModes.ADVENTURE)
                     .loadsOnStartup(true)
                     .difficulty(Difficulties.EASY)
                     .generateSpawnOnLoad(true)
+                    .dimension(DimensionTypes.OVERWORLD)
                     .generator(GeneratorTypes.THE_END) // TODO Remove when Inscrutable has Lobby map
                     .pvp(false)
                     .keepsSpawnLoaded(true)
