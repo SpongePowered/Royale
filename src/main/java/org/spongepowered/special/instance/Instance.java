@@ -49,9 +49,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 public final class Instance {
 
@@ -60,7 +57,7 @@ public final class Instance {
     private final WeakReference<World> worldRef;
     private final Deque<Vector3d> unusedSpawns = Queues.newArrayDeque();
     private final Map<UUID, Vector3d> playerSpawns = Maps.newHashMap();
-    private final Set<UUID> tasks = Sets.newHashSet();
+    private final Set<UUID> tasks = Sets.newLinkedHashSet();
 
     private boolean isRunning = false;
 
