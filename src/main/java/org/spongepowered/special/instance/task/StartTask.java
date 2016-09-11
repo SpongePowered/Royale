@@ -30,13 +30,10 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.title.Title;
 import org.spongepowered.api.world.World;
-import org.spongepowered.special.Constants;
-import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public final class StartTask extends RoundTask {
 
@@ -81,6 +78,7 @@ public final class StartTask extends RoundTask {
 
             if (seconds >= startTitles.size()) {
                 task.cancel();
+                this.getInstance().advance();
             }
         }
     }

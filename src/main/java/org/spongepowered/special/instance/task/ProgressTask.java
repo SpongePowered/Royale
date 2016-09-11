@@ -32,8 +32,6 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.instance.Instance;
 
-import java.util.function.Consumer;
-
 public final class ProgressTask extends RoundTask {
 
     private final ServerBossBar bossBar = ServerBossBar.builder()
@@ -62,6 +60,10 @@ public final class ProgressTask extends RoundTask {
 
         // Make sure the world is still around and loaded
         if (world != null && world.isLoaded()) {
+            if (this.getInstance().getState() == Instance.State.POST_START) {
+                this.getInstance().advance();
+            }
+
             final float percent = (float) this.roundLengthRemaining * 1f / this.roundLengthTotal;
             this.bossBar.setPercent(percent);
 
@@ -90,6 +92,7 @@ public final class ProgressTask extends RoundTask {
             if (this.roundLengthRemaining < 0) {
                 this.bossBar.getPlayers().forEach(this.bossBar::removePlayer);
                 task.cancel();
+                this.getInstance().advance();
             }
         }
     }

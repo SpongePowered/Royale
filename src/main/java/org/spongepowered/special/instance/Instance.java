@@ -35,11 +35,6 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
-import org.spongepowered.special.Constants;
-import org.spongepowered.special.Special;
-import org.spongepowered.special.instance.task.EndTask;
-import org.spongepowered.special.instance.task.ProgressTask;
-import org.spongepowered.special.instance.task.StartTask;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -59,7 +54,7 @@ public final class Instance {
     private final Map<UUID, Vector3d> playerSpawns = Maps.newHashMap();
     private final Set<UUID> tasks = Sets.newLinkedHashSet();
 
-    private boolean isRunning = false;
+    private State state = State.IDLE;
 
     public Instance(String worldName, InstanceType instanceType, World world) {
         this.worldName = worldName;
@@ -75,9 +70,7 @@ public final class Instance {
             throw new RuntimeException("Attempt to start an instance whose world no longer exists!");
         }
 
-        // TODO: Run start task
-
-        this.isRunning = true;
+        this.advance();
     }
 
     public void stop() {
@@ -88,7 +81,7 @@ public final class Instance {
             }
         }
 
-        this.isRunning = false;
+        this.advance();
     }
 
     public InstanceType getType() {
@@ -111,8 +104,37 @@ public final class Instance {
         return this.tasks.remove(uniqueId);
     }
 
-    public boolean isInstanceRunning() {
-        return this.isRunning;
+    public State getState() {
+        return state;
+    }
+
+    public void advance() {
+        final State next = State.values()[(this.state.ordinal() + 1) % State.values().length];
+        if (next.ordinal() < this.state.ordinal()) {
+            return;
+        }
+
+        this.onStateAdvance(next);
+        this.state = next;
+    }
+
+    public void onStateAdvance(State next) {
+        switch (next) {
+            case PRE_START:
+                // TODO Start initial task
+                break;
+            case POST_START:
+                // TODO Start round task (kill start task if still running)
+                break;
+            case RUNNING:
+                // TODO This activates before any additional code is called in the round task. Useless state for now, could be handy later
+                break;
+            case PRE_END:
+                // TODO Start end task (terminate round task if still running)
+                break;
+            case POST_END:
+                break;
+        }
     }
 
     public void addPlayerSpawn(Vector3d spawn) {
@@ -120,7 +142,7 @@ public final class Instance {
     }
 
     public void spawnPlayer(Player player) {
-        checkState(this.isRunning, "Instance is not running!");
+        checkState(this.state != State.IDLE, "Instance is not running!");
         if (this.playerSpawns.containsKey(player.getUniqueId())) {
             player.setLocation(new Location<>(this.worldRef.get(), this.playerSpawns.get(player.getUniqueId())));
             return;
@@ -155,5 +177,20 @@ public final class Instance {
                 .add("name", this.worldName)
                 .add("type", this.instanceType)
                 .toString();
+    }
+
+    public enum State {
+        /**
+         * Instance created but not activated.
+         */
+        IDLE,
+        /**
+         * Instance activated but not started.
+         */
+        PRE_START,
+        POST_START,
+        RUNNING,
+        PRE_END,
+        POST_END
     }
 }
