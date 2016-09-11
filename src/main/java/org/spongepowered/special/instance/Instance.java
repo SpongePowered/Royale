@@ -35,6 +35,11 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
+import org.spongepowered.special.Constants;
+import org.spongepowered.special.Special;
+import org.spongepowered.special.instance.task.EndTask;
+import org.spongepowered.special.instance.task.ProgressTask;
+import org.spongepowered.special.instance.task.StartTask;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -44,6 +49,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public final class Instance {
 
@@ -118,21 +124,37 @@ public final class Instance {
         this.state = next;
     }
 
-    public void onStateAdvance(State next) {
+    private void onStateAdvance(State next) {
         switch (next) {
             case PRE_START:
-                // TODO Start initial task
+                this.tasks.add(Task.builder()
+                        .execute(new StartTask(this))
+                        .interval(1, TimeUnit.SECONDS)
+                        .name(Constants.Meta.ID + " - Start Countdown - " + this.worldName)
+                        .submit(Special.instance)
+                        .getUniqueId());
                 break;
             case POST_START:
-                // TODO Start round task (kill start task if still running)
+                this.tasks.add(Task.builder()
+                        .execute(new ProgressTask(this))
+                        .interval(1, TimeUnit.SECONDS)
+                        .name(Constants.Meta.ID + " - Progress Countdown - " + this.worldName)
+                        .submit(Special.instance)
+                        .getUniqueId());
                 break;
             case RUNNING:
                 // TODO This activates before any additional code is called in the round task. Useless state for now, could be handy later
                 break;
             case PRE_END:
-                // TODO Start end task (terminate round task if still running)
+                this.tasks.add(Task.builder()
+                        .execute(new EndTask(this, worldRef.get().getPlayers().stream().findFirst().get()))
+                        .interval(0, TimeUnit.SECONDS)
+                        .name(Constants.Meta.ID + " - End Countdown - " + this.worldName)
+                        .submit(Special.instance)
+                        .getUniqueId());
                 break;
             case POST_END:
+                this.stop();
                 break;
         }
     }

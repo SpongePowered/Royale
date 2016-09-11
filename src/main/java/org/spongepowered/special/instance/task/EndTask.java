@@ -70,5 +70,8 @@ public final class EndTask extends RoundTask {
                 });
             }
         });
+
+        task.cancel();
+        this.getInstance().advance();
     }
 }

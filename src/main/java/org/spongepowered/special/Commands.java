@@ -127,7 +127,7 @@ final class Commands {
                 }
 
                 final Optional<Instance> optInstance = Special.instance.getInstanceManager().getInstance(world.getName());
-                if (!optInstance.isPresent() || optInstance.isPresent() && !optInstance.get().isInstanceRunning()) {
+                if (!optInstance.isPresent() || optInstance.isPresent() && optInstance.get().getState().equals(Instance.State.IDLE)) {
                     try {
                         src.sendMessage(Text.of("Starting round countdown in [", format(TextColors.GREEN, world.getName()), "]."));
                         Special.instance.getInstanceManager().startInstance(world.getName());

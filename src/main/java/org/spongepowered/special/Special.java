@@ -32,12 +32,8 @@ import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.game.state.GameConstructionEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
-import org.spongepowered.api.item.inventory.InventoryArchetype;
-import org.spongepowered.api.item.inventory.InventoryArchetypes;
-import org.spongepowered.api.item.inventory.property.InventorySize;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.special.instance.InstanceManager;
 import org.spongepowered.special.instance.InstanceType;
 import org.spongepowered.special.instance.InstanceTypeRegistryModule;
@@ -69,12 +65,6 @@ public final class Special {
     @Inject @ConfigDir(sharedRoot = false) private Path configPath;
 
     public static Cause plugin_cause;
-
-    public static final InventoryArchetype backpack = InventoryArchetype.builder()
-            .with(InventoryArchetypes.CHEST)
-            .title(Text.of("Backpack"))
-            .property(InventorySize.of(9, 4))
-            .build("backpack", "Backpack");
 
     @Listener
     public void onGameConstruction(GameConstructionEvent event) {
