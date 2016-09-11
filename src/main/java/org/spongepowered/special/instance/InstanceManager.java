@@ -102,6 +102,9 @@ public final class InstanceManager {
 
             }
             instances.add(instance);
+
+            final MapMutatorPipeline pipeline = type.getMutatorPipeline();
+            pipeline.mutate(world, instance);
         }
     }
 
@@ -145,6 +148,7 @@ public final class InstanceManager {
                 }
             }
         } else {
+            this.instances.remove(instanceName);
             instance.stop();
         }
     }
