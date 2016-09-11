@@ -29,21 +29,29 @@ import static com.google.common.base.Preconditions.checkState;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
-import org.spongepowered.special.instance.task.StartCountdown;
+import org.spongepowered.special.instance.task.EndTask;
+import org.spongepowered.special.instance.task.ProgressTask;
+import org.spongepowered.special.instance.task.StartTask;
 
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public final class Instance {
 
@@ -52,9 +60,9 @@ public final class Instance {
     private final WeakReference<World> worldRef;
     private final Deque<Vector3d> unusedSpawns = Queues.newArrayDeque();
     private final Map<UUID, Vector3d> playerSpawns = Maps.newHashMap();
+    private final Set<UUID> tasks = Sets.newHashSet();
 
     private boolean isRunning = false;
-    private Task startTask, roundTask;
 
     public Instance(String worldName, InstanceType instanceType, World world) {
         this.worldName = worldName;
@@ -70,19 +78,20 @@ public final class Instance {
             throw new RuntimeException("Attempt to start an instance whose world no longer exists!");
         }
 
-        this.startTask = Task.builder()
-                .execute(new StartCountdown(this))
-                .interval(1, TimeUnit.SECONDS)
-                .name(Constants.Meta.ID + " - Start Countdown - " + world.getName())
-                .submit(Special.instance);
+        // TODO: Run start task
 
         this.isRunning = true;
-
-        // Kickup round task here
     }
 
     public void stop() {
-        // TODO Kickup stop code here
+        for (UUID uuid : tasks) {
+            final Task task = Sponge.getScheduler().getTaskById(uuid).orElse(null);
+            if (task != null) {
+                task.cancel();
+            }
+        }
+
+        this.isRunning = false;
     }
 
     public InstanceType getType() {
@@ -91,6 +100,18 @@ public final class Instance {
 
     public Optional<World> getHandle() {
         return Optional.ofNullable(this.worldRef.get());
+    }
+
+    public Set<UUID> getAssociatedTasks() {
+        return Collections.unmodifiableSet(this.tasks);
+    }
+
+    public boolean addAssociatedTaskUniqueId(UUID uniqueId) {
+        return this.tasks.add(uniqueId);
+    }
+
+    public boolean removeAssociatedTaskUniqueId(UUID uniqueId) {
+        return this.tasks.remove(uniqueId);
     }
 
     public boolean isInstanceRunning() {

@@ -29,11 +29,11 @@ import org.spongepowered.special.instance.Instance;
 
 import java.util.function.Consumer;
 
-abstract class RoundCountdown implements Consumer<Task> {
+abstract class RoundTask implements Consumer<Task> {
 
     private final Instance instance;
 
-    RoundCountdown(Instance instance) {
+    RoundTask(Instance instance) {
         this.instance = instance;
     }
 

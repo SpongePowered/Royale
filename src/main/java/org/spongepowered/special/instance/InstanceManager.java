@@ -148,9 +148,10 @@ public final class InstanceManager {
                 }
             }
         } else {
-            this.instances.remove(instanceName);
             instance.stop();
         }
+
+
     }
 
     public Optional<Instance> getInstance(String instanceName) {

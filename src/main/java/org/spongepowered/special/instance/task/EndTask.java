@@ -28,17 +28,25 @@ import org.spongepowered.api.effect.particle.ParticleEffect;
 import org.spongepowered.api.effect.particle.ParticleTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.title.Title;
 import org.spongepowered.special.instance.Instance;
 
-public final class EndCountdown {
+public final class EndTask extends RoundTask {
 
-    private final Title title;
+    private Title title;
+    private final Player winner;
 
-    public EndCountdown(Instance instance, Player winner) {
-        final long seconds = instance.getType().getRoundEndLength();
+    public EndTask(Instance instance, Player winner) {
+        super(instance);
+        this.winner = winner;
+    }
+
+    @Override
+    public void accept(Task task) {
+        final long seconds = getInstance().getType().getRoundEndLength();
 
         this.title = Title.builder()
                 .stay((int) ((seconds - 1) * 20))
@@ -55,7 +63,7 @@ public final class EndCountdown {
 
         // TODO If world is null or not loaded, shut this task down and log it.
 
-        instance.getHandle().ifPresent((world) -> {
+        getInstance().getHandle().ifPresent((world) -> {
             if (world.isLoaded()) {
                 world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> {
                     onlinePlayer.sendTitle(title);

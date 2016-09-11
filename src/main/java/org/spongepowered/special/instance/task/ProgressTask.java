@@ -32,7 +32,9 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.instance.Instance;
 
-public final class ProgressCountdown extends RoundCountdown {
+import java.util.function.Consumer;
+
+public final class ProgressTask extends RoundTask {
 
     private final ServerBossBar bossBar = ServerBossBar.builder()
             .color(BossBarColors.GREEN)
@@ -45,10 +47,10 @@ public final class ProgressCountdown extends RoundCountdown {
     private final long roundLengthTotal;
     private long roundLengthRemaining;
 
-    public ProgressCountdown(Instance instance) {
+    public ProgressTask(Instance instance) {
         super(instance);
 
-        this.roundLengthTotal = instance.getType().getRoundEndLength();
+        this.roundLengthTotal = instance.getType().getRoundLength();
         this.roundLengthRemaining = this.roundLengthTotal;
     }
 
@@ -74,9 +76,9 @@ public final class ProgressCountdown extends RoundCountdown {
             int seconds = (int) this.roundLengthRemaining % 60;
             if (this.roundLengthRemaining > 60) {
                 int minutes = (int) this.roundLengthRemaining / 60;
-                this.bossBar.setName(Text.of(String.format("Time remaining: %02d:%s", minutes, seconds)));
+                this.bossBar.setName(Text.of(String.format("Time remaining: %02d:%02d", minutes, seconds)));
             } else {
-                this.bossBar.setName(Text.of(String.format("Time remaining: %s", seconds)));
+                this.bossBar.setName(Text.of(String.format("Time remaining: %02d", seconds)));
             }
 
 

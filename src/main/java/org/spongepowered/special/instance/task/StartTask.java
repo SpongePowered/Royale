@@ -30,18 +30,21 @@ import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.title.Title;
 import org.spongepowered.api.world.World;
+import org.spongepowered.special.Constants;
+import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-public final class StartCountdown extends RoundCountdown {
+public final class StartTask extends RoundTask {
 
     private final List<Title> startTitles = new LinkedList<>();
 
     private int seconds = 0;
 
-    public StartCountdown(Instance instance) {
+    public StartTask(Instance instance) {
         super(instance);
 
         final Title.Builder builder = Title.builder()

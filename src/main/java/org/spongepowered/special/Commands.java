@@ -126,12 +126,17 @@ final class Commands {
                     throw new CommandException(Text.of("World was not provided!"));
                 }
 
-                try {
-                    src.sendMessage(Text.of("Starting round countdown in [", format(TextColors.GREEN, world.getName()), "]."));
-                    Special.instance.getInstanceManager().startInstance(world.getName());
-                } catch (UnknownInstanceException e) {
-                    throw new CommandException(Text.of("Unable to start round in [", format(TextColors.GREEN, world.getName()), "], was it ",
-                            "created?"));
+                final Optional<Instance> optInstance = Special.instance.getInstanceManager().getInstance(world.getName());
+                if (!optInstance.isPresent() || optInstance.isPresent() && !optInstance.get().isInstanceRunning()) {
+                    try {
+                        src.sendMessage(Text.of("Starting round countdown in [", format(TextColors.GREEN, world.getName()), "]."));
+                        Special.instance.getInstanceManager().startInstance(world.getName());
+                    } catch (UnknownInstanceException e) {
+                        throw new CommandException(Text.of("Unable to start round in [", format(TextColors.GREEN, world.getName()), "], was it ",
+                                "created?"));
+                    }
+                } else {
+                    src.sendMessage(Text.of("Round already in progress."));
                 }
 
                 return CommandResult.success();
