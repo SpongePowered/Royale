@@ -45,12 +45,15 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
+import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 import org.spongepowered.special.instance.Instance;
 import org.spongepowered.special.instance.InstanceType;
 import org.spongepowered.special.instance.InstanceTypeRegistryModule;
+import org.spongepowered.special.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.special.instance.exception.UnknownInstanceException;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 final class Commands {
@@ -198,6 +201,42 @@ final class Commands {
             })
             .build();
 
+    private static final CommandSpec reloadCommand = CommandSpec.builder()
+            .permission(Constants.Meta.ID + ".command.reload")
+            .description(Text.of("Reloads an instance"))
+            .extendedDescription(Text.of("Reloads an instance")) // TODO More descriptive
+            .arguments(catalogedElement(Text.of("instanceType"), InstanceType.class))
+            .executor((src, args) -> {
+                final InstanceType instanceType = args.<InstanceType>getOne("instanceType").orElse(null);
+                if (instanceType != null) {
+                    if (!Special.instance.getInstanceManager().getInstances(instanceType).isEmpty()) {
+                        throw new CommandException(Text.of("Cannot reload instance type [", TextColors.YELLOW, instanceType.getId(), TextColors.RESET,
+                                "] configuration as the instance is still running."));
+                    }
+
+                    final Path configPath = Constants.Map.PATH_CONFIG_INSTANCE_TYPES.resolve(instanceType.getId() + ".conf");
+                    final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
+                            .class, Constants.Map.DEFAULT_OPTIONS, configPath);
+
+                    try {
+                        adapter.load();
+                    } catch (IOException | ObjectMappingException e) {
+                        throw new CommandException(Text.of("Unable to load configuration for instance type [", TextColors.YELLOW, instanceType
+                                .getId(), TextColors.RESET, "]."));
+                    }
+
+                    instanceType.injectFromConfig(adapter.getConfig());
+
+                    src.sendMessage(Text.of("Reloaded configuration for instance [", TextColors.YELLOW, instanceType.getId(), TextColors.RESET, "]"
+                            + "."));
+
+                    return CommandResult.success();
+                }
+
+                return CommandResult.empty();
+            })
+            .build();
+
     private static final CommandSpec tpWorldCommand = CommandSpec.builder()
             .description(Text.of("Teleports a player to another world"))
             .arguments(seq(playerOrSource(Text.of("target")), onlyOne(world(Text.of("world")))))
@@ -225,11 +264,12 @@ final class Commands {
                 src.sendMessage(Text.of("Some help should go here..."));
                 return CommandResult.success();
             })
-            .child(registerCommand, "register", "r")
+            .child(registerCommand, "register", "reg")
             .child(createCommand, "create", "c")
             .child(startCommand, "start", "s")
             .child(endCommand, "end", "e")
             .child(joinCommand, "join", "j")
+            .child(reloadCommand, "reload", "rel")
             .child(tpWorldCommand, "tpworld", "tpw")
             .build();
 }

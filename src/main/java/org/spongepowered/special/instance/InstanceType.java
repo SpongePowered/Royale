@@ -146,7 +146,7 @@ public final class InstanceType implements CatalogType {
         return this.mutatorPipeline;
     }
 
-    void injectFromConfig(InstanceTypeConfiguration value) {
+    public void injectFromConfig(InstanceTypeConfiguration value) {
         this.name = value.general.name;
         this.nameTemplate = value.general.nameTemplate;
         this.mapWidth = value.general.mapWidth;
