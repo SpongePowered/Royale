@@ -69,7 +69,7 @@ public final class RoundScoreboard {
         Score score = this.objective.getOrCreateScore(Text.of(player.getName()));
         score.setScore(0);
 
-        Team team = Team.builder().name(player.getUniqueId().toString()).build();
+        Team team = Team.builder().name(player.getName()).build();
         team.addMember(player.getTeamRepresentation());
         this.scoreboard.registerTeam(team);
 
