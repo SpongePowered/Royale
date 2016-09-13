@@ -29,7 +29,7 @@ import org.spongepowered.special.instance.Instance;
 
 import java.util.function.Consumer;
 
-abstract class RoundTask implements Consumer<Task> {
+public abstract class RoundTask implements Consumer<Task>  {
 
     private final Instance instance;
 
@@ -40,4 +40,6 @@ abstract class RoundTask implements Consumer<Task> {
     public final Instance getInstance() {
         return this.instance;
     }
+
+    public abstract void cancel();
 }

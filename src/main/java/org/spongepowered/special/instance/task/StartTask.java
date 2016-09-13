@@ -41,6 +41,8 @@ public final class StartTask extends RoundTask {
 
     private int seconds = 0;
 
+    private Task task;
+
     public StartTask(Instance instance) {
         super(instance);
 
@@ -63,7 +65,14 @@ public final class StartTask extends RoundTask {
     }
 
     @Override
+    public void cancel() {
+        this.task.cancel();
+    }
+
+    @Override
     public void accept(Task task) {
+        this.task = task;
+
         final World world = this.getInstance().getHandle().orElse(null);
 
         // TODO If world is null or not loaded, shut this task down and log it.
@@ -77,7 +86,7 @@ public final class StartTask extends RoundTask {
             seconds++;
 
             if (seconds >= startTitles.size()) {
-                task.cancel();
+                this.cancel();
                 this.getInstance().advance();
             }
         }

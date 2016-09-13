@@ -24,6 +24,8 @@
  */
 package org.spongepowered.special.instance.task;
 
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.effect.particle.ParticleEffect;
 import org.spongepowered.api.effect.particle.ParticleTypes;
 import org.spongepowered.api.entity.living.player.Player;
@@ -34,25 +36,37 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.title.Title;
 import org.spongepowered.special.instance.Instance;
 
+import java.util.Set;
+import java.util.UUID;
+
 public final class EndTask extends RoundTask {
 
     private Title title;
-    private final Player winner;
+    private final Set<UUID> winners;
 
-    public EndTask(Instance instance, Player winner) {
+    private Task task;
+
+    public EndTask(Instance instance, Set<UUID> winners) {
         super(instance);
-        this.winner = winner;
+        this.winners = winners;
     }
 
     @Override
     public void accept(Task task) {
+        this.task = task;
         final long seconds = getInstance().getType().getRoundEndLength();
 
+        Player winner = null;
+        for (UUID uuid : winners) {
+            winner = Sponge.getServer().getPlayer(uuid).orElse(null);
+        }
+
+        // TODO Handle multiple winners
         this.title = Title.builder()
                 .stay((int) ((seconds - 1) * 20))
                 .fadeIn(0)
                 .fadeOut(20)
-                .title(Text.of(TextColors.YELLOW, winner.getDisplayNameData().displayName().get(), TextColors.WHITE, " is the winner!"))
+                .title(Text.of(TextColors.YELLOW, winner.get(Keys.DISPLAY_NAME).get(), TextColors.WHITE, " is the winner!"))
                 .build();
 
         winner.spawnParticles(ParticleEffect.builder()
@@ -65,13 +79,16 @@ public final class EndTask extends RoundTask {
 
         getInstance().getHandle().ifPresent((world) -> {
             if (world.isLoaded()) {
-                world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> {
-                    onlinePlayer.sendTitle(title);
-                });
+                world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> onlinePlayer.sendTitle(title));
             }
         });
 
-        task.cancel();
+        this.cancel();
         this.getInstance().advance();
+    }
+
+    @Override
+    public void cancel() {
+        this.task.cancel();
     }
 }

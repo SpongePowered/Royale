@@ -27,10 +27,13 @@ package org.spongepowered.special.instance.task;
 import org.spongepowered.api.boss.BossBarColors;
 import org.spongepowered.api.boss.BossBarOverlays;
 import org.spongepowered.api.boss.ServerBossBar;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.instance.Instance;
+
+import java.util.Iterator;
 
 public final class ProgressTask extends RoundTask {
 
@@ -45,6 +48,8 @@ public final class ProgressTask extends RoundTask {
     private final long roundLengthTotal;
     private long roundLengthRemaining;
 
+    private Task task;
+
     public ProgressTask(Instance instance) {
         super(instance);
 
@@ -53,7 +58,18 @@ public final class ProgressTask extends RoundTask {
     }
 
     @Override
+    public void cancel() {
+        final Iterator<Player> iter = this.bossBar.getPlayers().iterator();
+        while (iter.hasNext()) {
+            this.bossBar.removePlayer(iter.next());
+        }
+        this.task.cancel();
+    }
+
+    @Override
     public void accept(Task task) {
+        this.task = task;
+
         final World world = this.getInstance().getHandle().orElse(null);
 
         // TODO If world is null or not loaded, shut this task down and log it.
@@ -90,8 +106,7 @@ public final class ProgressTask extends RoundTask {
 
             this.roundLengthRemaining--;
             if (this.roundLengthRemaining < 0) {
-                this.bossBar.getPlayers().forEach(this.bossBar::removePlayer);
-                task.cancel();
+                this.cancel();
                 this.getInstance().advance();
             }
         }

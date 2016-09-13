@@ -45,7 +45,6 @@ import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.SerializationBehavior;
-import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
@@ -207,6 +206,7 @@ final class Commands {
                 }
 
                 player.sendMessage(Text.of("Joining [", format(TextColors.GREEN, world.getName()), "]."));
+                instance.get().registerPlayer(player);
                 instance.get().spawnPlayer(player);
 
                 return CommandResult.success();
