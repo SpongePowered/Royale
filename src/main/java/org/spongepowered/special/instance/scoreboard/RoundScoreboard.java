@@ -30,6 +30,7 @@ import org.spongepowered.api.scoreboard.Score;
 import org.spongepowered.api.scoreboard.Scoreboard;
 import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.scoreboard.critieria.Criteria;
+import org.spongepowered.api.scoreboard.displayslot.DisplaySlots;
 import org.spongepowered.api.scoreboard.objective.Objective;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -56,13 +57,17 @@ import java.util.UUID;
  */
 public final class RoundScoreboard {
 
+    private Instance instance;
     private Scoreboard scoreboard;
     private Objective objective;
     private java.util.Map<UUID, PlayerData> playerData = new HashMap<>();
 
     public RoundScoreboard(Instance instance) {
+        this.instance = instance;
         this.scoreboard = Scoreboard.builder().build();
         this.objective = Objective.builder().name("main").displayName(Text.of(TextColors.YELLOW, "Players")).criterion(Criteria.DUMMY).build();
+        this.scoreboard.addObjective(objective);
+        this.scoreboard.updateDisplaySlot(this.objective, DisplaySlots.SIDEBAR);
     }
 
     public void addPlayer(Player player) {
@@ -88,6 +93,10 @@ public final class RoundScoreboard {
         data.dead = true;
 
         this.sortScoreboard();
+    }
+
+    public boolean hasPlayer(Player player) {
+        return this.playerData.containsKey(player.getUniqueId());
     }
 
     private void sortScoreboard() {

@@ -32,6 +32,10 @@ import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.entity.DamageEntityEvent;
+import org.spongepowered.api.event.entity.DestructEntityEvent;
+import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -40,6 +44,7 @@ import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.task.EndTask;
 import org.spongepowered.special.instance.task.ProgressTask;
 import org.spongepowered.special.instance.task.StartTask;
+import org.spongepowered.special.instance.scoreboard.RoundScoreboard;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
@@ -59,6 +64,7 @@ public final class Instance {
     private final Deque<Vector3d> unusedSpawns = Queues.newArrayDeque();
     private final Map<UUID, Vector3d> playerSpawns = Maps.newHashMap();
     private final Set<UUID> tasks = Sets.newLinkedHashSet();
+    private final RoundScoreboard scoreboard;
 
     private State state = State.IDLE;
 
@@ -66,6 +72,7 @@ public final class Instance {
         this.worldName = worldName;
         this.instanceType = instanceType;
         this.worldRef = new WeakReference<>(world);
+        this.scoreboard = new RoundScoreboard(this);
     }
 
     public void start() {
@@ -173,7 +180,16 @@ public final class Instance {
         Vector3d player_spawn = this.unusedSpawns.pop();
         this.playerSpawns.put(player.getUniqueId(), player_spawn);
 
+        this.scoreboard.addPlayer(player);
+
         player.setLocation(new Location<>(this.worldRef.get(), player_spawn));
+    }
+
+    @Listener
+    public void onDeath(DestructEntityEvent.Death event, @Getter("getTargetEntity") Player player) {
+        if (this.scoreboard.hasPlayer(player)) {
+            this.scoreboard.killPlayer(player);
+        }
     }
 
     @Override

@@ -39,6 +39,7 @@ import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
+import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.exception.InstanceAlreadyExistsException;
 import org.spongepowered.special.instance.exception.UnknownInstanceException;
 import org.spongepowered.special.instance.gen.MapMutatorPipeline;
@@ -65,6 +66,7 @@ public final class InstanceManager {
             throw new InstanceAlreadyExistsException(instanceName);
         }
 
+        Instance instance;
         World world = Sponge.getServer().getWorld(instanceName).orElse(null);
 
         if (world == null) {
@@ -76,7 +78,7 @@ public final class InstanceManager {
             world.setSerializationBehavior(SerializationBehaviors.NONE);
             world.setKeepSpawnLoaded(true);
 
-            final Instance instance = new Instance(instanceName, type, world);
+            instance = new Instance(instanceName, type, world);
 
             this.instances.put(world.getName(), instance);
             List<Instance> instances = this.instancesByTypes.get(type);
@@ -92,7 +94,7 @@ public final class InstanceManager {
         } else {
             world.setSerializationBehavior(SerializationBehaviors.NONE);
             world.setKeepSpawnLoaded(true);
-            final Instance instance = new Instance(instanceName, type, world);
+            instance = new Instance(instanceName, type, world);
 
             this.instances.put(world.getName(), instance);
             List<Instance> instances = this.instancesByTypes.get(type);
@@ -106,6 +108,7 @@ public final class InstanceManager {
             final MapMutatorPipeline pipeline = type.getMutatorPipeline();
             pipeline.mutate(world, instance);
         }
+        Sponge.getEventManager().registerListeners(Special.instance, instance);
     }
 
     public void startInstance(String instanceName) throws UnknownInstanceException {
@@ -150,6 +153,8 @@ public final class InstanceManager {
         } else {
             instance.stop();
         }
+
+        Sponge.getEventManager().unregisterListeners(instance);
 
 
     }

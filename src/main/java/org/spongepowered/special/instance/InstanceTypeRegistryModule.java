@@ -126,6 +126,7 @@ public final class InstanceTypeRegistryModule implements AdditionalCatalogRegist
             try {
                 this.registerAdditionalCatalog(InstanceType.builder()
                         .mutator("chest")
+                        .mutator("player_spawn")
                         .build("last_man_standing", "Last Man Standing"));
             } catch (IOException | ObjectMappingException e) {
                 throw new RuntimeException("Failed to register default instance types!");
