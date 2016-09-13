@@ -27,13 +27,12 @@ package org.spongepowered.special.instance.task;
 import org.spongepowered.api.boss.BossBarColors;
 import org.spongepowered.api.boss.BossBarOverlays;
 import org.spongepowered.api.boss.ServerBossBar;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.instance.Instance;
 
-import java.util.Iterator;
+import java.util.stream.Collectors;
 
 public final class ProgressTask extends RoundTask {
 
@@ -59,10 +58,7 @@ public final class ProgressTask extends RoundTask {
 
     @Override
     public void cancel() {
-        final Iterator<Player> iter = this.bossBar.getPlayers().iterator();
-        while (iter.hasNext()) {
-            this.bossBar.removePlayer(iter.next());
-        }
+        this.bossBar.removePlayers(this.bossBar.getPlayers());
         this.task.cancel();
     }
 
@@ -99,6 +95,8 @@ public final class ProgressTask extends RoundTask {
                 this.bossBar.setName(Text.of(String.format("Time remaining: %02d", seconds)));
             }
 
+            this.bossBar.addPlayers(world.getPlayers().stream().filter(player -> player.isOnline() && !this.bossBar.getPlayers().contains(player))
+                    .collect(Collectors.toList()));
 
             // Make sure a player ref isn't still here
             world.getPlayers().stream().filter(player -> player.isOnline() && !bossBar.getPlayers().contains(player))
