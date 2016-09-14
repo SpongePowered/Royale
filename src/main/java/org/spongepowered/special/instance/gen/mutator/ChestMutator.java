@@ -24,10 +24,12 @@
  */
 package org.spongepowered.special.instance.gen.mutator;
 
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.block.tileentity.TileEntity;
 import org.spongepowered.api.block.tileentity.carrier.Chest;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.util.weighted.LootTable;
 import org.spongepowered.api.world.extent.Extent;
 import org.spongepowered.special.Special;
@@ -43,14 +45,15 @@ public final class ChestMutator extends SignMutator {
         super("chest", "Chest Mutator", "chest");
     }
 
-    public boolean visitSign(Instance instance, Extent area, int x, int y, int z, Sign sign) {
+    public boolean visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign) {
         final String lootTableId = sign.lines().get(1).toPlain();
         final LootTable<ItemArchetype> lootTable = Loot.getTable(lootTableId);
         final List<ItemArchetype> items = lootTable.get(Special.instance.getRandom());
 
         Special.instance.getLogger().debug("Generating loot chest via table [" + lootTableId + "] at " + x + "x " + y + "y " + z + "z.");
 
-        area.setBlock(x, y, z, BlockTypes.CHEST.getDefaultState(), Special.instance.getPluginCause());
+        area.setBlock(x, y, z, BlockTypes.CHEST.getDefaultState().with(Keys.DIRECTION, state.get(Keys.DIRECTION).get()).get(), Special.instance
+                .getPluginCause());
 
         final TileEntity tileEntity = area.getTileEntity(x, y, z).orElse(null);
         if (tileEntity == null) {

@@ -25,6 +25,7 @@
 package org.spongepowered.special.instance.gen.mutator;
 
 import com.flowpowered.math.vector.Vector3d;
+import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.world.extent.Extent;
@@ -37,12 +38,12 @@ public final class PlayerSpawnMutator extends SignMutator {
         super("player_spawn", "Player Spawn Finder", "player_spawn");
     }
 
-    public boolean visitSign(Instance instance, Extent area, int x, int y, int z, Sign sign) {
+    public boolean visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign) {
         area.setBlock(x, y, z, BlockTypes.AIR.getDefaultState(), Special.instance.getPluginCause());
 
         instance.addPlayerSpawn(new Vector3d(x + 0.5, y + 0.0125, z + 0.5));
 
-        Special.instance.getLogger().debug("Found player spawn at " + x + "x " + y + "y " + z + "z.");
+        Special.instance.getLogger().info("Found player spawn at " + x + "x " + y + "y " + z + "z.");
 
         return true;
     }

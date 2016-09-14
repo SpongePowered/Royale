@@ -43,7 +43,7 @@ public abstract class SignMutator extends InstanceMutator {
         this.sign_id = sign_id;
     }
 
-    public abstract boolean visitSign(Instance instance, Extent area, int x, int y, int z, Sign sign);
+    public abstract boolean visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign);
 
     public boolean visitBlock(Instance instance, Extent area, BlockState state, int x, int y, int z) {
         if (state.getType() != BlockTypes.STANDING_SIGN && state.getType() != BlockTypes.WALL_SIGN) {
@@ -66,7 +66,7 @@ public abstract class SignMutator extends InstanceMutator {
             return false;
         }
 
-        visitSign(instance, area, x, y, z, sign);
+        visitSign(instance, area, state, x, y, z, sign);
         return true;
     }
 
