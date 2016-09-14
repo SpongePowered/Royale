@@ -37,7 +37,7 @@ import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 import org.spongepowered.special.instance.configuration.InstanceTypeConfiguration;
-import org.spongepowered.special.instance.gen.MapMutatorRegistryModule;
+import org.spongepowered.special.instance.gen.InstanceMutatorRegistryModule;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
@@ -49,7 +49,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@RegistrationDependency(MapMutatorRegistryModule.class)
+@RegistrationDependency(InstanceMutatorRegistryModule.class)
 public final class InstanceTypeRegistryModule implements AdditionalCatalogRegistryModule<InstanceType> {
 
     private final Map<String, InstanceType> types = new HashMap<>();

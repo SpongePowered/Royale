@@ -29,16 +29,12 @@ import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.block.tileentity.TileEntity;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.extent.Extent;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
-import org.spongepowered.special.instance.gen.MapMutator;
+import org.spongepowered.special.instance.gen.InstanceMutator;
 
-import java.util.List;
-import java.util.Optional;
-
-public abstract class SignMutator extends MapMutator {
+public abstract class SignMutator extends InstanceMutator {
 
     private final String sign_id;
 
@@ -47,24 +43,30 @@ public abstract class SignMutator extends MapMutator {
         this.sign_id = sign_id;
     }
 
-    public abstract boolean visitSign(Extent extent, Instance instance, int x, int y, int z, List<Text> signText);
+    public abstract boolean visitSign(Instance instance, Extent area, int x, int y, int z, Sign sign);
 
-    public final boolean visitBlock(Extent extent, Instance instance, BlockState state, int x, int y, int z) {
+    public boolean visitBlock(Instance instance, Extent area, BlockState state, int x, int y, int z) {
         if (state.getType() != BlockTypes.STANDING_SIGN && state.getType() != BlockTypes.WALL_SIGN) {
             return false;
         }
-        Optional<TileEntity> tile = extent.getTileEntity(x, y, z);
-        if (!tile.isPresent() || !(tile.get() instanceof Sign)) {
-            Special.instance.getLogger().error("Something is very wrong... (Expected a sign but was: " + (!tile.isPresent() ? "null"
-                    : tile.get().getClass().getSimpleName()) + ")");
+
+        final TileEntity tileEntity = area.getTileEntity(x, y, z).orElse(null);
+        if (tileEntity == null) {
+            Special.instance.getLogger().error("Something is quite wrong...we have a sign type yet found no tile entity. This is a serious "
+                    + "issue likely due to server misconfiguration!");
+            return false;
+        } else if (!(tileEntity instanceof Sign)) {
+            Special.instance.getLogger().error("Something is quite wrong...we have a sign type yet found a [" + tileEntity.getClass()
+                    .getSimpleName() + "] instead. This is a serious issue likely due to server misconfiguration!");
             return false;
         }
-        Sign sign = (Sign) tile.get();
-        List<Text> lines = sign.lines().get();
-        if (!lines.get(0).toPlain().equalsIgnoreCase(this.sign_id)) {
+
+        final Sign sign = (Sign) tileEntity;
+        if (!sign.lines().get(0).toPlain().equalsIgnoreCase(this.sign_id)) {
             return false;
         }
-        visitSign(extent, instance, x, y, z, lines);
+
+        visitSign(instance, area, x, y, z, sign);
         return true;
     }
 

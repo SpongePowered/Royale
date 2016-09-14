@@ -28,22 +28,22 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.tileentity.Sign;
 
 /**
- * {@link MapMutator}s available to run against instances.
+ * {@link InstanceMutator}s available to run against instances.
  */
-public final class MapMutators {
+public final class InstanceMutators {
 
     // SORTFIELDS:ON
 
     /**
-     * A map mutator that populate possible player spawns by detecting {@link Sign}s with "player_spawn" one line 1.
+     * An instance mutator that populate possible player spawns by detecting {@link Sign}s with "player_spawn" one line 1.
      */
-    public static final MapMutator PLAYER_SPAWN = Sponge.getRegistry().getType(MapMutator.class, "player_spawn").orElse(null);
+    public static final InstanceMutator PLAYER_SPAWN = Sponge.getRegistry().getType(InstanceMutator.class, "player_spawn").orElse(null);
 
     /**
-     * A map mutator that populate loot chests with varying levels of rarity by detecting {@link Sign}s with "chest" one line 1
+     * An instance mutator that populate loot chests with varying levels of rarity by detecting {@link Sign}s with "chest" one line 1
      * and a loot id on line 2.
      */
-    public static final MapMutator CHEST_MUTATOR = Sponge.getRegistry().getType(MapMutator.class, "chest").orElse(null);
+    public static final InstanceMutator CHEST_MUTATOR = Sponge.getRegistry().getType(InstanceMutator.class, "chest").orElse(null);
 
     // SORTFIELDS:OFF
 }

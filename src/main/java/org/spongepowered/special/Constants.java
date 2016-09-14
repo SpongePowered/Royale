@@ -37,8 +37,8 @@ import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.WorldArchetype;
 import org.spongepowered.api.world.WorldArchetypes;
 import org.spongepowered.api.world.difficulty.Difficulties;
-import org.spongepowered.special.instance.gen.MapMutator;
-import org.spongepowered.special.instance.gen.MapMutatorRegistryModule;
+import org.spongepowered.special.instance.gen.InstanceMutator;
+import org.spongepowered.special.instance.gen.InstanceMutatorRegistryModule;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -79,7 +79,7 @@ public class Constants {
 
         public static final List<String> DEFAULT_MAP_MUTATOR_IDS = new ArrayList<>();
 
-        public static final Set<MapMutator> DEFAULT_MAP_MUTATORS = new HashSet<>();
+        public static final Set<InstanceMutator> DEFAULT_MAP_MUTATORS = new HashSet<>();
 
         public static final int DEFAULT_MAP_LENGTH = 500;
         public static final int DEFAULT_MAP_WIDTH = 500;
@@ -95,7 +95,7 @@ public class Constants {
 
             DEFAULT_MAP_MUTATOR_IDS.add("player_spawn");
 
-            DEFAULT_MAP_MUTATORS.add(MapMutatorRegistryModule.getInstance().getById("player_spawn").get());
+            DEFAULT_MAP_MUTATORS.add(InstanceMutatorRegistryModule.getInstance().getById("player_spawn").get());
         }
 
         private Map() {

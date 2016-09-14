@@ -64,7 +64,7 @@ public final class Loot {
 
     public static final WeightedTable<ItemArchetype> super_rare_items = new WeightedTable<>();
 
-    public static final ChanceTable<ItemArchetype> wierd_items = new ChanceTable<>();
+    public static final ChanceTable<ItemArchetype> weird_items = new ChanceTable<>();
 
     public static final WeightedTable<ItemArchetype> basic_potions = new WeightedTable<>();
     public static final ChanceTable<ItemArchetype> high_potions = new ChanceTable<>();
@@ -81,29 +81,30 @@ public final class Loot {
 
         low_level.addTable(basic_food);
         low_level.addTable(basic_combat);
-        low_level.addTable(wierd_items);
+        low_level.addTable(weird_items);
 
         mid_level.addTable(basic_food);
         mid_level.addTable(basic_potions);
         mid_level.addTable(mid_combat);
         mid_level.addTable(high_food);
-        mid_level.addTable(wierd_items);
+        mid_level.addTable(weird_items);
 
         high_level.addTable(mid_combat);
         high_level.addTable(high_combat);
         high_level.addTable(high_potions);
         high_level.addTable(high_food);
-        high_level.addTable(wierd_items);
+        high_level.addTable(weird_items);
 
         high_level.addTable(high_combat);
         high_level.addTable(high_potions);
         high_level.addTable(high_food);
-        high_level.addTable(wierd_items);
+        high_level.addTable(weird_items);
         high_level.addTable(super_rare_items);
 
         // @formatter:off
 
         // TODO flesh out these tables more
+
         // basic_food
         basic_food.add(     item(   ItemTypes.BREAD,            range(1, 4)),   5);
 
@@ -126,10 +127,11 @@ public final class Loot {
         high_combat.add(    item(   ItemTypes.DIAMOND_SWORD,    fixed(1)),      0.0025);
 
         // super_rare_items
+
         // TODO special named weapons and armor
 
-        // wierd_items
-        wierd_items.add(     item(   ItemTypes.SPONGE,           range(1, 6)),   5);
+        // weird_items
+        weird_items.add(     item(   ItemTypes.SPONGE,           range(1, 6)),   5);
 
         // basic_potions
 

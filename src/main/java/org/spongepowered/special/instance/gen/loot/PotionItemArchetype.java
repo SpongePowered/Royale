@@ -38,16 +38,14 @@ import org.spongepowered.api.util.weighted.VariableAmount;
 import java.util.List;
 import java.util.Random;
 
-public class PotionItemArchetype implements ItemArchetype {
+public class PotionItemArchetype extends BasicItemArchetype {
 
-    private final Type type;
-    private final VariableAmount quantity;
     private final VariableAmount power;
     private final VariableAmount duration;
     private final PotionEffectType effect;
+
     public PotionItemArchetype(Type type, VariableAmount quantity, PotionEffectType effect, VariableAmount power, VariableAmount duration) {
-        this.type = checkNotNull(type);
-        this.quantity = checkNotNull(quantity);
+        super(type.getItemType(), quantity);
         this.effect = checkNotNull(effect);
         this.power = checkNotNull(power);
         this.duration = checkNotNull(duration);
@@ -55,18 +53,17 @@ public class PotionItemArchetype implements ItemArchetype {
 
     @Override
     public ItemStack create(Random rand) {
-        int amount = this.quantity.getFlooredAmount(rand);
-        List<PotionEffect> itemEffects = Lists.newArrayList();
+        final int amount = this.getQuantity().getFlooredAmount(rand);
+        final List<PotionEffect> itemEffects = Lists.newArrayList();
         itemEffects.add(PotionEffect.of(this.effect, this.power.getFlooredAmount(rand), this.duration.getFlooredAmount(rand)));
-        ItemStack stack = ItemStack.builder()
-                .itemType(this.type.getItemType())
+        return ItemStack.builder()
+                .itemType(this.getType())
                 .quantity(amount)
                 .keyValue(Keys.POTION_EFFECTS, itemEffects)
                 .build();
-        return stack;
     }
 
-    public static enum Type {
+    public enum Type {
         NORMAL(ItemTypes.POTION),
         SPLASH(ItemTypes.SPLASH_POTION),
         LINGERING(ItemTypes.LINGERING_POTION);

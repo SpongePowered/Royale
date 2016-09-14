@@ -68,8 +68,6 @@ public final class ProgressTask extends RoundTask {
 
         final World world = this.getInstance().getHandle().orElse(null);
 
-        // TODO If world is null or not loaded, shut this task down and log it.
-
         // Make sure the world is still around and loaded
         if (world != null && world.isLoaded()) {
             if (this.getInstance().getState() == Instance.State.POST_START) {
@@ -97,10 +95,6 @@ public final class ProgressTask extends RoundTask {
 
             this.bossBar.addPlayers(world.getPlayers().stream().filter(player -> player.isOnline() && !this.bossBar.getPlayers().contains(player))
                     .collect(Collectors.toList()));
-
-            // Make sure a player ref isn't still here
-            world.getPlayers().stream().filter(player -> player.isOnline() && !bossBar.getPlayers().contains(player))
-                    .forEach(bossBar::addPlayer);
 
             this.roundLengthRemaining--;
             if (this.roundLengthRemaining < 0) {

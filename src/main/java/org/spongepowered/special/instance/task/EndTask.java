@@ -46,45 +46,53 @@ public final class EndTask extends RoundTask {
 
     private Task task;
 
+    private final long endLengthTotal;
+    private long endLengthRemaining;
+
     public EndTask(Instance instance, Set<UUID> winners) {
         super(instance);
         this.winners = winners;
+        this.endLengthTotal = instance.getType().getRoundEndLength();
+        this.endLengthRemaining = this.endLengthTotal;
     }
 
     @Override
     public void accept(Task task) {
-        this.task = task;
-        final long seconds = getInstance().getType().getRoundEndLength();
+        // First tick, kickoff end sequence
+        if (this.endLengthTotal == this.endLengthRemaining) {
+            this.task = task;
 
-        Player winner = null;
-        for (UUID uuid : winners) {
-            winner = Sponge.getServer().getPlayer(uuid).orElse(null);
+            Player winner = null;
+            for (UUID uuid : winners) {
+                winner = Sponge.getServer().getPlayer(uuid).orElse(null);
+            }
+
+            // TODO Handle multiple winners
+            this.title = Title.builder()
+                    .stay((int) ((this.endLengthTotal - 1) * 20))
+                    .fadeIn(0)
+                    .fadeOut(20)
+                    .title(Text.of(TextColors.YELLOW, winner.get(Keys.DISPLAY_NAME).get(), TextColors.WHITE, " is the winner!"))
+                    .build();
+
+            winner.spawnParticles(ParticleEffect.builder()
+                            .type(ParticleTypes.FIREWORKS_SPARK)
+                            .count(30)
+                            .build(),
+                    winner.getLocation().getPosition());
+
+            getInstance().getHandle().ifPresent((world) -> {
+                if (world.isLoaded()) {
+                    world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> onlinePlayer.sendTitle(title));
+                }
+            });
         }
 
-        // TODO Handle multiple winners
-        this.title = Title.builder()
-                .stay((int) ((seconds - 1) * 20))
-                .fadeIn(0)
-                .fadeOut(20)
-                .title(Text.of(TextColors.YELLOW, winner.get(Keys.DISPLAY_NAME).get(), TextColors.WHITE, " is the winner!"))
-                .build();
-
-        winner.spawnParticles(ParticleEffect.builder()
-                        .type(ParticleTypes.FIREWORKS_SPARK)
-                        .count(30)
-                        .build(),
-                winner.getLocation().getPosition());
-
-        // TODO If world is null or not loaded, shut this task down and log it.
-
-        getInstance().getHandle().ifPresent((world) -> {
-            if (world.isLoaded()) {
-                world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> onlinePlayer.sendTitle(title));
-            }
-        });
-
-        this.cancel();
-        this.getInstance().advance();
+        this.endLengthRemaining--;
+        if (this.endLengthRemaining < 0) {
+            this.cancel();
+            this.getInstance().advance();
+        }
     }
 
     @Override

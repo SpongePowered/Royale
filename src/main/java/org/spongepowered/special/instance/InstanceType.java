@@ -40,9 +40,9 @@ import org.spongepowered.api.util.annotation.CatalogedBy;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 import org.spongepowered.special.instance.configuration.InstanceTypeConfiguration;
-import org.spongepowered.special.instance.gen.MapMutator;
-import org.spongepowered.special.instance.gen.MapMutatorPipeline;
-import org.spongepowered.special.instance.gen.MapMutatorRegistryModule;
+import org.spongepowered.special.instance.gen.InstanceMutator;
+import org.spongepowered.special.instance.gen.InstanceMutatorPipeline;
+import org.spongepowered.special.instance.gen.InstanceMutatorRegistryModule;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -61,7 +61,7 @@ public final class InstanceType implements CatalogType {
     private long roundStartLength, roundLength, roundEndLength;
     private int mapWidth, mapLength;
     private Vector3i min, max, size;
-    private MapMutatorPipeline mutatorPipeline;
+    private InstanceMutatorPipeline mutatorPipeline;
 
     private InstanceType(String id, Builder builder) {
         this.id = id;
@@ -69,7 +69,7 @@ public final class InstanceType implements CatalogType {
         this.nameTemplate = builder.nameTemplate;
         this.mapWidth = builder.mapWidth;
         this.mapLength = builder.mapLength;
-        this.mutatorPipeline = new MapMutatorPipeline();
+        this.mutatorPipeline = new InstanceMutatorPipeline();
         this.mutatorPipeline.getMutators().addAll(builder.mutators);
         this.defaultItems = builder.defaultItems;
         this.roundStartTemplate = builder.roundStartTemplate;
@@ -142,7 +142,7 @@ public final class InstanceType implements CatalogType {
         return this.size;
     }
 
-    public MapMutatorPipeline getMutatorPipeline() {
+    public InstanceMutatorPipeline getMutatorPipeline() {
         return this.mutatorPipeline;
     }
 
@@ -152,7 +152,7 @@ public final class InstanceType implements CatalogType {
         this.mapWidth = value.general.mapWidth;
         this.mapLength = value.general.mapLength;
         this.mutatorPipeline.getMutators().clear();
-        this.mutatorPipeline.getMutators().addAll(MapMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators));
+        this.mutatorPipeline.getMutators().addAll(InstanceMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators));
         this.defaultItems.clear();
         this.defaultItems.addAll(value.round.defaultItems);
         this.roundStartTemplate = value.round.startTemplate;
@@ -207,7 +207,7 @@ public final class InstanceType implements CatalogType {
         List<ItemStackSnapshot> defaultItems;
         int mapLength, mapWidth;
         long roundStartLength, roundLength, roundEndLength;
-        Set<MapMutator> mutators;
+        Set<InstanceMutator> mutators;
 
         public Builder() {
             reset();
@@ -234,7 +234,7 @@ public final class InstanceType implements CatalogType {
             this.nameTemplate = value.general.nameTemplate;
             this.mapWidth = value.general.mapWidth;
             this.mapLength = value.general.mapLength;
-            this.mutators = MapMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators);
+            this.mutators = InstanceMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators);
             this.defaultItems = Lists.newLinkedList(value.round.defaultItems);
             this.roundStartTemplate = value.round.startTemplate;
             this.roundEndTemplate = value.round.endTemplate;
@@ -323,13 +323,13 @@ public final class InstanceType implements CatalogType {
             return this;
         }
 
-        public Builder mutator(MapMutator mutator) {
+        public Builder mutator(InstanceMutator mutator) {
             this.mutators.add(checkNotNull(mutator));
             return this;
         }
 
         public Builder mutator(String mutator_id) {
-            Optional<MapMutator> mutator = MapMutatorRegistryModule.getInstance().getById(mutator_id);
+            Optional<InstanceMutator> mutator = InstanceMutatorRegistryModule.getInstance().getById(mutator_id);
             if (mutator.isPresent()) {
                 this.mutators.add(mutator.get());
             }
@@ -363,7 +363,7 @@ public final class InstanceType implements CatalogType {
             config.general.mapWidth = this.mapWidth;
             config.general.mapLength = this.mapLength;
             config.general.mapMutators.clear();
-            config.general.mapMutators.addAll(this.mutators.stream().map(MapMutator::getId).collect(Collectors.toList()));
+            config.general.mapMutators.addAll(this.mutators.stream().map(InstanceMutator::getId).collect(Collectors.toList()));
 
             config.round.defaultItems.clear();
             config.round.defaultItems.addAll(this.defaultItems);

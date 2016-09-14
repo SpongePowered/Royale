@@ -44,30 +44,30 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public final class MapMutatorRegistryModule implements AdditionalCatalogRegistryModule<MapMutator> {
+public final class InstanceMutatorRegistryModule implements AdditionalCatalogRegistryModule<InstanceMutator> {
 
-    private final Map<String, MapMutator> maps = new HashMap<>();
+    private final Map<String, InstanceMutator> maps = new HashMap<>();
 
-    private MapMutatorRegistryModule() {
+    private InstanceMutatorRegistryModule() {
     }
 
-    public static MapMutatorRegistryModule getInstance() {
+    public static InstanceMutatorRegistryModule getInstance() {
         return Holder.INSTANCE;
     }
 
     @Override
-    public Optional<MapMutator> getById(String id) {
+    public Optional<InstanceMutator> getById(String id) {
         checkNotNull(id);
         return Optional.ofNullable(this.maps.get(id));
     }
 
     @Override
-    public Collection<MapMutator> getAll() {
+    public Collection<InstanceMutator> getAll() {
         return Collections.unmodifiableCollection(this.maps.values());
     }
 
     @Override
-    public void registerAdditionalCatalog(MapMutator extraCatalog) {
+    public void registerAdditionalCatalog(InstanceMutator extraCatalog) {
         checkNotNull(extraCatalog);
         if (this.maps.containsKey(extraCatalog.getId())) {
             throw new CatalogTypeAlreadyRegisteredException(extraCatalog.getId());
@@ -92,8 +92,8 @@ public final class MapMutatorRegistryModule implements AdditionalCatalogRegistry
         registerAdditionalCatalog(new ChestMutator());
     }
 
-    public Set<MapMutator> mapStrings(List<String> mutatorIds) {
-        final Set<MapMutator> mutators = new HashSet<>();
+    public Set<InstanceMutator> mapStrings(List<String> mutatorIds) {
+        final Set<InstanceMutator> mutators = new HashSet<>();
         for (String id : mutatorIds) {
             mutators.add(getById(id).orElseThrow(() -> new IllegalArgumentException("Unknown map mutator: " + id)));
         }
@@ -102,6 +102,6 @@ public final class MapMutatorRegistryModule implements AdditionalCatalogRegistry
 
     private static final class Holder {
 
-        static final MapMutatorRegistryModule INSTANCE = new MapMutatorRegistryModule();
+        static final InstanceMutatorRegistryModule INSTANCE = new InstanceMutatorRegistryModule();
     }
 }

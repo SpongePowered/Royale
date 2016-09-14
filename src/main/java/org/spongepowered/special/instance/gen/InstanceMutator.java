@@ -25,47 +25,64 @@
 package org.spongepowered.special.instance.gen;
 
 import com.google.common.base.Objects;
+import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.util.annotation.CatalogedBy;
 import org.spongepowered.api.world.extent.Extent;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 
-import java.util.HashSet;
-import java.util.Set;
+@CatalogedBy(InstanceMutators.class)
+public abstract class InstanceMutator implements CatalogType {
 
-/**
- * Mutates the map templates after loading into the final form.
- */
-public final class MapMutatorPipeline {
+    private final String id;
+    private final String name;
 
-    private final Set<MapMutator> mutators = new HashSet<>();
-
-    public Set<MapMutator> getMutators() {
-        return this.mutators;
+    protected InstanceMutator(String id, String name) {
+        this.id = id;
+        this.name = name;
     }
 
-    public void mutate(World world, Instance instance) {
-        final Extent area = world.getExtentView(instance.getType().getBlockMin(), instance.getType().getBlockMax());
+    @Override
+    public final String getId() {
+        return this.id;
+    }
 
-        for (MapMutator mutator : this.mutators) {
-            mutator.visitExtent(area, instance);
+    @Override
+    public String getName() {
+        return this.name;
+    }
+
+    public void visitInstance(Instance instance) {
+        Special.instance.getLogger().info("Mutating instance [" + instance.getName() + "] with mutator [" + this.getId() + "]...");
+    }
+
+    public boolean visitBlock(Instance instance, Extent area, BlockState state, int x, int y, int z) {
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(id);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
         }
-
-        area.getBlockWorker(Special.plugin_cause).iterate((v, x, y, z) -> {
-            BlockState state = v.getBlock(x, y, z);
-            for (MapMutator mutator : this.mutators) {
-                if (mutator.visitBlock(area, instance, state, x, y, z)) {
-                    break;
-                }
-            }
-        });
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final InstanceMutator that = (InstanceMutator) o;
+        return java.util.Objects.equals(id, that.id);
     }
 
     @Override
     public String toString() {
         return Objects.toStringHelper(this)
-                .add("mutators", this.mutators)
+                .add("id", this.id)
+                .add("name", this.name)
                 .toString();
     }
 }

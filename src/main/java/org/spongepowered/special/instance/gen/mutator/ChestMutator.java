@@ -25,10 +25,9 @@
 package org.spongepowered.special.instance.gen.mutator;
 
 import org.spongepowered.api.block.BlockTypes;
+import org.spongepowered.api.block.tileentity.Sign;
 import org.spongepowered.api.block.tileentity.TileEntity;
 import org.spongepowered.api.block.tileentity.carrier.Chest;
-import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.weighted.LootTable;
 import org.spongepowered.api.world.extent.Extent;
 import org.spongepowered.special.Special;
@@ -37,34 +36,38 @@ import org.spongepowered.special.instance.gen.loot.ItemArchetype;
 import org.spongepowered.special.instance.gen.loot.Loot;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.Random;
 
-public class ChestMutator extends SignMutator {
-
-    private Random rand = new Random();
+public final class ChestMutator extends SignMutator {
 
     public ChestMutator() {
         super("chest", "Chest Mutator", "chest");
     }
 
-    public boolean visitSign(Extent extent, Instance instance, int x, int y, int z, List<Text> lines) {
-        String loot_table_id = lines.get(1).toPlain();
-        LootTable<ItemArchetype> loot_table = Loot.getTable(loot_table_id);
-        List<ItemArchetype> items = loot_table.get(this.rand);
+    public boolean visitSign(Instance instance, Extent area, int x, int y, int z, Sign sign) {
+        final String lootTableId = sign.lines().get(1).toPlain();
+        final LootTable<ItemArchetype> lootTable = Loot.getTable(lootTableId);
+        final List<ItemArchetype> items = lootTable.get(Special.instance.getRandom());
 
-        extent.setBlock(x, y, z, BlockTypes.CHEST.getDefaultState(), Special.plugin_cause);
-        Optional<TileEntity> chestTile = extent.getTileEntity(x, y, z);
-        if (!chestTile.isPresent() || !(chestTile.get() instanceof Chest)) {
-            Special.instance.getLogger().error("Something is very wrong... (Expected a chest but was: " + (!chestTile.isPresent() ? "null"
-                    : chestTile.get().getClass().getSimpleName()) + ")");
+        Special.instance.getLogger().debug("Generating loot chest via table [" + lootTableId + "] at " + x + "x " + y + "y " + z + "z.");
+
+        area.setBlock(x, y, z, BlockTypes.CHEST.getDefaultState(), Special.instance.getPluginCause());
+
+        final TileEntity tileEntity = area.getTileEntity(x, y, z).orElse(null);
+        if (tileEntity == null) {
+            Special.instance.getLogger().error("Something is quite wrong...we set a Chest down yet found no tile entity. This is a serious "
+                    + "issue likely due to server misconfiguration!");
+            return false;
+        } else if (!(tileEntity instanceof Chest)) {
+            Special.instance.getLogger().error("Something is quite wrong...we set a Chest down yet found a [" + tileEntity.getClass()
+                    .getSimpleName() + "] instead. This is a serious issue likely due to server misconfiguration!");
             return false;
         }
-        Chest chest = (Chest) chestTile.get();
+
+        final Chest chest = (Chest) tileEntity;
         for (ItemArchetype item : items) {
-            ItemStack stack = item.create(this.rand);
-            chest.getInventory().offer(stack);
+            chest.getInventory().offer(item.create(Special.instance.getRandom()));
         }
+
         return true;
     }
 

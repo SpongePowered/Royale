@@ -33,18 +33,9 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
-import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.cause.Cause;
-import org.spongepowered.api.event.cause.NamedCause;
-import org.spongepowered.api.event.entity.AttackEntityEvent;
-import org.spongepowered.api.event.entity.DestructEntityEvent;
-import org.spongepowered.api.event.entity.MoveEntityEvent;
-import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
-import org.spongepowered.api.event.filter.Getter;
-import org.spongepowered.api.event.filter.cause.First;
-import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.item.inventory.entity.Hotbar;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -104,6 +95,22 @@ public final class Instance {
         return state;
     }
 
+    public Set<UUID> getRegisteredPlayers() {
+        return registeredPlayers;
+    }
+
+    public Deque<Vector3d> getUnusedSpawns() {
+        return unusedSpawns;
+    }
+
+    public Map<UUID, Vector3d> getPlayerSpawns() {
+        return playerSpawns;
+    }
+
+    public Map<UUID, PlayerDeathRecord> getPlayerDeaths() {
+        return playerDeaths;
+    }
+
     public void advance() {
         if (this.worldRef.get() == null) {
             throw new RuntimeException("Attempt to advance an instance whose world no longer exists!");
@@ -117,13 +124,73 @@ public final class Instance {
         this.advanceTo(next);
     }
 
-    public void advanceTo(State state) {
+    void advanceTo(State state) {
         if (this.worldRef.get() == null) {
             throw new RuntimeException("Attempt to advance an instance whose world no longer exists!");
         }
 
         this.onStateAdvance(state);
         this.state = state;
+    }
+
+    public void registerPlayer(Player player) {
+        checkState(this.unusedSpawns.size() != 0, "This instance cannot register any more players!");
+        this.registeredPlayers.add(player.getUniqueId());
+    }
+
+    public void addPlayerSpawn(Vector3d spawn) {
+        this.unusedSpawns.push(spawn);
+    }
+
+    public void spawnPlayer(Player player) {
+        checkState(this.registeredPlayers.contains(player.getUniqueId()), "Attempted to spawn a player into this round who wasn't registered!");
+
+        // If the player has a consumed spawn and this method is called, we put them back at spawn
+        if (this.playerSpawns.containsKey(player.getUniqueId())) {
+            player.setLocation(new Location<>(this.worldRef.get(), this.playerSpawns.get(player.getUniqueId())));
+            return;
+        }
+
+        checkState(!this.unusedSpawns.isEmpty(), "No spawn available for player!");
+        Vector3d player_spawn = this.unusedSpawns.pop();
+
+        this.playerSpawns.put(player.getUniqueId(), player_spawn);
+
+        this.scoreboard.addPlayer(player);
+
+        player.setLocation(new Location<>(this.worldRef.get(), player_spawn));
+
+        this.convertPlayerToCombatant(player, true);
+    }
+
+    void disqualifyPlayer(Player player, Cause causeOfDeath) {
+        this.playerDeaths.put(player.getUniqueId(), new PlayerDeathRecord(player, causeOfDeath));
+        this.scoreboard.killPlayer(player);
+        player.getInventory().clear();
+    }
+
+    void detectIfRoundOver() {
+        if (this.playerDeaths.size() >= this.playerSpawns.size() - 1) {
+            this.advanceTo(State.PRE_END);
+        }
+    }
+
+    private void convertPlayerToCombatant(Player player, boolean first) {
+        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
+        player.offer(Keys.CAN_FLY, false);
+
+        if (first) {
+            player.getInventory().clear();
+
+            for (ItemStackSnapshot snapshot : this.instanceType.getDefaultItems()) {
+                player.getInventory().query(Hotbar.class).offer(snapshot.createStack());
+            }
+        }
+    }
+
+    void convertPlayerToSpectator(Player player) {
+        player.offer(Keys.GAME_MODE, GameModes.SPECTATOR);
+        player.offer(Keys.CAN_FLY, true);
     }
 
     private void onStateAdvance(State next) {
@@ -167,7 +234,7 @@ public final class Instance {
                 winners.removeAll(this.playerDeaths.keySet());
                 this.tasks.add(Task.builder()
                         .execute(new EndTask(this, winners))
-                        .interval(0, TimeUnit.SECONDS)
+                        .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Meta.ID + " - End Countdown - " + this.worldName)
                         .submit(Special.instance)
                         .getUniqueId());
@@ -176,131 +243,6 @@ public final class Instance {
             case FORCE_STOP:
                 Special.instance.getInstanceManager().unloadInstance(this);
                 break;
-        }
-    }
-
-    public void registerPlayer(Player player) {
-        checkState(this.unusedSpawns.size() != 0, "This instance cannot register any more players!");
-        this.registeredPlayers.add(player.getUniqueId());
-    }
-
-    public void addPlayerSpawn(Vector3d spawn) {
-        this.unusedSpawns.push(spawn);
-    }
-
-    public void spawnPlayer(Player player) {
-        checkState(this.registeredPlayers.contains(player.getUniqueId()), "Attempted to spawn a player into this round who wasn't registered!");
-
-        // If the player has a consumed spawn and this method is called, we put them back at spawn
-        if (this.playerSpawns.containsKey(player.getUniqueId())) {
-            player.setLocation(new Location<>(this.worldRef.get(), this.playerSpawns.get(player.getUniqueId())));
-            return;
-        }
-
-        checkState(!this.unusedSpawns.isEmpty(), "No spawn available for player!");
-        Vector3d player_spawn = this.unusedSpawns.pop();
-
-        this.playerSpawns.put(player.getUniqueId(), player_spawn);
-
-        this.scoreboard.addPlayer(player);
-
-        player.setLocation(new Location<>(this.worldRef.get(), player_spawn));
-
-        this.convertPlayerToCombatant(player, true);
-    }
-
-    private void killPlayer(Player player, Cause causeOfDeath) {
-        this.playerDeaths.put(player.getUniqueId(), new PlayerDeathRecord(player, causeOfDeath));
-        this.scoreboard.killPlayer(player);
-    }
-
-    private void detectIfRoundOver() {
-        if (this.playerDeaths.size() >= this.playerSpawns.size() - 1) {
-            this.advanceTo(State.PRE_END);
-        }
-    }
-
-    private void convertPlayerToCombatant(Player player, boolean first) {
-        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
-        player.offer(Keys.CAN_FLY, false);
-
-        if (first) {
-            player.getInventory().clear();
-
-            for (ItemStackSnapshot snapshot : this.instanceType.getDefaultItems()) {
-                player.getInventory().offer(snapshot.createStack());
-            }
-
-            // TODO Send them a chat message with game details?
-        }
-
-    }
-
-    private void convertPlayerToSpectator(Player player) {
-        player.offer(Keys.GAME_MODE, GameModes.SPECTATOR);
-        player.offer(Keys.CAN_FLY, true);
-    }
-
-    @Listener(order = Order.LAST)
-    public void onClientConnectionJoin(ClientConnectionEvent.Join event, @First Player player) {
-        // Joined into this instance
-        if (this.registeredPlayers.contains(player.getUniqueId()) && player.getTransform().getExtent().getUniqueId().equals(this.worldRef.get().getUniqueId())) {
-            if (this.playerSpawns.containsKey(player.getUniqueId())) {
-                this.convertPlayerToSpectator(player);
-                this.killPlayer(player, Cause.of(NamedCause.source(this)));
-                this.detectIfRoundOver();
-            } else {
-                this.convertPlayerToCombatant(player, false);
-            }
-        }
-    }
-
-    @Listener(order = Order.LAST)
-    public void onMoveEntityTeleport(MoveEntityEvent.Teleport event, @First Player player) {
-        // Teleported into this instance
-        if (this.registeredPlayers.contains(player.getUniqueId()) && event.getToTransform().getExtent().getUniqueId().equals(this.worldRef.get().getUniqueId())) {
-            if (this.playerSpawns.containsKey(player.getUniqueId())) {
-                this.convertPlayerToSpectator(player);
-                this.killPlayer(player, Cause.of(NamedCause.source(this)));
-                this.detectIfRoundOver();
-            } else {
-                this.convertPlayerToCombatant(player, false);
-            }
-        }
-    }
-
-    @Listener(order = Order.LAST)
-    public void onDestructEntity(DestructEntityEvent.Death event, @Getter("getTargetEntity") Player player) {
-        if (player.getTransform().getExtent().getUniqueId().equals(this.worldRef.get().getUniqueId())) {
-            // Someone died, update scoreboard/advance to end
-            if (this.registeredPlayers.contains(player.getUniqueId())) {
-                this.killPlayer(player, event.getCause());
-                this.detectIfRoundOver();
-            }
-        }
-    }
-
-    @Listener(order = Order.LAST)
-    public void onRespawnPlayer(RespawnPlayerEvent event, @Getter("getTargetEntity") Player player) {
-        // Respawning into instance
-        if (this.registeredPlayers.contains(player.getUniqueId()) && event.getToTransform().getExtent().getUniqueId().equals(this.worldRef.get().getUniqueId())) {
-            if (this.playerSpawns.containsKey(player.getUniqueId())) {
-                this.convertPlayerToSpectator(player);
-            }
-        }
-    }
-
-    @Listener(order = Order.LAST)
-    public void onAttackEntity(AttackEntityEvent event) {
-        // People attacking people
-        if (event.getTargetEntity().getTransform().getExtent().getUniqueId().equals(this.worldRef.get().getUniqueId())) {
-            if (!this.state.canAnyoneAttack()) {
-                event.setCancelled(true);
-                return;
-            }
-            if (event.getTargetEntity() instanceof Player && !this.registeredPlayers.contains(event.getTargetEntity().getUniqueId())) {
-                event.setCancelled(true);
-            }
         }
     }
 
@@ -331,7 +273,12 @@ public final class Instance {
     }
 
     interface IState {
-        default boolean canAnyoneAttack() {
+
+        default boolean canAnyoneMove() {
+            return true;
+        }
+
+        default boolean canAnyoneInteract() {
             return false;
         }
 
@@ -341,17 +288,28 @@ public final class Instance {
     }
 
     public enum State implements IState {
-        IDLE,
-        PRE_START,
+
+        IDLE {
+            @Override
+            public boolean canAnyoneMove() {
+                return false;
+            }
+        },
+        PRE_START {
+            @Override
+            public boolean canAnyoneMove() {
+                return false;
+            }
+        },
         POST_START {
             @Override
-            public boolean canAnyoneAttack() {
+            public boolean canAnyoneInteract() {
                 return true;
             }
         },
         RUNNING {
             @Override
-            public boolean canAnyoneAttack() {
+            public boolean canAnyoneInteract() {
                 return true;
             }
 
