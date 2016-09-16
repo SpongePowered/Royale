@@ -43,6 +43,7 @@ import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.world.Dimension;
 import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
@@ -254,6 +255,9 @@ public final class InstanceManager {
                 if (fromInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
                     fromInstance.disqualifyPlayer(player, Cause.of(NamedCause.source(fromInstance)));
                     fromInstance.detectIfRoundOver();
+
+                    // Set them back to the default scoreboard
+                    player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
                 }
             } else {
                 // Switching into an instance
@@ -261,6 +265,8 @@ public final class InstanceManager {
                     // Already dead here? Adjust them as a spectator
                     if (toInstance.getPlayerDeaths().containsKey(player.getUniqueId())) {
                         toInstance.convertPlayerToSpectator(player);
+
+                        player.setScoreboard(toInstance.getScoreboard().getHandle());
                     }
                 }
             }
@@ -282,18 +288,30 @@ public final class InstanceManager {
 
     @Listener(order = Order.LAST)
     public void onRespawnPlayer(RespawnPlayerEvent event, @Getter("getTargetEntity") Player player) {
-        final World world = event.getFromTransform().getExtent();
-        final Instance instance = getInstance(world.getName()).orElse(null);
+        final World fromWorld = event.getFromTransform().getExtent();
+        World toWorld = event.getToTransform().getExtent();
+        final Instance fromInstance = getInstance(fromWorld.getName()).orElse(null);
+        Instance toInstance = getInstance(toWorld.getName()).orElse(null);
 
-        if (instance != null) {
-            if (instance.getRegisteredPlayers().contains(player.getUniqueId())) {
-                if (!event.getFromTransform().getExtent().getUniqueId().equals(event.getToTransform().getExtent().getUniqueId())) {
-                    if (event.getFromTransform().getExtent().isLoaded()) {
-                        event.setToTransform(event.getFromTransform());
-                    }
+        if (fromInstance != null && toInstance == null) {
+            if (fromInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
+                // Sometimes an instance is using a dimension that doesn't allow respawns. Override that logic so long as the instance world is
+                // still loaded
+                final Dimension dimension = fromWorld.getDimension();
+                if (!dimension.allowsPlayerRespawns() && fromWorld.isLoaded()) {
+                    event.setToTransform(event.getFromTransform());
                 }
+            }
+        }
 
-                instance.convertPlayerToSpectator(player);
+        toWorld = event.getToTransform().getExtent();
+        toInstance = getInstance(toWorld.getName()).orElse(null);
+
+        if (fromInstance != null) {
+            if (toInstance != null && fromInstance.equals(toInstance)) {
+                fromInstance.convertPlayerToSpectator(player);
+            } else {
+                player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
             }
         }
     }

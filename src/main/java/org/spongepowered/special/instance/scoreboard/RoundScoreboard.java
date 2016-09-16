@@ -70,6 +70,14 @@ public final class RoundScoreboard {
         this.scoreboard.updateDisplaySlot(this.objective, DisplaySlots.SIDEBAR);
     }
 
+    public Instance getInstance() {
+        return instance;
+    }
+
+    public Scoreboard getHandle() {
+        return scoreboard;
+    }
+
     public void addPlayer(Player player) {
         Score score = this.objective.getOrCreateScore(Text.of(player.getName()));
         score.setScore(0);
@@ -93,10 +101,6 @@ public final class RoundScoreboard {
         data.dead = true;
 
         this.sortScoreboard();
-    }
-
-    public boolean hasPlayer(Player player) {
-        return this.playerData.containsKey(player.getUniqueId());
     }
 
     private void sortScoreboard() {

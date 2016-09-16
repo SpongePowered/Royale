@@ -95,6 +95,10 @@ public final class Instance {
         return state;
     }
 
+    public RoundScoreboard getScoreboard() {
+        return scoreboard;
+    }
+
     public Set<UUID> getRegisteredPlayers() {
         return registeredPlayers;
     }
