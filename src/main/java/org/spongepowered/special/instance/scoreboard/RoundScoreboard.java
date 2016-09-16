@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -57,29 +58,39 @@ import java.util.UUID;
  */
 public final class RoundScoreboard {
 
-    private Instance instance;
-    private Scoreboard scoreboard;
-    private Objective objective;
-    private java.util.Map<UUID, PlayerData> playerData = new HashMap<>();
+    private final Scoreboard scoreboard;
+    private final Objective objective;
+    private final Score instanceTypeScore, dashesScore, emptyLineScore;
+    private final Map<UUID, PlayerData> playerData = new HashMap<>();
 
     public RoundScoreboard(Instance instance) {
-        this.instance = instance;
         this.scoreboard = Scoreboard.builder().build();
-        this.objective = Objective.builder().name("main").displayName(Text.of(TextColors.YELLOW, "Players")).criterion(Criteria.DUMMY).build();
+        this.objective = Objective.builder().name("main").displayName(Text.of(TextColors.GREEN, instance.getName())).criterion(Criteria.DUMMY).build();
+
+        // Instance type
+        instanceTypeScore = this.objective.getOrCreateScore(Text.of(TextColors.RED, instance.getType().getName()));
+        instanceTypeScore.setScore(0);
+
+        // Dashes
+        dashesScore = this.objective.getOrCreateScore(Text.of("----------------"));
+        dashesScore.setScore(0);
+
+        // Empty line
+        emptyLineScore = this.objective.getOrCreateScore(Text.EMPTY);
+        emptyLineScore.setScore(0);
+
         this.scoreboard.addObjective(objective);
         this.scoreboard.updateDisplaySlot(this.objective, DisplaySlots.SIDEBAR);
-    }
 
-    public Instance getInstance() {
-        return instance;
+        this.sortScoreboard();
     }
 
     public Scoreboard getHandle() {
-        return scoreboard;
+        return this.scoreboard;
     }
 
     public void addPlayer(Player player) {
-        Score score = this.objective.getOrCreateScore(Text.of(player.getName()));
+        final Score score = this.objective.getOrCreateScore(Text.of(player.getName()));
         score.setScore(0);
 
         Team team = Team.builder().name(player.getName()).build();
@@ -104,12 +115,12 @@ public final class RoundScoreboard {
     }
 
     private void sortScoreboard() {
-        List<Player> alive = new ArrayList<>();
-        List<Player> dead = new ArrayList<>();
+        final List<Player> alive = new ArrayList<>();
+        final List<Player> dead = new ArrayList<>();
 
-        for (java.util.Map.Entry<UUID, PlayerData> entry : this.playerData.entrySet()) {
-            Player player = Sponge.getServer().getPlayer(entry.getKey()).orElseThrow(() -> new RuntimeException(String.format("No player with UUID "
-                    + "%s 'found!", entry.getKey())));
+        for (Map.Entry<UUID, PlayerData> entry : this.playerData.entrySet()) {
+            final Player player = Sponge.getServer().getPlayer(entry.getKey()).orElseThrow(() -> new RuntimeException(String.format("No player with "
+                    + "UUID %s 'found!", entry.getKey())));
             if (entry.getValue().dead) {
                 dead.add(player);
             } else {
@@ -123,13 +134,21 @@ public final class RoundScoreboard {
         dead.sort(comparator);
         alive.sort(comparator);
 
+        int position = 0;
+
         for (int i = 0; i < dead.size(); i++) {
-            this.playerData.get(dead.get(i).getUniqueId()).score.setScore(i);
+            this.playerData.get(dead.get(i).getUniqueId()).score.setScore(position);
+            position += i;
         }
 
         for (int i = 0; i < alive.size(); i++) {
-            this.playerData.get(alive.get(i).getUniqueId()).score.setScore(dead.size() + i);
+            this.playerData.get(alive.get(i).getUniqueId()).score.setScore(position);
+            position += i;
         }
+
+        emptyLineScore.setScore(++position);
+        dashesScore.setScore(++position);
+        instanceTypeScore.setScore(++position);
     }
 
     private class PlayerData {

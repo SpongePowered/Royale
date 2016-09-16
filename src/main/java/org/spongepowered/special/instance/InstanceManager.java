@@ -203,6 +203,11 @@ public final class InstanceManager {
 
     @Listener(order = Order.LAST)
     public void onClientConnection(ClientConnectionEvent event, @First Player player) {
+        // We only care about these events
+        if (!(event instanceof ClientConnectionEvent.Join || event instanceof ClientConnectionEvent.Disconnect)) {
+            return;
+        }
+
         final World world = player.getWorld();
         final Instance instance = getInstance(world.getName()).orElse(null);
 
@@ -213,18 +218,26 @@ public final class InstanceManager {
                     if (instance.getPlayerDeaths().containsKey(player.getUniqueId())) {
                         instance.convertPlayerToSpectator(player);
                     }
-                } else if (event instanceof ClientConnectionEvent.Disconnect) {
+                } else {
                     // Player disconnecting instantly means they forfeit
                     instance.disqualifyPlayer(player, Cause.of(NamedCause.source(instance)));
-                    instance.detectIfRoundOver();
+                    if (instance.isRoundOver()) {
+                        instance.advanceTo(Instance.State.PRE_END);
+                    }
                 }
             }
         }
     }
 
     @Listener(order = Order.LAST)
-    public void onMoveEntity(MoveEntityEvent event, @First Player player) {
+    public void onMoveEntity(MoveEntityEvent event) {
 
+        if (!(event.getTargetEntity() instanceof Player)) {
+            // We only care about Players.
+            return;
+        }
+
+        final Player player = (Player) event.getTargetEntity();
         final World fromWorld = event.getFromTransform().getExtent();
         final World toWorld = event.getToTransform().getExtent();
 
@@ -254,7 +267,9 @@ public final class InstanceManager {
                 // Switching out of instance means we kill them in the instance they left
                 if (fromInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
                     fromInstance.disqualifyPlayer(player, Cause.of(NamedCause.source(fromInstance)));
-                    fromInstance.detectIfRoundOver();
+                    if (fromInstance.isRoundOver()) {
+                        fromInstance.advanceTo(Instance.State.PRE_END);
+                    }
 
                     // Set them back to the default scoreboard
                     player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
@@ -281,7 +296,9 @@ public final class InstanceManager {
         if (instance != null) {
             if (instance.getRegisteredPlayers().contains(player.getUniqueId())) {
                 instance.disqualifyPlayer(player, event.getCause());
-                instance.detectIfRoundOver();
+                if (instance.isRoundOver()) {
+                    instance.advanceTo(Instance.State.PRE_END);
+                }
             }
         }
     }
@@ -310,6 +327,8 @@ public final class InstanceManager {
         if (fromInstance != null) {
             if (toInstance != null && fromInstance.equals(toInstance)) {
                 fromInstance.convertPlayerToSpectator(player);
+            } else if (toInstance != null){
+                player.setScoreboard(toInstance.getScoreboard().getHandle());
             } else {
                 player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
             }

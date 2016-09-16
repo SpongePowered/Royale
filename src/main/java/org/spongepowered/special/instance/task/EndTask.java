@@ -41,12 +41,11 @@ import java.util.UUID;
 
 public final class EndTask extends RoundTask {
 
-    private Title title;
     private final Set<UUID> winners;
+    private final long endLengthTotal;
 
     private Task task;
-
-    private final long endLengthTotal;
+    private Title title;
     private long endLengthRemaining;
 
     public EndTask(Instance instance, Set<UUID> winners) {
@@ -62,30 +61,33 @@ public final class EndTask extends RoundTask {
         if (this.endLengthTotal == this.endLengthRemaining) {
             this.task = task;
 
+            // TODO Remove this stupid code
             Player winner = null;
             for (UUID uuid : winners) {
                 winner = Sponge.getServer().getPlayer(uuid).orElse(null);
             }
 
             // TODO Handle multiple winners
-            this.title = Title.builder()
-                    .stay((int) ((this.endLengthTotal - 1) * 20))
-                    .fadeIn(0)
-                    .fadeOut(20)
-                    .title(Text.of(TextColors.YELLOW, winner.get(Keys.DISPLAY_NAME).get(), TextColors.WHITE, " is the winner!"))
-                    .build();
+            if (winner != null) {
+                this.title = Title.builder()
+                        .stay((int) ((this.endLengthTotal - 1) * 20))
+                        .fadeIn(0)
+                        .fadeOut(20)
+                        .title(Text.of(TextColors.YELLOW, winner.get(Keys.DISPLAY_NAME).get(), TextColors.WHITE, " is the winner!"))
+                        .build();
 
-            winner.spawnParticles(ParticleEffect.builder()
-                            .type(ParticleTypes.FIREWORKS_SPARK)
-                            .count(30)
-                            .build(),
-                    winner.getLocation().getPosition());
+                winner.spawnParticles(ParticleEffect.builder()
+                                .type(ParticleTypes.FIREWORKS_SPARK)
+                                .count(30)
+                                .build(),
+                        winner.getLocation().getPosition());
 
-            getInstance().getHandle().ifPresent((world) -> {
-                if (world.isLoaded()) {
-                    world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> onlinePlayer.sendTitle(title));
-                }
-            });
+                getInstance().getHandle().ifPresent((world) -> {
+                    if (world.isLoaded()) {
+                        world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> onlinePlayer.sendTitle(title));
+                    }
+                });
+            }
         }
 
         this.endLengthRemaining--;

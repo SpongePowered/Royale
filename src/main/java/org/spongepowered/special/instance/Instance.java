@@ -133,6 +133,16 @@ public final class Instance {
             throw new RuntimeException("Attempt to advance an instance whose world no longer exists!");
         }
 
+        if (this.state == state) {
+            return;
+        }
+
+        if (state.doesCheckRoundStatusOnAdvance()) {
+            if (this.isRoundOver()) {
+                state = State.PRE_END;
+            }
+        }
+
         this.onStateAdvance(state);
         this.state = state;
     }
@@ -173,10 +183,9 @@ public final class Instance {
         player.getInventory().clear();
     }
 
-    void detectIfRoundOver() {
-        if (this.playerDeaths.size() >= this.playerSpawns.size() - 1) {
-            this.advanceTo(State.PRE_END);
-        }
+    boolean isRoundOver() {
+        return this.playerDeaths.size() >= this.playerSpawns.size() - 1;
+
     }
 
     private void convertPlayerToCombatant(Player player, boolean first) {
@@ -198,7 +207,7 @@ public final class Instance {
     }
 
     private void onStateAdvance(State next) {
-        if (next.cancelPreviousTasks()) {
+        if (next.doesCancelTasksOnAdvance()) {
             // Cancel previous tasks when advancing a state. Prevents stale state tasks
             for (UUID uuid : this.tasks) {
                 final Task task = Sponge.getScheduler().getTaskById(uuid).orElse(null);
@@ -286,7 +295,11 @@ public final class Instance {
             return false;
         }
 
-        default boolean cancelPreviousTasks() {
+        default boolean doesCancelTasksOnAdvance() {
+            return true;
+        }
+
+        default boolean doesCheckRoundStatusOnAdvance() {
             return true;
         }
     }
@@ -296,6 +309,11 @@ public final class Instance {
         IDLE {
             @Override
             public boolean canAnyoneMove() {
+                return false;
+            }
+
+            @Override
+            public boolean doesCheckRoundStatusOnAdvance() {
                 return false;
             }
         },
@@ -318,13 +336,28 @@ public final class Instance {
             }
 
             @Override
-            public boolean cancelPreviousTasks() {
+            public boolean doesCancelTasksOnAdvance() {
                 return false;
             }
         },
-        PRE_END,
-        POST_END,
-        FORCE_STOP
+        PRE_END {
+            @Override
+            public boolean doesCheckRoundStatusOnAdvance() {
+                return false;
+            }
+        },
+        POST_END {
+            @Override
+            public boolean doesCheckRoundStatusOnAdvance() {
+                return false;
+            }
+        },
+        FORCE_STOP {
+            @Override
+            public boolean doesCheckRoundStatusOnAdvance() {
+                return false;
+            }
+        }
     }
 
     public static class PlayerDeathRecord {
