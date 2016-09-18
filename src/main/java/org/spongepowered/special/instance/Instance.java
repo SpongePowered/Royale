@@ -49,9 +49,11 @@ import org.spongepowered.special.instance.task.StartTask;
 
 import java.lang.ref.WeakReference;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -242,7 +244,7 @@ public final class Instance {
                 // TODO This activates before any additional code is called in the round task. Useless state for now, could be handy later
                 break;
             case PRE_END:
-                final Set<UUID> winners = new HashSet<>();
+                final List<UUID> winners = new ArrayList<>();
                 winners.addAll(this.playerSpawns.keySet());
                 winners.removeAll(this.playerDeaths.keySet());
                 this.tasks.add(Task.builder()

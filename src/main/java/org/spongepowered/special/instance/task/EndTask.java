@@ -36,19 +36,21 @@ import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.title.Title;
 import org.spongepowered.special.instance.Instance;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 public final class EndTask extends RoundTask {
 
-    private final Set<UUID> winners;
+    private final List<UUID> winners;
     private final long endLengthTotal;
 
     private Task task;
     private Title title;
     private long endLengthRemaining;
 
-    public EndTask(Instance instance, Set<UUID> winners) {
+    public EndTask(Instance instance, List<UUID> winners) {
         super(instance);
         this.winners = winners;
         this.endLengthTotal = instance.getType().getRoundEndLength();
@@ -57,37 +59,45 @@ public final class EndTask extends RoundTask {
 
     @Override
     public void accept(Task task) {
+        if (winners.size() < 1) {
+            return;
+        }
+
         // First tick, kickoff end sequence
         if (this.endLengthTotal == this.endLengthRemaining) {
             this.task = task;
 
-            // TODO Remove this stupid code
-            Player winner = null;
-            for (UUID uuid : winners) {
-                winner = Sponge.getServer().getPlayer(uuid).orElse(null);
+            final Optional<Player> winner;
+            if (this.winners.size() > 1) {
+                winner = Optional.empty();
+            } else {
+                winner = Sponge.getServer().getPlayer(winners.get(0));
             }
 
-            // TODO Handle multiple winners
-            if (winner != null) {
-                this.title = Title.builder()
-                        .stay((int) ((this.endLengthTotal - 1) * 20))
-                        .fadeIn(0)
-                        .fadeOut(20)
-                        .title(Text.of(TextColors.YELLOW, winner.get(Keys.DISPLAY_NAME).get(), TextColors.WHITE, " is the winner!"))
-                        .build();
+            final Text content = winner.isPresent() ?
+                    Text.of(TextColors.GREEN, winner.get().get(Keys.DISPLAY_NAME).get(), TextColors.WHITE, " is the winner!") :
+                    Text.of(TextColors.YELLOW, "Draw");
 
-                winner.spawnParticles(ParticleEffect.builder()
+            this.title = Title.builder()
+                    .stay((int) ((this.endLengthTotal - 1) * 20))
+                    .fadeIn(0)
+                    .fadeOut(20)
+                    .title(content)
+                    .build();
+
+            if (winner.isPresent()) {
+                winner.get().spawnParticles(ParticleEffect.builder()
                                 .type(ParticleTypes.FIREWORKS_SPARK)
                                 .count(30)
                                 .build(),
-                        winner.getLocation().getPosition());
-
-                getInstance().getHandle().ifPresent((world) -> {
-                    if (world.isLoaded()) {
-                        world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> onlinePlayer.sendTitle(title));
-                    }
-                });
+                        winner.get().getLocation().getPosition());
             }
+
+            getInstance().getHandle().ifPresent((world) -> {
+                if (world.isLoaded()) {
+                    world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> onlinePlayer.sendTitle(title));
+                }
+            });
         }
 
         this.endLengthRemaining--;
@@ -99,6 +109,8 @@ public final class EndTask extends RoundTask {
 
     @Override
     public void cancel() {
-        this.task.cancel();
+        if (this.task != null) {
+            this.task.cancel();
+        }
     }
 }

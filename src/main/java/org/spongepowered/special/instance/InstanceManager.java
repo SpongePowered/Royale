@@ -340,7 +340,7 @@ public final class InstanceManager {
         final World world = player.getWorld();
         final Instance instance = getInstance(world.getName()).orElse(null);
 
-        if (instance != null && !instance.getState().canAnyoneInteract()) {
+        if (instance != null && !instance.getState().canAnyoneInteract() && instance.getRegisteredPlayers().contains(player.getUniqueId())) {
             event.setCancelled(true);
         }
     }
