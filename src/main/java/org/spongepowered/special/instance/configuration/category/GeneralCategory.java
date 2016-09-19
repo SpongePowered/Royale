@@ -41,13 +41,29 @@ public final class GeneralCategory extends AbstractConfigurationCategory {
     @Setting(value = "name-template", comment = "Template used to display the name to the user.")
     public TextTemplate nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
 
-    @Setting(value = "map-length", comment = "The map's length. Used to handle unknown spawns, end of round player cleanup, and other things. "
-            + "Specifying -1 tells the plugin to treat this value as unknown. Default (" + Constants.Map.DEFAULT_MAP_LENGTH + ").")
-    public int mapLength = Constants.Map.DEFAULT_MAP_LENGTH;
+    @Setting(value = "center-x", comment = "The center of the map on the x-axis. 'min-x' and 'max-x' are relative to this coordinate.")
+    public int centerX = 0;
 
-    @Setting(value = "map-width", comment = "The map's width. Used to handle unknown spawns, end of round player cleanup, and other things. "
-            + "Specifying -1 tells the plugin to treat this value as unknown. Default (" + Constants.Map.DEFAULT_MAP_WIDTH + ").")
-    public int mapWidth = Constants.Map.DEFAULT_MAP_WIDTH;
+    @Setting(value = "center-z", comment = "The center of the map on the z-axis. 'min-z' and 'max-z' are relative to this coordinate.")
+    public int centerZ = 0;
+
+    @Setting(value = "min-x", comment = "The minimum x-coordinate of the map, relative to center-x. This is inclusive, so 'center-x + min-x' will be the actual minimum coordinate.")
+    public int minX = -Constants.Map.DEFAULT_MAP_WIDTH;
+
+    @Setting(value = "max-x", comment = "The maximum x-coordinate of the map, relative to center-x. This is exclusive, so 'center-x + max-x' will be one greater than the actual maximum coordinate.")
+    public int maxX = Constants.Map.DEFAULT_MAP_WIDTH;
+
+    @Setting(value = "min-y", comment = "The minimum y-coordinate of the map.")
+    public int minY = 0;
+
+    @Setting(value = "min-y", comment = "The maximum y-coordinate of the map.")
+    public int maxY = 256;
+
+    @Setting(value = "min-z", comment = "The minimum z-coordinate of the map, relative to center-z. This is inclusive, so 'center-z + min-z' will be the actual minimum coordinate")
+    public int minZ = -Constants.Map.DEFAULT_MAP_LENGTH;
+
+    @Setting(value = "max-z", comment = "The maximum z-coordinate of the map, relative to center-z. This is exclusive, so 'center-z + max-z' will be one greater than the actual maximum coordinate.")
+    public int maxZ = Constants.Map.DEFAULT_MAP_LENGTH;
 
     @Setting(value = "map-mutators", comment = "Map Mutators to apply after the instance is loaded.")
     public List<String> mapMutators = Constants.Map.DEFAULT_MAP_MUTATOR_IDS;

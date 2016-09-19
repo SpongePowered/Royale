@@ -57,8 +57,8 @@ public abstract class InstanceMutator implements CatalogType {
         Special.instance.getLogger().info("Mutating instance [" + instance.getName() + "] with mutator [" + this.getId() + "]...");
     }
 
-    public boolean visitBlock(Instance instance, Extent area, BlockState state, int x, int y, int z) {
-        return false;
+    public BlockState visitBlock(Instance instance, Extent area, BlockState state, int x, int y, int z) {
+        return null;
     }
 
     @Override

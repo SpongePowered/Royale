@@ -59,7 +59,14 @@ public final class InstanceType implements CatalogType {
     private TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
     private List<ItemStackSnapshot> defaultItems;
     private long roundStartLength, roundLength, roundEndLength;
-    private int mapWidth, mapLength;
+    private int centerX;
+    private int centerZ;
+    private int minX;
+    private int minY;
+    private int minZ;
+    private int maxX;
+    private int maxY;
+    private int maxZ;
     private int automaticStartPlayerCount;
     private Vector3i min, max, size;
     private InstanceMutatorPipeline mutatorPipeline;
@@ -68,8 +75,14 @@ public final class InstanceType implements CatalogType {
         this.id = id;
         this.name = builder.name == null ? id : builder.name;
         this.nameTemplate = builder.nameTemplate;
-        this.mapWidth = builder.mapWidth;
-        this.mapLength = builder.mapLength;
+        this.centerX = builder.centerX;
+        this.centerZ = builder.centerZ;
+        this.minX = builder.minX;
+        this.minY = builder.minY;
+        this.minZ = builder.minZ;
+        this.maxX = builder.maxX;
+        this.maxY = builder.maxY;
+        this.maxZ = builder.maxZ;
         this.mutatorPipeline = new InstanceMutatorPipeline();
         this.mutatorPipeline.getMutators().addAll(builder.mutators);
         this.defaultItems = builder.defaultItems;
@@ -79,9 +92,9 @@ public final class InstanceType implements CatalogType {
         this.roundEndTemplate = builder.roundEndTemplate;
         this.roundEndLength = builder.roundEndLength;
         this.automaticStartPlayerCount = builder.automaticStartPlayerCount;
-        this.size = new Vector3i(builder.mapWidth, 256, builder.mapLength);
-        this.min = new Vector3i(-builder.mapWidth / 2, 0, -builder.mapLength / 2);
-        this.max = this.min.add(this.size).sub(1, 1, 1);
+        this.size = new Vector3i(builder.maxX - builder.minX, builder.maxY - builder.minY, builder.maxZ - builder.minZ);
+        this.min = new Vector3i(builder.centerX + builder.minX, builder.minY, builder.centerZ + builder.minZ);
+        this.max = new Vector3i(builder.centerX + builder.maxX, builder.maxY, builder.centerZ + builder.maxZ).sub(1, 1, 1);
     }
 
     public static Builder builder() {
@@ -155,8 +168,14 @@ public final class InstanceType implements CatalogType {
     public void injectFromConfig(InstanceTypeConfiguration value) {
         this.name = value.general.name;
         this.nameTemplate = value.general.nameTemplate;
-        this.mapWidth = value.general.mapWidth;
-        this.mapLength = value.general.mapLength;
+        this.centerX = value.general.centerX;
+        this.centerZ = value.general.centerZ;
+        this.minX = value.general.minX;
+        this.minY = value.general.minY;
+        this.minZ = value.general.minZ;
+        this.maxX = value.general.maxX;
+        this.maxY = value.general.maxY;
+        this.maxZ = value.general.maxZ;
         this.mutatorPipeline.getMutators().clear();
         this.mutatorPipeline.getMutators().addAll(InstanceMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators));
         this.defaultItems.clear();
@@ -166,9 +185,9 @@ public final class InstanceType implements CatalogType {
         this.roundStartLength = value.round.start;
         this.roundLength = value.round.length;
         this.roundEndLength = value.round.end;
-        this.size = new Vector3i(this.mapWidth, 256, this.mapLength);
-        this.min = new Vector3i(-this.mapWidth / 2, 0, -this.mapLength / 2);
-        this.max = this.min.add(this.size).sub(1, 1, 1);
+        this.size = new Vector3i(this.maxX - this.minX, this.maxY - this.minY, this.maxZ - this.minZ);
+        this.min = new Vector3i(this.centerX + this.minX, this.minY, this.centerZ + this.minZ);
+        this.max = new Vector3i(this.centerX + this.maxX, this.maxY, this.centerZ + this.maxZ).sub(1, 1, 1);
     }
 
     @Override
@@ -190,20 +209,30 @@ public final class InstanceType implements CatalogType {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-                .add("id", this.id)
-                .add("name", this.name)
-                .add("nameTemplate", this.nameTemplate)
-                .add("mapWidth", this.mapWidth)
-                .add("mapLength", this.mapLength)
-                .add("mutatorPipeline", this.mutatorPipeline)
-                .add("defaultItems", this.defaultItems)
-                .add("roundStartLength", this.roundStartLength)
-                .add("roundStartTemplate", this.roundStartTemplate)
-                .add("roundLength", this.roundLength)
-                .add("roundEndLength", this.roundEndLength)
-                .add("roundEndTemplate", this.roundEndTemplate)
-                .toString();
+        return "InstanceType{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", nameTemplate=" + nameTemplate +
+                ", roundStartTemplate=" + roundStartTemplate +
+                ", roundEndTemplate=" + roundEndTemplate +
+                ", defaultItems=" + defaultItems +
+                ", roundStartLength=" + roundStartLength +
+                ", roundLength=" + roundLength +
+                ", roundEndLength=" + roundEndLength +
+                ", centerX=" + centerX +
+                ", centerZ=" + centerZ +
+                ", minX=" + minX +
+                ", minY=" + minY +
+                ", minZ=" + minZ +
+                ", maxX=" + maxX +
+                ", maxY=" + maxY +
+                ", maxZ=" + maxZ +
+                ", automaticStartPlayerCount=" + automaticStartPlayerCount +
+                ", min=" + min +
+                ", max=" + max +
+                ", size=" + size +
+                ", mutatorPipeline=" + mutatorPipeline +
+                '}';
     }
 
     public static final class Builder implements ResettableBuilder<InstanceType, Builder> {
@@ -211,10 +240,18 @@ public final class InstanceType implements CatalogType {
         String name;
         TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
         List<ItemStackSnapshot> defaultItems;
-        int mapLength, mapWidth;
         long roundStartLength, roundLength, roundEndLength;
         int automaticStartPlayerCount;
         Set<InstanceMutator> mutators;
+
+        private int centerX;
+        private int centerZ;
+        private int minX;
+        private int minY;
+        private int minZ;
+        private int maxX;
+        private int maxY;
+        private int maxZ;
 
         public Builder() {
             reset();
@@ -224,8 +261,6 @@ public final class InstanceType implements CatalogType {
         public Builder from(InstanceType value) {
             this.name = value.name;
             this.nameTemplate = value.nameTemplate;
-            this.mapWidth = value.size.getX();
-            this.mapLength = value.size.getZ();
             this.mutators = Sets.newHashSet(value.mutatorPipeline.getMutators());
             this.defaultItems = Lists.newLinkedList(value.defaultItems);
             this.roundStartTemplate = value.roundStartTemplate;
@@ -240,8 +275,14 @@ public final class InstanceType implements CatalogType {
         public Builder from(InstanceTypeConfiguration value) {
             this.name = value.general.name;
             this.nameTemplate = value.general.nameTemplate;
-            this.mapWidth = value.general.mapWidth;
-            this.mapLength = value.general.mapLength;
+            this.centerX = value.general.centerX;
+            this.centerZ = value.general.centerZ;
+            this.minX = value.general.minX;
+            this.minY = value.general.minY;
+            this.minZ = value.general.minZ;
+            this.maxX = value.general.maxX;
+            this.maxY = value.general.maxY;
+            this.maxZ = value.general.maxZ;
             this.mutators = InstanceMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators);
             this.defaultItems = Lists.newLinkedList(value.round.defaultItems);
             this.roundStartTemplate = value.round.startTemplate;
@@ -257,8 +298,6 @@ public final class InstanceType implements CatalogType {
         public Builder reset() {
             this.name = null;
             this.nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
-            this.mapWidth = Constants.Map.DEFAULT_MAP_WIDTH;
-            this.mapLength = Constants.Map.DEFAULT_MAP_LENGTH;
             this.mutators = Constants.Map.DEFAULT_MAP_MUTATORS;
             this.defaultItems = Constants.Map.Round.DEFAULT_ITEMS;
             this.roundStartTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_START;
@@ -317,22 +356,6 @@ public final class InstanceType implements CatalogType {
             return this;
         }
 
-        public Builder width(int width) {
-            if (width < 0) {
-                width = Constants.Map.DEFAULT_MAP_WIDTH;
-            }
-            this.mapWidth = width;
-            return this;
-        }
-
-        public Builder length(int length) {
-            if (length < 0) {
-                length = Constants.Map.DEFAULT_MAP_LENGTH;
-            }
-            this.mapLength = length;
-            return this;
-        }
-
         public Builder mutator(InstanceMutator mutator) {
             this.mutators.add(checkNotNull(mutator));
             return this;
@@ -375,8 +398,14 @@ public final class InstanceType implements CatalogType {
             final InstanceTypeConfiguration config = adapter.getConfig();
             config.general.name = this.name;
             config.general.nameTemplate = this.nameTemplate;
-            config.general.mapWidth = this.mapWidth;
-            config.general.mapLength = this.mapLength;
+            config.general.centerX = this.centerX;
+            config.general.centerZ = this.centerZ;
+            config.general.minX =    this.minX;
+            config.general.minY =    this.minY;
+            config.general.minZ =    this.minZ;
+            config.general.maxX =    this.maxX;
+            config.general.maxY =    this.maxY;
+            config.general.maxZ =    this.maxZ;
             config.general.mapMutators.clear();
             config.general.mapMutators.addAll(this.mutators.stream().map(InstanceMutator::getId).collect(Collectors.toList()));
 

@@ -45,7 +45,8 @@ public final class ChestMutator extends SignMutator {
         super("chest", "Chest Mutator", "chest");
     }
 
-    public boolean visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign) {
+    @Override
+    public BlockState visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign) {
         final String lootTableId = sign.lines().get(1).toPlain();
         final LootTable<ItemArchetype> lootTable = Loot.getTable(lootTableId);
         final List<ItemArchetype> items = lootTable.get(Special.instance.getRandom());
@@ -57,13 +58,11 @@ public final class ChestMutator extends SignMutator {
 
         final TileEntity tileEntity = area.getTileEntity(x, y, z).orElse(null);
         if (tileEntity == null) {
-            Special.instance.getLogger().error("Something is quite wrong...we set a Chest down yet found no tile entity. This is a serious "
+            throw new IllegalStateException("Something is quite wrong...we set a Chest down yet found no tile entity. This is a serious "
                     + "issue likely due to server misconfiguration!");
-            return false;
         } else if (!(tileEntity instanceof Chest)) {
-            Special.instance.getLogger().error("Something is quite wrong...we set a Chest down yet found a [" + tileEntity.getClass()
+            throw new IllegalStateException("Something is quite wrong...we set a Chest down yet found a [" + tileEntity.getClass()
                     .getSimpleName() + "] instead. This is a serious issue likely due to server misconfiguration!");
-            return false;
         }
 
         final Chest chest = (Chest) tileEntity;
@@ -71,7 +70,7 @@ public final class ChestMutator extends SignMutator {
             chest.getInventory().offer(item.create(Special.instance.getRandom()));
         }
 
-        return true;
+        return state;
     }
 
 }

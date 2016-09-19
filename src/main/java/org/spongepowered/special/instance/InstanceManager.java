@@ -38,6 +38,7 @@ import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.action.InteractEvent;
+import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
 import org.spongepowered.api.event.cause.Cause;
@@ -65,10 +66,12 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public final class InstanceManager {
 
@@ -77,6 +80,8 @@ public final class InstanceManager {
 
     // Instance Type -> List(Instances)
     private final Map<InstanceType, List<Instance>> instancesByTypes = new HashMap<>();
+
+    private final Set<String> canUseFastPass = new HashSet<>();
 
     public void createInstance(String instanceName, InstanceType type) throws Exception {
         if (this.instances.containsKey(instanceName)) {
@@ -107,7 +112,7 @@ public final class InstanceManager {
             instances.add(instance);
 
             final InstanceMutatorPipeline pipeline = type.getMutatorPipeline();
-            pipeline.mutate(instance);
+            pipeline.mutate(instance, this.canUseFastPass.contains(world.getName()));
         } else {
             world.setKeepSpawnLoaded(true);
             world.setSerializationBehavior(SerializationBehaviors.NONE);
@@ -124,7 +129,7 @@ public final class InstanceManager {
             instances.add(instance);
 
             final InstanceMutatorPipeline pipeline = type.getMutatorPipeline();
-            pipeline.mutate(instance);
+            pipeline.mutate(instance, this.canUseFastPass.contains(world.getName()));
         }
     }
 
@@ -141,6 +146,14 @@ public final class InstanceManager {
         }
 
         instance.advanceTo(Instance.State.PRE_START);
+    }
+
+    public void setWorldModified(String instanceName, boolean modified) {
+        if (modified) {
+            this.canUseFastPass.remove(instanceName);
+        } else {
+            this.canUseFastPass.add(instanceName);
+        }
     }
 
     public void endInstance(String instanceName, boolean force) throws UnknownInstanceException {
@@ -190,6 +203,8 @@ public final class InstanceManager {
         if (!server.unloadWorld(world)) {
             throw new RuntimeException("Failed to unload instance world!"); // TODO Specialized exception
         }
+
+        this.canUseFastPass.add(instance.getName());
     }
 
     public Optional<Instance> getInstance(String instanceName) {
@@ -406,6 +421,16 @@ public final class InstanceManager {
                 }
             }
         });
+    }
+
+    @Listener
+    public void onChangeBlock(ChangeBlockEvent event, @First Player player) {
+        String name = event.getTargetWorld().getName();
+        if (!this.getInstance(name).isPresent() && this.canUseFastPass.contains(name)) {
+            canUseFastPass.remove(name);
+            player.sendMessages(Text.of(TextColors.YELLOW, "You have modified the world '%s' - mutators will take longer to run the next time an instance of this map is started.\n" +
+                                             String.format("If you make any modifications outside of the game, make sure to run '/worldmodified %s' so that your changes are detected.", name)));
+        }
     }
 
     private boolean isTpSign(List<Text> lines) {

@@ -43,31 +43,29 @@ public abstract class SignMutator extends InstanceMutator {
         this.sign_id = sign_id;
     }
 
-    public abstract boolean visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign);
+    public abstract BlockState visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign);
 
-    public boolean visitBlock(Instance instance, Extent area, BlockState state, int x, int y, int z) {
+    @Override
+    public BlockState visitBlock(Instance instance, Extent area, BlockState state, int x, int y, int z) {
         if (state.getType() != BlockTypes.STANDING_SIGN && state.getType() != BlockTypes.WALL_SIGN) {
-            return false;
+            return null;
         }
 
         final TileEntity tileEntity = area.getTileEntity(x, y, z).orElse(null);
         if (tileEntity == null) {
-            Special.instance.getLogger().error("Something is quite wrong...we have a sign type yet found no tile entity. This is a serious "
+            throw new IllegalStateException("Something is quite wrong...we have a sign type yet found no tile entity. This is a serious "
                     + "issue likely due to server misconfiguration!");
-            return false;
         } else if (!(tileEntity instanceof Sign)) {
-            Special.instance.getLogger().error("Something is quite wrong...we have a sign type yet found a [" + tileEntity.getClass()
+            throw new IllegalStateException("Something is quite wrong...we have a sign type yet found a [" + tileEntity.getClass()
                     .getSimpleName() + "] instead. This is a serious issue likely due to server misconfiguration!");
-            return false;
         }
 
         final Sign sign = (Sign) tileEntity;
         if (!sign.lines().get(0).toPlain().equalsIgnoreCase(this.sign_id)) {
-            return false;
+            return null;
         }
 
-        visitSign(instance, area, state, x, y, z, sign);
-        return true;
+        return visitSign(instance, area, state, x, y, z, sign);
     }
 
     @Override

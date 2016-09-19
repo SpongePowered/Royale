@@ -300,6 +300,21 @@ final class Commands {
             })
             .build();
 
+    private static final CommandSpec worldModifiedCommand = CommandSpec.builder()
+            .description(Text.of("Sets whether a world has been modified"))
+            .extendedDescription(Text.of("This controls whether or not a fast mutator pass can be used"))
+            .arguments(world(Text.of("world")), optional(bool(Text.of("modified")), true))
+            .permission(Constants.Permissions.WORLD_MODIFIED_COMMAND)
+            .executor((src, args) -> {
+                WorldProperties properties = args.<WorldProperties>getOne("world").get();
+                boolean modified = args.<Boolean>getOne("modified").get();
+                Special.instance.getInstanceManager().setWorldModified(properties.getWorldName(), modified);
+
+                src.sendMessage(Text.of(TextColors.GREEN, String.format("Set modified state of world %s to %s!", properties.getWorldName(), modified)));
+                return CommandResult.success();
+            })
+            .build();
+
     static final CommandSpec rootCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.help")
             .description(Text.of("Displays available commands"))
@@ -316,6 +331,7 @@ final class Commands {
             .child(reloadCommand, "reload", "rel")
             .child(setCommand, "set")
             .child(tpWorldCommand, "tpworld", "tpw")
+            .child(worldModifiedCommand, "worldmodified", "modified", "wm")
             .build();
 
     private static Text format(TextColor color, String content) {

@@ -38,13 +38,14 @@ public final class PlayerSpawnMutator extends SignMutator {
         super("player_spawn", "Player Spawn Finder", "player_spawn");
     }
 
-    public boolean visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign) {
+    @Override
+    public BlockState visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign) {
         area.setBlock(x, y, z, BlockTypes.AIR.getDefaultState(), Special.instance.getPluginCause());
 
         instance.addPlayerSpawn(new Vector3d(x + 0.5, y + 0.0125, z + 0.5));
 
         Special.instance.getLogger().info("Found player spawn at " + x + "x " + y + "y " + z + "z.");
 
-        return true;
+        return state;
     }
 }
