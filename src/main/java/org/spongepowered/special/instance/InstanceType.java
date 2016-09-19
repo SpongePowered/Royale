@@ -60,6 +60,7 @@ public final class InstanceType implements CatalogType {
     private List<ItemStackSnapshot> defaultItems;
     private long roundStartLength, roundLength, roundEndLength;
     private int mapWidth, mapLength;
+    private int automaticStartPlayerCount;
     private Vector3i min, max, size;
     private InstanceMutatorPipeline mutatorPipeline;
 
@@ -77,6 +78,7 @@ public final class InstanceType implements CatalogType {
         this.roundLength = builder.roundLength;
         this.roundEndTemplate = builder.roundEndTemplate;
         this.roundEndLength = builder.roundEndLength;
+        this.automaticStartPlayerCount = builder.automaticStartPlayerCount;
         this.size = new Vector3i(builder.mapWidth, 256, builder.mapLength);
         this.min = new Vector3i(-builder.mapWidth / 2, 0, -builder.mapLength / 2);
         this.max = this.min.add(this.size).sub(1, 1, 1);
@@ -118,6 +120,10 @@ public final class InstanceType implements CatalogType {
 
     public TextTemplate getRoundEndTemplate() {
         return this.roundEndTemplate;
+    }
+
+    public int getAutomaticStartPlayerCount() {
+        return this.automaticStartPlayerCount;
     }
 
     public List<ItemStackSnapshot> getDefaultItems() {
@@ -207,6 +213,7 @@ public final class InstanceType implements CatalogType {
         List<ItemStackSnapshot> defaultItems;
         int mapLength, mapWidth;
         long roundStartLength, roundLength, roundEndLength;
+        int automaticStartPlayerCount;
         Set<InstanceMutator> mutators;
 
         public Builder() {
@@ -226,6 +233,7 @@ public final class InstanceType implements CatalogType {
             this.roundStartLength = value.roundStartLength;
             this.roundLength = value.roundLength;
             this.roundEndLength = value.roundEndLength;
+            this.automaticStartPlayerCount = value.automaticStartPlayerCount;
             return this;
         }
 
@@ -241,6 +249,7 @@ public final class InstanceType implements CatalogType {
             this.roundStartLength = value.round.start;
             this.roundLength = value.round.length;
             this.roundEndLength = value.round.end;
+            this.automaticStartPlayerCount = value.round.automaticStartPlayerCount;
             return this;
         }
 
@@ -257,6 +266,7 @@ public final class InstanceType implements CatalogType {
             this.roundStartLength = Constants.Map.Round.DEFAULT_START_LENGTH;
             this.roundLength = Constants.Map.Round.DEFAULT_LENGTH;
             this.roundEndLength = Constants.Map.Round.DEFAULT_END_LENGTH;
+            this.automaticStartPlayerCount = Constants.Map.Round.DEFAULT_AUTOMATIC_START_PLAYER_COUNT;
             return this;
         }
 
@@ -328,6 +338,11 @@ public final class InstanceType implements CatalogType {
             return this;
         }
 
+        public Builder automaticStartPlayerCount(int playerCount) {
+            this.automaticStartPlayerCount = playerCount;
+            return this;
+        }
+
         public Builder mutator(String mutator_id) {
             Optional<InstanceMutator> mutator = InstanceMutatorRegistryModule.getInstance().getById(mutator_id);
             if (mutator.isPresent()) {
@@ -372,6 +387,7 @@ public final class InstanceType implements CatalogType {
             config.round.length = this.roundLength;
             config.round.end = this.roundEndLength;
             config.round.endTemplate = this.roundEndTemplate;
+            config.round.automaticStartPlayerCount = this.automaticStartPlayerCount;
             adapter.save();
 
             return new InstanceType(id, this);

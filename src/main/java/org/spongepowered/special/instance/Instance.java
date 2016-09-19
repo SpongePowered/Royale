@@ -41,6 +41,7 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
+import org.spongepowered.special.instance.exception.UnknownInstanceException;
 import org.spongepowered.special.instance.scoreboard.RoundScoreboard;
 import org.spongepowered.special.instance.task.EndTask;
 import org.spongepowered.special.instance.task.ProgressTask;
@@ -175,6 +176,15 @@ public final class Instance {
         this.scoreboard.addPlayer(player);
 
         player.setLocation(new Location<>(this.worldRef.get(), player_spawn));
+
+        int playerCount = this.instanceType.getAutomaticStartPlayerCount();
+        if (playerCount == this.registeredPlayers.size() && this.state == State.IDLE) {
+            try {
+                Special.instance.getInstanceManager().startInstance(this.worldName);
+            } catch (UnknownInstanceException e) {
+                e.printStackTrace();
+            }
+        }
 
         this.convertPlayerToCombatant(player, true);
     }
