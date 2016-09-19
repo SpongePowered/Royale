@@ -26,10 +26,13 @@ package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.flowpowered.noise.module.source.Const;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.action.InteractEvent;
@@ -245,7 +248,7 @@ public final class InstanceManager {
         final Instance toInstance = getInstance(toWorld.getName()).orElse(null);
 
         // We don't care about non-instances from and to.
-        if (fromInstance == null && toInstance == null) {
+        if (fromInstance == null && toInstance == null && !toWorld.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
             return;
         }
 
@@ -273,16 +276,23 @@ public final class InstanceManager {
 
                     // Set them back to the default scoreboard
                     player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
+                    player.offer(Keys.HEALTH, 20.0);
+                    player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
+                    player.offer(Keys.CAN_FLY, true);
                 }
             } else {
                 // Switching into an instance
-                if (toInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
+                if (toInstance != null && toInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
                     // Already dead here? Adjust them as a spectator
                     if (toInstance.getPlayerDeaths().containsKey(player.getUniqueId())) {
                         toInstance.convertPlayerToSpectator(player);
 
                         player.setScoreboard(toInstance.getScoreboard().getHandle());
                     }
+                } else if (toWorld.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME) && !player.hasPermission(Constants.Meta.ID + ".admin")) {
+                    // Going from a non-instance world to lobby
+                    player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
+                    player.offer(Keys.CAN_FLY, true);
                 }
             }
         }

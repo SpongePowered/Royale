@@ -203,6 +203,7 @@ public final class Instance {
     private void convertPlayerToCombatant(Player player, boolean first) {
         player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
         player.offer(Keys.CAN_FLY, false);
+        player.offer(Keys.HEALTH, 20.0);
 
         if (first) {
             player.getInventory().clear();
