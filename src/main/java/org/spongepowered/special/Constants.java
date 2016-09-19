@@ -83,6 +83,7 @@ public class Constants {
 
         public static final int DEFAULT_MAP_LENGTH = 500;
         public static final int DEFAULT_MAP_WIDTH = 500;
+        public static final int MAXIMUM_WORLD_NAME_LENGTH = 15;
 
         static {
             if (Files.notExists(PATH_CONFIG_INSTANCE_TYPES)) {
@@ -130,6 +131,7 @@ public class Constants {
         public static final class Lobby {
 
             public static final String DEFAULT_LOBBY_NAME = Constants.Meta.ID + "_lobby";
+            public static final String SIGN_HEADER = "Join Game";
 
             static final WorldArchetype lobbyArchetype = WorldArchetype.builder().from(WorldArchetypes.THE_END)
                     .gameMode(GameModes.ADVENTURE)
@@ -145,6 +147,13 @@ public class Constants {
 
             private Lobby() {
             }
+        }
+    }
+
+    public static final class Permissions {
+        public static final String ADMIN = Meta.ID + ".admin";
+
+        private Permissions() {
         }
     }
 }

@@ -70,6 +70,10 @@ final class Commands {
                 final InstanceType instanceType = args.<InstanceType>getOne("instanceType").orElse(null);
                 final WorldProperties targetProperties = args.<WorldProperties>getOne("targetWorld").orElse(null);
 
+                if (targetProperties.getWorldName().length() > Constants.Map.MAXIMUM_WORLD_NAME_LENGTH) {
+                    throw new CommandException(Text.of(String.format("World name %s is too long! It must be at most %s characters!", targetProperties.getWorldName(), Constants.Map.MAXIMUM_WORLD_NAME_LENGTH)));
+                }
+
                 src.sendMessage(Text.of("Creating an instance from [", format(TextColors.GREEN, targetProperties.getWorldName()), "] using instance ",
                                 "type ", format(TextColors.LIGHT_PURPLE, instanceType.getName()), "."));
 

@@ -150,6 +150,10 @@ public final class Instance {
         this.state = state;
     }
 
+    public boolean canRegisterPlayer(Player player) {
+        return this.unusedSpawns.size() != 0;
+    }
+
     public void registerPlayer(Player player) {
         checkState(this.unusedSpawns.size() != 0, "This instance cannot register any more players!");
         this.registeredPlayers.add(player.getUniqueId());

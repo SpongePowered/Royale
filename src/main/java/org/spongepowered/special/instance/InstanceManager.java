@@ -29,13 +29,17 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.flowpowered.noise.module.source.Const;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.value.mutable.ListValue;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.action.InteractEvent;
+import org.spongepowered.api.event.block.InteractBlockEvent;
+import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.entity.AttackEntityEvent;
@@ -46,6 +50,8 @@ import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Dimension;
 import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.World;
@@ -289,7 +295,7 @@ public final class InstanceManager {
 
                         player.setScoreboard(toInstance.getScoreboard().getHandle());
                     }
-                } else if (toWorld.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME) && !player.hasPermission(Constants.Meta.ID + ".admin")) {
+                } else if (toWorld.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME) && !player.hasPermission(Constants.Permissions.ADMIN)) {
                     // Going from a non-instance world to lobby
                     player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
                     player.offer(Keys.CAN_FLY, true);
@@ -366,5 +372,43 @@ public final class InstanceManager {
                 event.setCancelled(true);
             }
         }
+    }
+
+    @Listener
+    public void onSignText(ChangeSignEvent event, @Root Player player) {
+        if (this.isTpSign(event.getText().lines().get())) {
+            if (player.hasPermission(Constants.Permissions.ADMIN)) {
+                player.sendMessage(Text.of(TextColors.GREEN, "Sucessfully created world teleportation sign!"));
+                event.getText().setElement(0, Text.of(TextColors.AQUA, event.getText().get(0).get()));
+            } else {
+                player.sendMessage(Text.of(TextColors.RED, "You don't have permission to create a world teleportation sign!"));
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @Listener
+    public void onSignClick(InteractBlockEvent.Secondary.MainHand event, @Root Player player, @Getter("getTargetBlock") BlockSnapshot block) {
+        block.getLocation().get().getTileEntity().flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
+            if (this.isTpSign(lines)) {
+                String name = lines.get(1).toPlain();
+                Optional<Instance> instance = Special.instance.getInstanceManager().getInstance(name);
+                if (instance.isPresent()) {
+                    if (!instance.get().canRegisterPlayer(player)) {
+                        player.sendMessage(Text.of(TextColors.RED, "World is full!"));
+                        return;
+                    }
+                    player.sendMessage(Text.of(TextColors.GREEN, "Joining world " + name));
+                    instance.get().registerPlayer(player);
+                    instance.get().spawnPlayer(player);
+                } else {
+                    player.sendMessage(Text.of(TextColors.RED, String.format("World %s isn't up yet!", name)));
+                }
+            }
+        });
+    }
+
+    private boolean isTpSign(List<Text> lines) {
+        return lines.get(0).toPlain().equalsIgnoreCase(Constants.Map.Lobby.SIGN_HEADER);
     }
 }
