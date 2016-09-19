@@ -276,7 +276,7 @@ public final class InstanceManager {
 
                     // Set them back to the default scoreboard
                     player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
-                    player.offer(Keys.HEALTH, 20.0);
+                    player.offer(Keys.HEALTH, player.get(Keys.MAX_HEALTH).get());
                     player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
                     player.offer(Keys.CAN_FLY, true);
                 }
