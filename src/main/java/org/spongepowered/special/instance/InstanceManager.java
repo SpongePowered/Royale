@@ -26,12 +26,10 @@ package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.flowpowered.noise.module.source.Const;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.data.value.mutable.ListValue;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
@@ -188,7 +186,6 @@ public final class InstanceManager {
                 player.getInventory().clear();
             }
 
-            Special.instance.getLogger().error(player.getName());
             player.setLocation(lobby.getSpawnLocation());
         }
 

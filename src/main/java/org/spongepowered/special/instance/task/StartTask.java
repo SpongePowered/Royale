@@ -35,13 +35,13 @@ import org.spongepowered.special.instance.Instance;
 import java.util.LinkedList;
 import java.util.List;
 
-public final class StartTask extends RoundTask {
+public final class StartTask extends InstanceTask {
 
     private final List<Title> startTitles = new LinkedList<>();
 
     private int seconds = 0;
 
-    private Task task;
+    private Task handle;
 
     public StartTask(Instance instance) {
         super(instance);
@@ -66,16 +66,16 @@ public final class StartTask extends RoundTask {
 
     @Override
     public void cancel() {
-        this.task.cancel();
+        this.handle.cancel();
     }
 
     @Override
     public void accept(Task task) {
-        this.task = task;
+        this.handle = task;
 
         final World world = this.getInstance().getHandle().orElse(null);
 
-        // TODO If world is null or not loaded, shut this task down and log it.
+        // TODO If world is null or not loaded, shut this handle down and log it.
 
         // Make sure the world is still around and loaded
         if (world != null && world.isLoaded()) {

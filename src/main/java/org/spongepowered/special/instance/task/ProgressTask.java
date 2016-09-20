@@ -34,7 +34,7 @@ import org.spongepowered.special.instance.Instance;
 
 import java.util.stream.Collectors;
 
-public final class ProgressTask extends RoundTask {
+public final class ProgressTask extends InstanceTask {
 
     private final ServerBossBar bossBar = ServerBossBar.builder()
             .color(BossBarColors.GREEN)
@@ -47,7 +47,7 @@ public final class ProgressTask extends RoundTask {
     private final long roundLengthTotal;
     private long roundLengthRemaining;
 
-    private Task task;
+    private Task handle;
 
     public ProgressTask(Instance instance) {
         super(instance);
@@ -59,12 +59,12 @@ public final class ProgressTask extends RoundTask {
     @Override
     public void cancel() {
         this.bossBar.removePlayers(this.bossBar.getPlayers());
-        this.task.cancel();
+        this.handle.cancel();
     }
 
     @Override
     public void accept(Task task) {
-        this.task = task;
+        this.handle = task;
 
         final World world = this.getInstance().getHandle().orElse(null);
 

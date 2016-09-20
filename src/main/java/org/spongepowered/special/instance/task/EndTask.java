@@ -38,15 +38,14 @@ import org.spongepowered.special.instance.Instance;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
-public final class EndTask extends RoundTask {
+public final class EndTask extends InstanceTask {
 
     private final List<UUID> winners;
     private final long endLengthTotal;
 
-    private Task task;
+    private Task handle;
     private Title title;
     private long endLengthRemaining;
 
@@ -59,13 +58,15 @@ public final class EndTask extends RoundTask {
 
     @Override
     public void accept(Task task) {
-        if (winners.size() < 1) {
+
+        this.handle = task;
+
+        if (winners.isEmpty()) {
             return;
         }
 
         // First tick, kickoff end sequence
         if (this.endLengthTotal == this.endLengthRemaining) {
-            this.task = task;
 
             final Optional<Player> winner;
             if (this.winners.size() > 1) {
@@ -79,9 +80,9 @@ public final class EndTask extends RoundTask {
                     Text.of(TextColors.YELLOW, "Draw");
 
             this.title = Title.builder()
-                    .stay((int) ((this.endLengthTotal - 1) * 20))
                     .fadeIn(0)
                     .fadeOut(20)
+                    .stay((int) ((this.endLengthTotal - 1) * 20))
                     .title(content)
                     .build();
 
@@ -109,8 +110,6 @@ public final class EndTask extends RoundTask {
 
     @Override
     public void cancel() {
-        if (this.task != null) {
-            this.task.cancel();
-        }
+        this.handle.cancel();
     }
 }

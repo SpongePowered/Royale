@@ -35,7 +35,6 @@ import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
-import org.spongepowered.api.item.inventory.entity.Hotbar;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.World;
@@ -43,9 +42,10 @@ import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.exception.UnknownInstanceException;
 import org.spongepowered.special.instance.scoreboard.RoundScoreboard;
+import org.spongepowered.special.instance.task.CleanupTask;
 import org.spongepowered.special.instance.task.EndTask;
 import org.spongepowered.special.instance.task.ProgressTask;
-import org.spongepowered.special.instance.task.RoundTask;
+import org.spongepowered.special.instance.task.InstanceTask;
 import org.spongepowered.special.instance.task.StartTask;
 
 import java.lang.ref.WeakReference;
@@ -213,7 +213,7 @@ public final class Instance {
             player.getInventory().clear();
 
             for (ItemStackSnapshot snapshot : this.instanceType.getDefaultItems()) {
-                player.getInventory().query(Hotbar.class).offer(snapshot.createStack());
+                player.getInventory().offer(snapshot.createStack());
             }
         }
     }
@@ -229,8 +229,8 @@ public final class Instance {
             for (UUID uuid : this.tasks) {
                 final Task task = Sponge.getScheduler().getTaskById(uuid).orElse(null);
                 if (task != null) {
-                    if (task.getConsumer() instanceof RoundTask) {
-                        ((RoundTask) task.getConsumer()).cancel();
+                    if (task.getConsumer() instanceof InstanceTask) {
+                        ((InstanceTask) task.getConsumer()).cancel();
                     } else {
                         task.cancel();
                     }
@@ -257,6 +257,14 @@ public final class Instance {
                 break;
             case RUNNING:
                 // TODO This activates before any additional code is called in the round task. Useless state for now, could be handy later
+                break;
+            case CLEANUP:
+                this.tasks.add(Task.builder()
+                        .execute(new CleanupTask(this))
+                        .interval(1, TimeUnit.SECONDS)
+                        .name(Constants.Meta.ID + " - Cleanup - " + this.worldName)
+                        .submit(Special.instance)
+                        .getUniqueId());
                 break;
             case PRE_END:
                 final List<UUID> winners = new ArrayList<>();
@@ -355,6 +363,12 @@ public final class Instance {
             @Override
             public boolean doesCancelTasksOnAdvance() {
                 return false;
+            }
+        },
+        CLEANUP {
+            @Override
+            public boolean canAnyoneInteract() {
+                return true;
             }
         },
         PRE_END {
