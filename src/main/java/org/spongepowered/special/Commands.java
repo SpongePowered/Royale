@@ -351,6 +351,11 @@ final class Commands {
                     return CommandResult.empty();
                 }
 
+                if (Special.instance.getInstanceManager().getInstance(properties.getWorldName()).isPresent()) {
+                    src.sendMessage(Text.of(TextColors.RED, String.format("Instance %s is currently running! Use '/s end %s' to end it!", properties.getWorldName(), properties.getWorldName())));
+                    return CommandResult.empty();
+                }
+
                 if (Sponge.getServer().unloadWorld(world.get())) {
                     src.sendMessage(Text.of(TextColors.GREEN, String.format("Successfully unloaded world %s", properties.getWorldName())));
                     return CommandResult.success();
