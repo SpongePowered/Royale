@@ -83,7 +83,7 @@ public final class CleanupTask extends InstanceTask {
         if (world != null && world.isLoaded()) {
             if (this.duration < 5) {
                 for (Player player : world.getPlayers()) {
-                    
+
                     if (!player.isOnline() || !this.getInstance().getRegisteredPlayers().contains(player.getUniqueId())) {
                         continue;
                     }
@@ -164,7 +164,7 @@ public final class CleanupTask extends InstanceTask {
                             .shouldPlaySmoke(true)
                             .radius(3)
                             .location(explosionLocation)
-                            .build());
+                            .build(), Special.instance.getPluginCause());
 
                 }
             }
