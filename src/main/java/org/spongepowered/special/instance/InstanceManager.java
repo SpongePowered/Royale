@@ -49,6 +49,7 @@ import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.scoreboard.Scoreboard;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Dimension;
@@ -72,6 +73,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 public final class InstanceManager {
 
@@ -82,6 +84,8 @@ public final class InstanceManager {
     private final Map<InstanceType, List<Instance>> instancesByTypes = new HashMap<>();
 
     private final Set<String> canUseFastPass = new HashSet<>();
+
+    private final Set<UUID> forceRespawning = new HashSet<>();
 
     public void createInstance(String instanceName, InstanceType type) throws Exception {
         if (this.instances.containsKey(instanceName)) {
@@ -184,6 +188,12 @@ public final class InstanceManager {
         // Move everyone out
         for (Player player : world.getPlayers()) {
             if (instance.getRegisteredPlayers().contains(player.getUniqueId())) {
+                if (player.isRemoved()) {
+                    this.forceRespawning.add(player.getUniqueId());
+                    player.respawnPlayer();
+                    this.giveLobbySetting(player);
+                    this.forceRespawning.remove(player.getUniqueId());
+                }
                 player.getInventory().clear();
             }
 
@@ -296,11 +306,7 @@ public final class InstanceManager {
                     }
 
                     // Set them back to the default scoreboard
-                    player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
-                    player.offer(Keys.HEALTH, player.get(Keys.MAX_HEALTH).get());
-                    player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
-                    player.offer(Keys.CAN_FLY, true);
-                    Utils.resetHungerAndPotions(player);
+                    this.giveLobbySetting(player);
                 } else {
                     // Switching into an instance
                     if (toInstance != null && toInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
@@ -322,6 +328,14 @@ public final class InstanceManager {
         }
     }
 
+    private void giveLobbySetting(Player player) {
+        player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
+        player.offer(Keys.HEALTH, player.get(Keys.MAX_HEALTH).get());
+        player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
+        player.offer(Keys.CAN_FLY, true);
+        Utils.resetHungerAndPotions(player);
+    }
+
     @Listener(order = Order.LAST)
     public void onDestructEntity(DestructEntityEvent.Death event, @Getter("getTargetEntity") Player player) {
         final World world = player.getWorld();
@@ -339,6 +353,10 @@ public final class InstanceManager {
 
     @Listener(order = Order.LAST)
     public void onRespawnPlayer(RespawnPlayerEvent event, @Getter("getTargetEntity") Player player) {
+        if (this.forceRespawning.contains(player.getUniqueId())) {
+            return;
+        }
+
         final World fromWorld = event.getFromTransform().getExtent();
         World toWorld = event.getToTransform().getExtent();
         final Instance fromInstance = getInstance(fromWorld.getName()).orElse(null);
