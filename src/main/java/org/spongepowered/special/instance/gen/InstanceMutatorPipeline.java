@@ -26,6 +26,7 @@ package org.spongepowered.special.instance.gen;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.Objects;
+import com.google.common.base.Strings;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.channel.MessageChannel;
@@ -54,7 +55,13 @@ public final class InstanceMutatorPipeline {
 
     public void mutate(Instance instance, boolean tryFastPass) {
         final Extent area = instance.getHandle().get().getExtentView(instance.getType().getBlockMin(), instance.getType().getBlockMax());
+
+        if (!tryFastPass) {
+            System.err.println(String.format("[Mutator] Instance %s is not eligible for a fast pass! Using slow pass.", instance.getName()));
+        }
+
         if (tryFastPass && canPerformFastPass(instance.getName(), area)) {
+            System.err.println(String.format("[Mutator] Preflight checks succeeded! Performing fast pass for instance %s.", instance.getName()));
             for (InstanceMutator mutator: this.mutators) {
                 mutator.visitInstance(instance);
             }
@@ -72,6 +79,9 @@ public final class InstanceMutatorPipeline {
         }
 
         Map<Vector3i, BlockState> cache = new HashMap<>();
+
+        Vector3i size = instance.getType().getBlockSize();
+        System.err.println(String.format("[Mutator] Performing slow pass for instance %s - %s blocks total", instance.getName(), size.getX() * size.getY() * size.getZ()));
 
         area.getBlockWorker(Special.instance.getPluginCause()).iterate((v, x, y, z) -> {
             final BlockState state = v.getBlock(x, y, z);
@@ -92,15 +102,19 @@ public final class InstanceMutatorPipeline {
 
         // We don't have any cached positions, so we can't do a fast pass
         if (cache == null) {
+            System.err.println(String.format("[Mutator] No cached positions for instance %s were found. Falling back to slow pass."));
             return false;
         }
 
         for (Map.Entry<Vector3i, BlockState> entry: cache.entrySet()) {
             try {
                 if (!extent.getBlock(entry.getKey()).equals(entry.getValue())) {
+                    System.err.println(String.format("[Mutator] Mutator mismatch! At position %s, expected %s but found %s. Falling back to slow pass.", entry.getKey(), entry.getValue(), extent.getBlock(entry.getKey())));
                     return false;
                 }
             } catch (PositionOutOfBoundsException e) {
+                System.err.println(String.format("[Mutator] Position %s was out of bounds (not sure how this happened). Falling back to slow pass", entry.getKey()));
+                e.printStackTrace();
                 return false;
             }
         }

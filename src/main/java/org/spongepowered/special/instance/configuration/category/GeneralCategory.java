@@ -42,10 +42,10 @@ public final class GeneralCategory extends AbstractConfigurationCategory {
     public TextTemplate nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
 
     @Setting(value = "center-x", comment = "The center of the map on the x-axis. 'min-x' and 'max-x' are relative to this coordinate.")
-    public int centerX = 0;
+    public int centerX = Constants.Map.DEFAULT_CENTER_X;
 
     @Setting(value = "center-z", comment = "The center of the map on the z-axis. 'min-z' and 'max-z' are relative to this coordinate.")
-    public int centerZ = 0;
+    public int centerZ = Constants.Map.DEFAULT_CENTER_Z;
 
     @Setting(value = "min-x", comment = "The minimum x-coordinate of the map, relative to center-x. This is inclusive, so 'center-x + min-x' will be the actual minimum coordinate.")
     public int minX = -Constants.Map.DEFAULT_MAP_WIDTH;
@@ -54,10 +54,10 @@ public final class GeneralCategory extends AbstractConfigurationCategory {
     public int maxX = Constants.Map.DEFAULT_MAP_WIDTH;
 
     @Setting(value = "min-y", comment = "The minimum y-coordinate of the map.")
-    public int minY = 0;
+    public int minY = Constants.Map.DEFAULT_MAP_MIN_Y;
 
-    @Setting(value = "min-y", comment = "The maximum y-coordinate of the map.")
-    public int maxY = 256;
+    @Setting(value = "max-y", comment = "The maximum y-coordinate of the map.")
+    public int maxY = Constants.Map.DEFAULT_MAP_MAX_Y;
 
     @Setting(value = "min-z", comment = "The minimum z-coordinate of the map, relative to center-z. This is inclusive, so 'center-z + min-z' will be the actual minimum coordinate")
     public int minZ = -Constants.Map.DEFAULT_MAP_LENGTH;

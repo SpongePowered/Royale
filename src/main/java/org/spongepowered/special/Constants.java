@@ -81,8 +81,12 @@ public class Constants {
 
         public static final Set<InstanceMutator> DEFAULT_MAP_MUTATORS = new HashSet<>();
 
-        public static final int DEFAULT_MAP_LENGTH = 500;
-        public static final int DEFAULT_MAP_WIDTH = 500;
+        public static final int DEFAULT_CENTER_X = 0;
+        public static final int DEFAULT_CENTER_Z = 0;
+        public static final int DEFAULT_MAP_LENGTH = 250;
+        public static final int DEFAULT_MAP_WIDTH = 250;
+        public static final int DEFAULT_MAP_MIN_Y = 0;
+        public static final int DEFAULT_MAP_MAX_Y = 256;
         public static final int MAXIMUM_WORLD_NAME_LENGTH = 15;
 
         static {

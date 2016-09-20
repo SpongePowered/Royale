@@ -261,6 +261,15 @@ public final class InstanceType implements CatalogType {
         public Builder from(InstanceType value) {
             this.name = value.name;
             this.nameTemplate = value.nameTemplate;
+            this.centerX = value.centerX;
+            this.centerZ = value.centerZ;
+            this.minX = value.minX;
+            this.minY = value.minY;
+            this.minZ = value.minZ;
+            this.maxX = value.maxX;
+            this.maxY = value.maxY;
+            this.maxZ = value.maxZ;
+
             this.mutators = Sets.newHashSet(value.mutatorPipeline.getMutators());
             this.defaultItems = Lists.newLinkedList(value.defaultItems);
             this.roundStartTemplate = value.roundStartTemplate;
@@ -306,6 +315,14 @@ public final class InstanceType implements CatalogType {
             this.roundLength = Constants.Map.Round.DEFAULT_LENGTH;
             this.roundEndLength = Constants.Map.Round.DEFAULT_END_LENGTH;
             this.automaticStartPlayerCount = Constants.Map.Round.DEFAULT_AUTOMATIC_START_PLAYER_COUNT;
+            this.centerX = Constants.Map.DEFAULT_CENTER_X;
+            this.centerZ = Constants.Map.DEFAULT_CENTER_Z;
+            this.minX = -Constants.Map.DEFAULT_MAP_WIDTH;
+            this.minY = Constants.Map.DEFAULT_MAP_MIN_Y;
+            this.minZ = -Constants.Map.DEFAULT_MAP_WIDTH;
+            this.maxX = Constants.Map.DEFAULT_MAP_WIDTH;
+            this.maxY = Constants.Map.DEFAULT_MAP_MAX_Y;
+            this.maxZ = Constants.Map.DEFAULT_MAP_WIDTH;
             return this;
         }
 

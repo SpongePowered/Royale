@@ -54,6 +54,7 @@ import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Dimension;
+import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.World;
 import org.spongepowered.special.Constants;
@@ -149,6 +150,7 @@ public final class InstanceManager {
     }
 
     public void setWorldModified(String instanceName, boolean modified) {
+        System.err.println(String.format("[Mutator] Setting fast pass availablity for instance %s to %s", instanceName, !modified));
         if (modified) {
             this.canUseFastPass.remove(instanceName);
         } else {
@@ -204,7 +206,7 @@ public final class InstanceManager {
             throw new RuntimeException("Failed to unload instance world!"); // TODO Specialized exception
         }
 
-        this.canUseFastPass.add(instance.getName());
+        this.setWorldModified(instance.getName(), false);
     }
 
     public Optional<Instance> getInstance(String instanceName) {
@@ -404,7 +406,7 @@ public final class InstanceManager {
 
     @Listener
     public void onSignClick(InteractBlockEvent.Secondary.MainHand event, @Root Player player, @Getter("getTargetBlock") BlockSnapshot block) {
-        block.getLocation().get().getTileEntity().flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
+        block.getLocation().flatMap(Location::getTileEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
             if (this.isTpSign(lines)) {
                 String name = lines.get(1).toPlain();
                 Optional<Instance> instance = Special.instance.getInstanceManager().getInstance(name);
@@ -427,9 +429,9 @@ public final class InstanceManager {
     public void onChangeBlock(ChangeBlockEvent event, @First Player player) {
         String name = event.getTargetWorld().getName();
         if (!this.getInstance(name).isPresent() && this.canUseFastPass.contains(name)) {
-            canUseFastPass.remove(name);
-            player.sendMessages(Text.of(TextColors.YELLOW, "You have modified the world '%s' - mutators will take longer to run the next time an instance of this map is started.\n" +
-                                             String.format("If you make any modifications outside of the game, make sure to run '/worldmodified %s' so that your changes are detected.", name)));
+            this.setWorldModified(name, true);
+            player.sendMessages(Text.of(TextColors.YELLOW, String.format("You have modified the world '%s' - mutators will take longer to run the next time an instance of this map is started.\n" +
+                                             "If you make any modifications outside of the game, make sure to run '/worldmodified %s' so that your changes are detected.", name, name)));
         }
     }
 
