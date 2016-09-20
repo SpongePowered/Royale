@@ -260,6 +260,8 @@ public final class InstanceManager {
                     }
                 }
             }
+        } else if (world.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
+            this.giveLobbySetting(player);
         }
     }
 
@@ -330,6 +332,7 @@ public final class InstanceManager {
 
     private void giveLobbySetting(Player player) {
         player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
+        player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
         player.offer(Keys.HEALTH, player.get(Keys.MAX_HEALTH).get());
         player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
         player.offer(Keys.CAN_FLY, true);

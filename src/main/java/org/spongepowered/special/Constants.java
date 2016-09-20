@@ -157,6 +157,8 @@ public class Constants {
     public static final class Permissions {
         public static final String ADMIN = Meta.ID + ".admin";
         public static final String WORLD_MODIFIED_COMMAND = Meta.ID + ".command.worldmodified";
+        public static final String WORLD_LOAD_COMMAND = Meta.ID + ".command.worldload";
+        public static final String WORLD_UNLOAD_COMMAND = Meta.ID + ".command.worldunload";
 
         private Permissions() {
         }

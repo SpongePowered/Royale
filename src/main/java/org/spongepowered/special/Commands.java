@@ -315,6 +315,52 @@ final class Commands {
             })
             .build();
 
+    private static final CommandSpec loadWorldCommand = CommandSpec.builder()
+            .description(Text.of("Manually loads a world"))
+            .arguments(world(Text.of("world")))
+            .permission(Constants.Permissions.WORLD_LOAD_COMMAND)
+            .executor((src, args) -> {
+                WorldProperties properties = args.<WorldProperties>getOne("world").get();
+
+                if (Sponge.getServer().getWorld(properties.getUniqueId()).isPresent()) {
+                    src.sendMessage(Text.of(TextColors.YELLOW, String.format("World %s is already loaded!", properties.getWorldName())));
+                    return CommandResult.empty();
+                }
+
+                Optional<World> world = Sponge.getServer().loadWorld(properties);
+                if (world.isPresent()) {
+                    src.sendMessage(Text.of(TextColors.GREEN, String.format("Successfully loaded world %s", properties.getWorldName())));
+                    return CommandResult.success();
+                } else {
+                    src.sendMessage(Text.of(TextColors.RED, String.format("Unable to load world %s", properties.getWorldName())));
+                    return CommandResult.empty();
+                }
+            })
+            .build();
+
+    private static final CommandSpec unloadWorldCommand = CommandSpec.builder()
+            .description(Text.of("Manually unloads a world"))
+            .arguments(world(Text.of("world")))
+            .permission(Constants.Permissions.WORLD_UNLOAD_COMMAND)
+            .executor((src, args) -> {
+                WorldProperties properties = args.<WorldProperties>getOne("world").get();
+
+                Optional<World> world = Sponge.getServer().getWorld(properties.getUniqueId());
+                if (!world.isPresent()) {
+                    src.sendMessage(Text.of(String.format("World %s is not loaded!", properties.getWorldName())));
+                    return CommandResult.empty();
+                }
+
+                if (Sponge.getServer().unloadWorld(world.get())) {
+                    src.sendMessage(Text.of(TextColors.GREEN, String.format("Successfully unloaded world %s", properties.getWorldName())));
+                    return CommandResult.success();
+                } else {
+                    src.sendMessage(Text.of(TextColors.RED, String.format("Unable to unload world %s", properties.getWorldName())));
+                    return CommandResult.empty();
+                }
+            })
+            .build();
+
     static final CommandSpec rootCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.help")
             .description(Text.of("Displays available commands"))
@@ -332,6 +378,8 @@ final class Commands {
             .child(setCommand, "set")
             .child(tpWorldCommand, "tpworld", "tpw")
             .child(worldModifiedCommand, "worldmodified", "modified", "wm")
+            .child(loadWorldCommand, "loadworld", "load", "lw")
+            .child(unloadWorldCommand, "unloadworld", "unload", "uw")
             .build();
 
     private static Text format(TextColor color, String content) {
