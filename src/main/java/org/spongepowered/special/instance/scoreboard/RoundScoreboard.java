@@ -136,14 +136,12 @@ public final class RoundScoreboard {
 
         int position = 0;
 
-        for (int i = 0; i < dead.size(); i++) {
+        for (int i = 0; i < dead.size(); i++, position++) {
             this.playerData.get(dead.get(i).getUniqueId()).score.setScore(position);
-            position += i;
         }
 
-        for (int i = 0; i < alive.size(); i++) {
+        for (int i = 0; i < alive.size(); i++, position++) {
             this.playerData.get(alive.get(i).getUniqueId()).score.setScore(position);
-            position += i;
         }
 
         emptyLineScore.setScore(++position);

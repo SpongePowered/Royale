@@ -62,6 +62,7 @@ import org.spongepowered.special.instance.exception.UnknownInstanceException;
 import org.spongepowered.special.instance.gen.InstanceMutatorPipeline;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -299,20 +300,23 @@ public final class InstanceManager {
                     player.offer(Keys.HEALTH, player.get(Keys.MAX_HEALTH).get());
                     player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
                     player.offer(Keys.CAN_FLY, true);
-                }
-            } else {
-                // Switching into an instance
-                if (toInstance != null && toInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
-                    // Already dead here? Adjust them as a spectator
-                    if (toInstance.getPlayerDeaths().containsKey(player.getUniqueId())) {
-                        toInstance.convertPlayerToSpectator(player);
+                    Utils.resetHungerAndPotions(player);
+                } else {
+                    // Switching into an instance
+                    if (toInstance != null && toInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
+                        // Already dead here? Adjust them as a spectator
+                        if (toInstance.getPlayerDeaths().containsKey(player.getUniqueId())) {
+                            toInstance.convertPlayerToSpectator(player);
 
-                        player.setScoreboard(toInstance.getScoreboard().getHandle());
+                            player.setScoreboard(toInstance.getScoreboard().getHandle());
+                        }
+
+                    } else if (toWorld.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME) && !player
+                            .hasPermission(Constants.Permissions.ADMIN)) {
+                        // Going from a non-instance world to lobby
+                        player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
+                        player.offer(Keys.CAN_FLY, true);
                     }
-                } else if (toWorld.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME) && !player.hasPermission(Constants.Permissions.ADMIN)) {
-                    // Going from a non-instance world to lobby
-                    player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
-                    player.offer(Keys.CAN_FLY, true);
                 }
             }
         }

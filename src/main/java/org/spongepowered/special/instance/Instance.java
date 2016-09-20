@@ -208,6 +208,7 @@ public final class Instance {
         player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
         player.offer(Keys.CAN_FLY, false);
         player.offer(Keys.HEALTH, player.get(Keys.MAX_HEALTH).get());
+        Utils.resetHungerAndPotions(player);
 
         if (first) {
             player.getInventory().clear();
