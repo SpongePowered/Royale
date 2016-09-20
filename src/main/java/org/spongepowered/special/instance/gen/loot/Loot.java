@@ -33,13 +33,18 @@ import static org.spongepowered.special.instance.gen.loot.PotionItemArchetype.Ty
 import com.google.common.collect.Maps;
 import org.spongepowered.api.effect.potion.PotionEffectType;
 import org.spongepowered.api.effect.potion.PotionEffectTypes;
+import org.spongepowered.api.item.Enchantment;
+import org.spongepowered.api.item.Enchantments;
 import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.util.weighted.ChanceTable;
 import org.spongepowered.api.util.weighted.LootTable;
 import org.spongepowered.api.util.weighted.VariableAmount;
 import org.spongepowered.api.util.weighted.WeightedTable;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public final class Loot {
@@ -49,7 +54,7 @@ public final class Loot {
     public static final LootTable<ItemArchetype> low_level = new LootTable<>();
     public static final LootTable<ItemArchetype> mid_level = new LootTable<>();
     public static final LootTable<ItemArchetype> high_level = new LootTable<>();
-    public static final LootTable<ItemArchetype> super_rare = new LootTable<>();
+    public static final LootTable<ItemArchetype> rare_level = new LootTable<>();
 
     public static final WeightedTable<ItemArchetype> basic_food = new WeightedTable<>();
     public static final WeightedTable<ItemArchetype> high_food = new WeightedTable<>();
@@ -62,7 +67,7 @@ public final class Loot {
 
     public static final ChanceTable<ItemArchetype> high_combat = new ChanceTable<>();
 
-    public static final WeightedTable<ItemArchetype> super_rare_items = new WeightedTable<>();
+    public static final WeightedTable<ItemArchetype> rare_items = new WeightedTable<>();
 
     public static final ChanceTable<ItemArchetype> weird_items = new ChanceTable<>();
 
@@ -77,7 +82,7 @@ public final class Loot {
         loot_tables.put("low_level", low_level);
         loot_tables.put("mid_level", mid_level);
         loot_tables.put("high_level", high_level);
-        loot_tables.put("super_rare", super_rare);
+        loot_tables.put("rare_level", rare_level);
 
         low_level.addTable(basic_food);
         low_level.addTable(basic_combat);
@@ -95,11 +100,11 @@ public final class Loot {
         high_level.addTable(high_food);
         high_level.addTable(weird_items);
 
-        high_level.addTable(high_combat);
-        high_level.addTable(high_potions);
-        high_level.addTable(high_food);
-        high_level.addTable(weird_items);
-        high_level.addTable(super_rare_items);
+        rare_level.addTable(high_combat);
+        rare_level.addTable(high_potions);
+        rare_level.addTable(high_food);
+        rare_level.addTable(weird_items);
+        rare_level.addTable(rare_items);
 
         // @formatter:off
 
@@ -119,19 +124,36 @@ public final class Loot {
 
         // mid_combat
         mid_combat.add(     item(   ItemTypes.IRON_SWORD,       fixed(1)),      5);
+        mid_combat.add(     item(   ItemTypes.SHIELD,           fixed(1)),      2.5);
 
         // mid_ranged
         mid_ranged.add(     item(   ItemTypes.BOW,              fixed(1)),      5);
 
         // high_combat
-        high_combat.add(    item(   ItemTypes.DIAMOND_SWORD,    fixed(1)),      0.0025);
+        high_combat.add(    item(   ItemTypes.DIAMOND_AXE,      fixed(1)),      1.5);
+        high_combat.add(    item(   ItemTypes.DIAMOND_SWORD,    fixed(1)),      0.050);
+        high_combat.add(    item(   ItemTypes.SHIELD,           fixed(1)),      5);
 
-        // super_rare_items
+        // rare_items
+        rare_items.add(item(ItemTypes.DIAMOND_SWORD, fixed(1), false,
+                Text.of(TextColors.RED, "Flailing ", TextColors.YELLOW, "Sponge"),
+                new HashMap<Enchantment, VariableAmount>() {{
+                    put(Enchantments.FIRE_ASPECT, range(1, 2));
+                    put(Enchantments.KNOCKBACK, range(1, 2));
+                }}), 0.0025);
 
-        // TODO special named weapons and armor
+        rare_items.add(item(ItemTypes.SHIELD, fixed(1), true,
+                Text.of(TextColors.GRAY, "Unbreaking ", TextColors.YELLOW, "Sponge"),
+                new HashMap<Enchantment, VariableAmount>() {{
+                    put(Enchantments.UNBREAKING, range(1, 3));
+                }}), 0.0025);
+
+        rare_items.add(item(ItemTypes.ELYTRA, fixed(1)), 0.0125);
 
         // weird_items
-        weird_items.add(     item(   ItemTypes.SPONGE,           range(1, 6)),   5);
+        weird_items.add(    item(   ItemTypes.SPONGE,           range(1, 6)),   5);
+        weird_items.add(    item(   ItemTypes.ROTTEN_FLESH,     range(1, 9)),   6);
+        weird_items.add(    item(   ItemTypes.POISONOUS_POTATO, range(1, 3)),   2.5);
 
         // basic_potions
 
@@ -181,6 +203,11 @@ public final class Loot {
 
     private static ItemArchetype item(ItemType type, VariableAmount quantity) {
         return new BasicItemArchetype(type, quantity);
+    }
+
+    private static ItemArchetype item(ItemType type, VariableAmount quantity, boolean unbreakable, Text name,
+            Map<Enchantment, VariableAmount> enchantments) {
+        return new EnchantedItemArchetype(type, quantity, unbreakable, name, enchantments);
     }
 
     private static ItemArchetype potion(PotionItemArchetype.Type type, VariableAmount quantity, PotionEffectType effect,
