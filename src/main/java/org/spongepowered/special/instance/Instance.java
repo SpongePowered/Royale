@@ -80,6 +80,8 @@ public final class Instance {
         this.instanceType = instanceType;
         this.worldRef = new WeakReference<>(world);
         this.scoreboard = new RoundScoreboard(this);
+        world.getWorldBorder().setCenter(instanceType.getWorldBorderX(), instanceType.getWorldBorderZ());
+        world.getWorldBorder().setDiameter(instanceType.getWorldBorderRadius() * 2);
     }
 
     public String getName() {

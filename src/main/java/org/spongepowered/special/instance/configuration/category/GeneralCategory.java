@@ -65,6 +65,15 @@ public final class GeneralCategory extends AbstractConfigurationCategory {
     @Setting(value = "max-z", comment = "The maximum z-coordinate of the map, relative to center-z. This is exclusive, so 'center-z + max-z' will be one greater than the actual maximum coordinate.")
     public int maxZ = Constants.Map.DEFAULT_MAP_LENGTH;
 
+    @Setting(value = "world-border-center-x", comment = "The center of the world border on the x-axis")
+    public int worldBorderCenterX = Constants.Map.DEFAULT_WORLD_BORDER_CENTER_X;
+
+    @Setting(value = "world-border-center-z", comment = "The center of the world border on the z-axis")
+    public int worldBorderCenterZ = Constants.Map.DEFAULT_WORLD_BORDER_CENTER_Z;
+
+    @Setting(value = "world-border-radius", comment = "The radius of the world border")
+    public int worldBorderRadius = Constants.Map.DEFAULT_WORLD_BORDER_RADIUS;
+
     @Setting(value = "map-mutators", comment = "Map Mutators to apply after the instance is loaded.")
     public List<String> mapMutators = Constants.Map.DEFAULT_MAP_MUTATOR_IDS;
 

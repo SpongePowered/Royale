@@ -68,6 +68,9 @@ public final class InstanceType implements CatalogType {
     private int maxY;
     private int maxZ;
     private int automaticStartPlayerCount;
+    private int worldBorderX;
+    private int worldBorderZ;
+    private int worldBorderRadius;
     private Vector3i min, max, size;
     private InstanceMutatorPipeline mutatorPipeline;
 
@@ -161,6 +164,18 @@ public final class InstanceType implements CatalogType {
         return this.size;
     }
 
+    public int getWorldBorderX() {
+        return this.worldBorderX;
+    }
+
+    public int getWorldBorderZ() {
+        return this.worldBorderZ;
+    }
+
+    public int getWorldBorderRadius() {
+        return this.worldBorderRadius;
+    }
+
     public InstanceMutatorPipeline getMutatorPipeline() {
         return this.mutatorPipeline;
     }
@@ -252,6 +267,9 @@ public final class InstanceType implements CatalogType {
         private int maxX;
         private int maxY;
         private int maxZ;
+        private int worldBorderX;
+        private int worldBorderZ;
+        private int worldBorderRadius;
 
         public Builder() {
             reset();
@@ -269,6 +287,9 @@ public final class InstanceType implements CatalogType {
             this.maxX = value.maxX;
             this.maxY = value.maxY;
             this.maxZ = value.maxZ;
+            this.worldBorderX = value.worldBorderX;
+            this.worldBorderZ = value.worldBorderZ;
+            this.worldBorderRadius = value.worldBorderRadius;
 
             this.mutators = Sets.newHashSet(value.mutatorPipeline.getMutators());
             this.defaultItems = Lists.newLinkedList(value.defaultItems);
@@ -292,6 +313,9 @@ public final class InstanceType implements CatalogType {
             this.maxX = value.general.maxX;
             this.maxY = value.general.maxY;
             this.maxZ = value.general.maxZ;
+            this.worldBorderX = value.general.worldBorderCenterX;
+            this.worldBorderZ = value.general.worldBorderCenterZ;
+            this.worldBorderRadius = value.general.worldBorderRadius;
             this.mutators = InstanceMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators);
             this.defaultItems = Lists.newLinkedList(value.round.defaultItems);
             this.roundStartTemplate = value.round.startTemplate;
@@ -323,6 +347,9 @@ public final class InstanceType implements CatalogType {
             this.maxX = Constants.Map.DEFAULT_MAP_WIDTH;
             this.maxY = Constants.Map.DEFAULT_MAP_MAX_Y;
             this.maxZ = Constants.Map.DEFAULT_MAP_WIDTH;
+            this.worldBorderX = Constants.Map.DEFAULT_WORLD_BORDER_CENTER_X;
+            this.worldBorderZ = Constants.Map.DEFAULT_WORLD_BORDER_CENTER_Z;
+            this.worldBorderRadius = Constants.Map.DEFAULT_WORLD_BORDER_RADIUS;
             return this;
         }
 
@@ -423,6 +450,9 @@ public final class InstanceType implements CatalogType {
             config.general.maxX =    this.maxX;
             config.general.maxY =    this.maxY;
             config.general.maxZ =    this.maxZ;
+            config.general.worldBorderCenterX = this.worldBorderX;
+            config.general.worldBorderCenterZ = this.worldBorderZ;
+            config.general.worldBorderRadius = this.worldBorderRadius;
             config.general.mapMutators.clear();
             config.general.mapMutators.addAll(this.mutators.stream().map(InstanceMutator::getId).collect(Collectors.toList()));
 
