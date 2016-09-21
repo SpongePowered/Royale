@@ -34,6 +34,7 @@ import static org.spongepowered.api.command.args.GenericArguments.seq;
 import static org.spongepowered.api.command.args.GenericArguments.string;
 import static org.spongepowered.api.command.args.GenericArguments.world;
 
+import com.google.common.collect.Iterables;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.CommandException;
@@ -56,7 +57,9 @@ import org.spongepowered.special.instance.exception.UnknownInstanceException;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.Random;
 
 final class Commands {
 
@@ -65,10 +68,24 @@ final class Commands {
             .description(Text.of("Creates an instance."))
             .extendedDescription(Text.of("Creates an instance from a ", format(TextColors.GREEN, "world"), " with the specified instance ",
                     format(TextColors.LIGHT_PURPLE, "type"), "."))
-            .arguments(catalogedElement(Text.of("instanceType"), InstanceType.class), world(Text.of("targetWorld")))
+            .arguments(optional(catalogedElement(Text.of("instanceType"), InstanceType.class)), optional(world(Text.of("targetWorld"))))
             .executor((src, args) -> {
-                final InstanceType instanceType = args.<InstanceType>getOne("instanceType").orElse(null);
-                final WorldProperties targetProperties = args.<WorldProperties>getOne("targetWorld").orElse(null);
+                InstanceType instanceType = args.<InstanceType>getOne("instanceType").orElse(null);
+                WorldProperties targetProperties = args.<WorldProperties>getOne("targetWorld").orElse(null);
+
+                if (instanceType == null) {
+                    Collection<InstanceType> types = InstanceTypeRegistryModule.getInstance().getAll();
+                    instanceType = Iterables.get(types, new Random().nextInt(types.size()));
+                }
+
+                if (targetProperties == null) {
+                    Optional<WorldProperties> properties = Sponge.getServer().getWorldProperties(instanceType.getId());
+                    if (!properties.isPresent()) {
+                        src.sendMessage(Text.of(TextColors.RED, String.format("Unable to find a world using instance type id of %s", instanceType.getId())));
+                        return CommandResult.empty();
+                    }
+                    targetProperties = properties.get();
+                }
 
                 if (targetProperties.getWorldName().length() > Constants.Map.MAXIMUM_WORLD_NAME_LENGTH) {
                     throw new CommandException(Text.of(String.format("World name %s is too long! It must be at most %s characters!", targetProperties.getWorldName(), Constants.Map.MAXIMUM_WORLD_NAME_LENGTH)));
