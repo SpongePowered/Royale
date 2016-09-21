@@ -98,6 +98,9 @@ public final class InstanceType implements CatalogType {
         this.size = new Vector3i(builder.maxX - builder.minX, builder.maxY - builder.minY, builder.maxZ - builder.minZ);
         this.min = new Vector3i(builder.centerX + builder.minX, builder.minY, builder.centerZ + builder.minZ);
         this.max = new Vector3i(builder.centerX + builder.maxX, builder.maxY, builder.centerZ + builder.maxZ).sub(1, 1, 1);
+        this.worldBorderX = builder.worldBorderX;
+        this.worldBorderX = builder.worldBorderZ;
+        this.worldBorderRadius = builder.worldBorderRadius;
     }
 
     public static Builder builder() {
