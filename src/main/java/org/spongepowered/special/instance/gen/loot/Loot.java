@@ -72,7 +72,7 @@ public final class Loot {
     public static final ChanceTable<ItemArchetype> weird_items = new ChanceTable<>();
 
     public static final WeightedTable<ItemArchetype> basic_potions = new WeightedTable<>();
-    public static final ChanceTable<ItemArchetype> high_potions = new ChanceTable<>();
+    public static final WeightedTable<ItemArchetype> high_potions = new WeightedTable<>();
 
     private static final Map<String, LootTable<ItemArchetype>> loot_tables = Maps.newHashMap();
 
@@ -111,28 +111,87 @@ public final class Loot {
         // TODO flesh out these tables more
 
         // basic_food
-        basic_food.add(     item(   ItemTypes.BREAD,            range(1, 4)),   5);
+        basic_food.add(     item(   ItemTypes.APPLE,                range(1, 3)),   5);
+        basic_food.add(     item(   ItemTypes.BAKED_POTATO,         range(1, 3)),   3);
+        basic_food.add(     item(   ItemTypes.BREAD,                range(1, 3)),   5);
+        basic_food.add(     item(   ItemTypes.CAKE,                 fixed(1)),      1);
+        basic_food.add(     item(   ItemTypes.CARROT,               range(1, 4)),   3);
+        basic_food.add(     item(   ItemTypes.COOKED_CHICKEN,       range(1, 3)),   3);
+        basic_food.add(     item(   ItemTypes.COOKED_FISH,          range(1, 3)),   2);
+        basic_food.add(     item(   ItemTypes.COOKED_MUTTON,        range(1, 3)),   3);
+        basic_food.add(     item(   ItemTypes.COOKED_RABBIT,        range(1, 3)),   3);
+        basic_food.add(     item(   ItemTypes.COOKIE,               range(2, 8)),   5);
+        basic_food.add(     item(   ItemTypes.MELON,                range(1, 3)),   5);
+        basic_food.add(     item(   ItemTypes.BOWL,                 range(1, 3)),   2);
+        basic_food.add(     item(   ItemTypes.RED_MUSHROOM,         range(1, 3)),   3);
+        basic_food.add(     item(   ItemTypes.BROWN_MUSHROOM,       range(1, 3)),   4);
 
         // high_food
-        high_food.add(      item(   ItemTypes.RABBIT_STEW,      fixed(1)),      5);
+        high_food.add(      item(   ItemTypes.COOKED_BEEF,          range(1, 2)),   2);
+        high_food.add(      item(   ItemTypes.COOKED_PORKCHOP,      range(1, 2)),   3);
+        high_food.add(      item(   ItemTypes.MUSHROOM_STEW,        fixed(1)),      3);
+        high_food.add(      item(   ItemTypes.RABBIT_STEW,          range(1, 3)),   2);
+        high_food.add(      item(   ItemTypes.PUMPKIN_PIE,          fixed(1)),      3);
+        high_food.add(      item(   ItemTypes.GOLDEN_APPLE,         range(1, 3)),   1);
+        high_food.add(      item(   ItemTypes.GOLDEN_CARROT,        range(1, 3)),   1);
 
         // basic_combat
-        basic_combat.add(   item(   ItemTypes.STONE_SWORD,      fixed(1)),      5);
+        basic_combat.add(   item(   ItemTypes.WOODEN_AXE,           fixed(1)),      5);
+        basic_combat.add(   item(   ItemTypes.WOODEN_SWORD,         fixed(1)),      5);
+        basic_combat.add(   item(   ItemTypes.STONE_AXE,            fixed(1)),      4);
+        basic_combat.add(   item(   ItemTypes.STONE_SWORD,          fixed(1)),      4);
+        basic_combat.add(   item(   ItemTypes.FISHING_ROD,          fixed(1)),      1);
+        basic_combat.add(   item(   ItemTypes.FLINT_AND_STEEL,      fixed(1)),      2);
+        basic_combat.add(   item(   ItemTypes.SHIELD,               fixed(1)),      1);
+        basic_combat.add(   item(   ItemTypes.LEATHER_HELMET,       fixed(1)),      5);
+        basic_combat.add(   item(   ItemTypes.LEATHER_CHESTPLATE,   fixed(1)),      1);
+        basic_combat.add(   item(   ItemTypes.LEATHER_LEGGINGS,     fixed(1)),      2);
+        basic_combat.add(   item(   ItemTypes.LEATHER_BOOTS,        fixed(1)),      3);
 
         // basic_ranged
-        basic_ranged.add(   item(   ItemTypes.BOW,              fixed(1)),      5);
-
+        basic_ranged.add(   item(   ItemTypes.BOW,                  fixed(1)),      5);
+        basic_ranged.add(   item(   ItemTypes.ARROW,                range(2, 6)),   10);
+        basic_ranged.add(   item(   ItemTypes.LEATHER_HELMET,       fixed(1)),      5);
+        basic_ranged.add(   item(   ItemTypes.LEATHER_CHESTPLATE,   fixed(1)),      1);
+        basic_ranged.add(   item(   ItemTypes.LEATHER_LEGGINGS,     fixed(1)),      2);
+        basic_ranged.add(   item(   ItemTypes.LEATHER_BOOTS,        fixed(1)),      3);
+        
         // mid_combat
-        mid_combat.add(     item(   ItemTypes.IRON_SWORD,       fixed(1)),      5);
-        mid_combat.add(     item(   ItemTypes.SHIELD,           fixed(1)),      2.5);
+        mid_combat.add(     item(   ItemTypes.GOLDEN_AXE,           fixed(1)),      12);
+        mid_combat.add(     item(   ItemTypes.GOLDEN_SWORD,         fixed(1)),      12);
+        mid_combat.add(     item(   ItemTypes.IRON_AXE,             fixed(1)),      8);
+        mid_combat.add(     item(   ItemTypes.IRON_SWORD,           fixed(1)),      8);
+        mid_combat.add(     item(   ItemTypes.SHIELD,               fixed(1)),      12.5);
+        mid_combat.add(     item(   ItemTypes.GOLDEN_HELMET,        fixed(1)),      8);
+        mid_combat.add(     item(   ItemTypes.GOLDEN_CHESTPLATE,    fixed(1)),      2);
+        mid_combat.add(     item(   ItemTypes.GOLDEN_LEGGINGS,      fixed(1)),      6);
+        mid_combat.add(     item(   ItemTypes.GOLDEN_BOOTS,         fixed(1)),      8);
+        mid_combat.add(     item(   ItemTypes.IRON_HELMET,          fixed(1)),      4);
+        mid_combat.add(     item(   ItemTypes.IRON_CHESTPLATE,      fixed(1)),      1);
+        mid_combat.add(     item(   ItemTypes.IRON_LEGGINGS,        fixed(1)),      2);
+        mid_combat.add(     item(   ItemTypes.IRON_BOOTS,           fixed(1)),      4);
 
         // mid_ranged
         mid_ranged.add(     item(   ItemTypes.BOW,              fixed(1)),      5);
+        mid_ranged.add(     item(   ItemTypes.ARROW,            range(2, 6)),   10);
+        mid_ranged.add(item(ItemTypes.LEATHER_CHESTPLATE, fixed(1), false,
+                Text.of(TextColors.RED, "Tough"),
+                new HashMap<Enchantment, VariableAmount>() {{
+                    put(Enchantments.PROTECTION, fixed(1));
+                }}), 1);
+        mid_ranged.add(item(ItemTypes.LEATHER_LEGGINGS, fixed(1), false,
+                Text.of(TextColors.RED, "Tough"),
+                new HashMap<Enchantment, VariableAmount>() {{
+                    put(Enchantments.PROTECTION, fixed(1));
+                }}), 1);
 
         // high_combat
-        high_combat.add(    item(   ItemTypes.DIAMOND_AXE,      fixed(1)),      1.5);
-        high_combat.add(    item(   ItemTypes.DIAMOND_SWORD,    fixed(1)),      0.050);
-        high_combat.add(    item(   ItemTypes.SHIELD,           fixed(1)),      5);
+        high_combat.add(    item(   ItemTypes.DIAMOND_AXE,          fixed(1)),      0.004);
+        high_combat.add(    item(   ItemTypes.DIAMOND_SWORD,        fixed(1)),      0.0035);
+        high_combat.add(    item(   ItemTypes.DIAMOND_HELMET,       fixed(1)),      0.0028);
+        high_combat.add(    item(   ItemTypes.DIAMOND_CHESTPLATE,   fixed(1)),      0.0016);
+        high_combat.add(    item(   ItemTypes.DIAMOND_LEGGINGS,     fixed(1)),      0.002);
+        high_combat.add(    item(   ItemTypes.DIAMOND_BOOTS,        fixed(1)),      0.0024);
 
         // rare_items
         rare_items.add(item(ItemTypes.DIAMOND_SWORD, fixed(1), false,
@@ -140,18 +199,18 @@ public final class Loot {
                 new HashMap<Enchantment, VariableAmount>() {{
                     put(Enchantments.FIRE_ASPECT, range(1, 2));
                     put(Enchantments.KNOCKBACK, range(1, 2));
-                }}), 0.0025);
+                }}), 0.0018);
 
         rare_items.add(item(ItemTypes.SHIELD, fixed(1), true,
                 Text.of(TextColors.GRAY, "Unbreaking ", TextColors.YELLOW, "Sponge"),
                 new HashMap<Enchantment, VariableAmount>() {{
                     put(Enchantments.UNBREAKING, range(1, 3));
-                }}), 0.0025);
+                }}), 0.0018);
 
         rare_items.add(item(ItemTypes.ELYTRA, fixed(1)), 0.0125);
 
         // weird_items
-        weird_items.add(    item(   ItemTypes.SPONGE,           range(1, 6)),   5);
+        weird_items.add(    item(   ItemTypes.SPONGE,           range(1, 6)),   15);
         weird_items.add(    item(   ItemTypes.ROTTEN_FLESH,     range(1, 9)),   6);
         weird_items.add(    item(   ItemTypes.POISONOUS_POTATO, range(1, 3)),   2.5);
 
@@ -210,8 +269,8 @@ public final class Loot {
         return new EnchantedItemArchetype(type, quantity, unbreakable, name, enchantments);
     }
 
-    private static ItemArchetype potion(PotionItemArchetype.Type type, VariableAmount quantity, PotionEffectType effect,
-            VariableAmount power, VariableAmount duration) {
+    private static ItemArchetype potion(PotionItemArchetype.Type type, VariableAmount quantity, PotionEffectType effect, VariableAmount power,
+            VariableAmount duration) {
         return new PotionItemArchetype(type, quantity, effect, power, duration);
     }
 }
