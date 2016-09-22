@@ -58,16 +58,14 @@ import java.util.Random;
 
 public final class CleanupTask extends InstanceTask {
 
-    private Task handle;
-
-    private long duration = 0;
-
     private final Title title = Title.builder()
             .fadeIn(0)
-            .fadeOut(5)
-            .stay(2)
+            .fadeOut(40)
+            .stay(20)
             .title(Text.of(TextColors.RED, "Survive!"))
             .build();
+    private Task handle;
+    private long duration = 0;
 
     public CleanupTask(Instance instance) {
         super(instance);
@@ -81,7 +79,7 @@ public final class CleanupTask extends InstanceTask {
         final World world = this.getInstance().getHandle().orElse(null);
 
         if (world != null && world.isLoaded()) {
-            if (this.duration < 5) {
+            if (this.duration < 10) {
                 for (Player player : world.getPlayers()) {
 
                     if (!player.isOnline() || !this.getInstance().getRegisteredPlayers().contains(player.getUniqueId())) {
@@ -95,50 +93,18 @@ public final class CleanupTask extends InstanceTask {
                     final Vector3d location = player.getLocation().getPosition();
                     final Human human = (Human) world.createEntity(EntityTypes.HUMAN, location);
 
-                    final Goal<Agent> targetGoal = human.getGoal(GoalTypes.TARGET).orElse(null);
-                    targetGoal.addTask(0, FindNearestAttackableTargetAITask.builder().chance(1).target(Player.class).filter(living -> {
-                        if (living instanceof Player) {
-                            if (CleanupTask.this.getInstance().getRegisteredPlayers().contains(living.getUniqueId())) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    }).build(human));
-
-                    final Goal<Agent> normalGoal = human.getGoal(GoalTypes.NORMAL).orElse(null);
-                    normalGoal.addTask(0, SwimmingAITask.builder().swimChance(0.8f).build(human));
-
-
-                    float rangerChance = random.nextFloat();
-
-                    boolean ranger = false;
-
-                    if (rangerChance < 0.3f) {
-                        normalGoal.addTask(1, RangeAgentAITask.builder().moveSpeed(0.4D).attackRadius(20f).delayBetweenAttacks(15).build((Ranger)
-                                human));
-                        human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.BOW, 1));
-                        ranger = true;
-                    } else {
-                        normalGoal.addTask(1, AttackLivingAITask.builder().longMemory().speed(0.4D).build(human));
-                        human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.DIAMOND_SWORD, 1));
-                    }
-
-                    normalGoal.addTask(2, WanderAITask.builder().speed(0.3D).build(human));
-                    normalGoal.addTask(3, WatchClosestAITask.builder().maxDistance(8f).watch(Player.class).build(human));
-                    normalGoal.addTask(3, LookIdleAITask.builder().build(human));
+                    Location<World> spawnLocation = null;
 
                     // 5 tries to spawn
                     int tries = 5;
 
                     while (tries > 0) {
-                        final Location<World> spawnLocation = Sponge.getGame().getTeleportHelper().getSafeLocation(new Location<>(world,
-                                human.getLocation().getPosition().add(random.nextInt(4), 0, random.nextInt(4))), 3, 3).orElse(null);
+                        spawnLocation = Sponge.getGame().getTeleportHelper().getSafeLocation(human.getLocation().add(random.nextInt(4), 0,
+                                random.nextInt(4)), 3, 3).orElse(null);
 
                         if (spawnLocation != null) {
-                            human.offer(Keys.DISPLAY_NAME, Text.of(ranger ? TextColors.GREEN : TextColors.BLUE, ranger ? "Ranger" : "Swordsman"));
                             human.setLocation(spawnLocation);
                             if (world.getIntersectingEntities(human.getBoundingBox().get()).isEmpty()) {
-                                world.spawnEntity(human, Special.instance.getPluginCause());
                                 break;
                             }
                         }
@@ -146,6 +112,43 @@ public final class CleanupTask extends InstanceTask {
                         tries--;
                     }
 
+                    if (spawnLocation != null) {
+                        final Goal<Agent> targetGoal = human.getGoal(GoalTypes.TARGET).orElse(null);
+                        targetGoal.addTask(0, FindNearestAttackableTargetAITask.builder().chance(1).target(Player.class).filter(living -> {
+                            if (living instanceof Player) {
+                                if (CleanupTask.this.getInstance().getRegisteredPlayers().contains(living.getUniqueId())) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }).build(human));
+
+                        final Goal<Agent> normalGoal = human.getGoal(GoalTypes.NORMAL).orElse(null);
+                        normalGoal.addTask(0, SwimmingAITask.builder().swimChance(0.8f).build(human));
+
+
+                        float rangerChance = random.nextFloat();
+
+                        boolean ranger = false;
+
+                        if (rangerChance < 0.3f) {
+                            normalGoal.addTask(1, RangeAgentAITask.builder().moveSpeed(0.4D).attackRadius(20f).delayBetweenAttacks(10).build((Ranger)
+                                    human));
+                            human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.BOW, 1));
+                            ranger = true;
+                        } else {
+                            normalGoal.addTask(1, AttackLivingAITask.builder().longMemory().speed(0.4D).build(human));
+                            human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.DIAMOND_SWORD, 1));
+                        }
+
+                        normalGoal.addTask(2, WanderAITask.builder().speed(0.3D).build(human));
+                        normalGoal.addTask(3, WatchClosestAITask.builder().maxDistance(8f).watch(Player.class).build(human));
+                        normalGoal.addTask(3, LookIdleAITask.builder().build(human));
+
+                        human.offer(Keys.DISPLAY_NAME, Text.of(ranger ? TextColors.GREEN : TextColors.BLUE, ranger ? "Ranger" : "Swordsman"));
+
+                        world.spawnEntity(human, Special.instance.getPluginCause());
+                    }
                 }
             } else {
 
@@ -155,17 +158,16 @@ public final class CleanupTask extends InstanceTask {
                         continue;
                     }
 
-                    final Location<World> explosionLocation = player.getLocation().add(random.nextInt(4),
-                            random.nextInt(4), random.nextInt(4));
+                    final Location<World> explosionLocation = player.getLocation().add(random.nextInt(4), random.nextInt(4), random.nextInt(4));
 
                     world.triggerExplosion(Explosion.builder()
                             .canCauseFire(true)
                             .shouldBreakBlocks(true)
                             .shouldPlaySmoke(true)
-                            .radius(3)
+                            .radius(5)
                             .location(explosionLocation)
-                            .build(), Special.instance.getPluginCause());
-
+                            .build(), Special.instance.getPluginCause()
+                    );
                 }
             }
         }
