@@ -82,6 +82,7 @@ public final class Instance {
         this.scoreboard = new RoundScoreboard(this);
         world.getWorldBorder().setCenter(instanceType.getWorldBorderX(), instanceType.getWorldBorderZ());
         world.getWorldBorder().setDiameter(instanceType.getWorldBorderRadius() * 2);
+        world.getWorldBorder().setWarningDistance(0);
     }
 
     public String getName() {

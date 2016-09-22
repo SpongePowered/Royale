@@ -62,7 +62,11 @@ public abstract class SignMutator extends InstanceMutator {
 
         final Sign sign = (Sign) tileEntity;
         if (!sign.lines().get(0).toPlain().equalsIgnoreCase(this.sign_id)) {
-            return null;
+            if (sign.lines().get(1).toPlain().equalsIgnoreCase(this.sign_id)) {
+                System.err.println(String.format("Found mismatched sign at % %s %s", x, y, z));
+            } else {
+                return null;
+            }
         }
 
         return visitSign(instance, area, state, x, y, z, sign);

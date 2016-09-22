@@ -31,6 +31,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.Entity;
+import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.Listener;
@@ -42,6 +43,7 @@ import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.entity.AttackEntityEvent;
+import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.DestructEntityEvent;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
@@ -292,8 +294,9 @@ public final class InstanceManager {
                 // If a Player has already spawned, this means they are playing. See if the instance allows movement
                 if (fromInstance.getPlayerSpawns().containsKey(player.getUniqueId()) && !fromInstance.getState().canAnyoneMove()) {
                     if (!event.getFromTransform().getPosition().equals(event.getToTransform().getPosition())) {
-                        // Don't cancel the event, to allow people to look around
-                        event.getToTransform().setPosition(event.getFromTransform().getPosition());
+                        // Don't cancel the event, to allow people to look aroundn
+                        Transform transform = event.getToTransform().setPosition(event.getFromTransform().getPosition());
+                        event.setToTransform(transform);
                     }
                     return;
                 }
@@ -413,6 +416,13 @@ public final class InstanceManager {
             if (victim instanceof Player && !instance.getRegisteredPlayers().contains(victim.getUniqueId())) {
                 event.setCancelled(true);
             }
+        }
+    }
+
+    @Listener
+    public void onDamageEntity(DamageEntityEvent event) {
+        if (event.getTargetEntity().getWorld().getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
+            event.setCancelled(true);
         }
     }
 
