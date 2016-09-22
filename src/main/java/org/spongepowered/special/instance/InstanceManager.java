@@ -291,7 +291,10 @@ public final class InstanceManager {
             if (fromInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
                 // If a Player has already spawned, this means they are playing. See if the instance allows movement
                 if (fromInstance.getPlayerSpawns().containsKey(player.getUniqueId()) && !fromInstance.getState().canAnyoneMove()) {
-                    event.setCancelled(true);
+                    if (!event.getFromTransform().getPosition().equals(event.getToTransform().getPosition())) {
+                        // Don't cancel the event, to allow people to look around
+                        event.getToTransform().setPosition(event.getFromTransform().getPosition());
+                    }
                     return;
                 }
             }
