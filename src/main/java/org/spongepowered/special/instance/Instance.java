@@ -136,6 +136,10 @@ public final class Instance {
 
     void advanceTo(State state) {
         if (this.worldRef.get() == null) {
+            if (state == State.FORCE_STOP) {
+                Special.instance.getInstanceManager().unloadInstance(this);
+                return;
+            }
             throw new RuntimeException("Attempt to advance an instance whose world no longer exists!");
         }
 

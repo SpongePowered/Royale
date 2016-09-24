@@ -172,7 +172,17 @@ final class Commands {
                 final Optional<WorldProperties> optWorldProperties = args.getOne("targetWorld");
                 final World world;
                 if (optWorldProperties.isPresent()) {
-                    world = Sponge.getServer().getWorld(optWorldProperties.get().getUniqueId()).orElseThrow(() -> new CommandException(Text.of(
+                    Optional<World> opt = Sponge.getServer().getWorld(optWorldProperties.get().getUniqueId());
+                    if (!opt.isPresent() && Special.instance.getInstanceManager().getInstance(optWorldProperties.get().getWorldName()).isPresent()) {
+                        src.sendMessage(Text.of(Text.of(TextColors.YELLOW, String.format("World %s was unloaded, but the instance still exists! Ending instance.", optWorldProperties.get().getWorldName()))));
+                        try {
+                            Special.instance.getInstanceManager().endInstance(optWorldProperties.get().getWorldName(), true);
+                        } catch (UnknownInstanceException e) {
+                            e.printStackTrace();
+                        }
+                        return CommandResult.empty();
+                    }
+                    world = opt.orElseThrow(() -> new CommandException(Text.of(
                             "World [", format(TextColors.GREEN, optWorldProperties.get().getWorldName()), "] is not online.")));
                 } else if (src instanceof Player) {
                     world = ((Player) src).getWorld();

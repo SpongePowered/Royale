@@ -181,6 +181,7 @@ public final class InstanceManager {
         final World world = instance.getHandle().orElse(null);
 
         if (world == null) {
+            this.instances.remove(instance.getName());
             return;
         }
 
