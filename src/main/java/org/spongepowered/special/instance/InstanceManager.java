@@ -452,7 +452,7 @@ public final class InstanceManager {
                     String name = lines.get(1).toPlain();
                     Optional<Instance> optInstance = Special.instance.getInstanceManager().getInstance(name);
                     if (optInstance.isPresent()) {
-                        if (!optInstance.get().canRegisterMorePlayers(player)) {
+                        if (!optInstance.get().canRegisterMorePlayers()) {
                             player.sendMessage(Text.of(TextColors.RED, "World is full!"));
                             return;
                         }
