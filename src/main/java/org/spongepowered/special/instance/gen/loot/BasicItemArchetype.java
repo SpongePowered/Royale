@@ -32,12 +32,12 @@ import org.spongepowered.api.util.weighted.VariableAmount;
 
 import java.util.Random;
 
-public class BasicItemArchetype implements ItemArchetype {
+class BasicItemArchetype implements ItemArchetype {
 
     private final ItemType type;
     private final VariableAmount quantity;
 
-    public BasicItemArchetype(ItemType type, VariableAmount quantity) {
+    BasicItemArchetype(ItemType type, VariableAmount quantity) {
         this.type = checkNotNull(type);
         this.quantity = checkNotNull(quantity);
     }
@@ -52,7 +52,7 @@ public class BasicItemArchetype implements ItemArchetype {
         return this.type;
     }
 
-    public final VariableAmount getQuantity() {
+    final VariableAmount getQuantity() {
         return this.quantity;
     }
 }

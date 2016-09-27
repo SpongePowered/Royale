@@ -24,7 +24,6 @@
  */
 package org.spongepowered.special.instance.scoreboard;
 
-import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scoreboard.Score;
 import org.spongepowered.api.scoreboard.Scoreboard;
@@ -65,7 +64,8 @@ public final class RoundScoreboard {
 
     public RoundScoreboard(Instance instance) {
         this.scoreboard = Scoreboard.builder().build();
-        this.objective = Objective.builder().name("main").displayName(Text.of(TextColors.GREEN, instance.getName())).criterion(Criteria.DUMMY).build();
+        this.objective =
+                Objective.builder().name("main").displayName(Text.of(TextColors.GREEN, instance.getName())).criterion(Criteria.DUMMY).build();
 
         // Instance type
         instanceTypeScore = this.objective.getOrCreateScore(Text.of(TextColors.RED, instance.getType().getName()));
@@ -97,7 +97,7 @@ public final class RoundScoreboard {
         team.addMember(player.getTeamRepresentation());
         this.scoreboard.registerTeam(team);
 
-        this.playerData.put(player.getUniqueId(), new PlayerData(score, team));
+        this.playerData.put(player.getUniqueId(), new PlayerData(score, team, player.getName(), player.getUniqueId()));
         player.setScoreboard(this.scoreboard);
 
         this.sortScoreboard();
@@ -115,21 +115,19 @@ public final class RoundScoreboard {
     }
 
     private void sortScoreboard() {
-        final List<Player> alive = new ArrayList<>();
-        final List<Player> dead = new ArrayList<>();
+        final List<PlayerData> alive = new ArrayList<>();
+        final List<PlayerData> dead = new ArrayList<>();
 
         for (Map.Entry<UUID, PlayerData> entry : this.playerData.entrySet()) {
-            final Player player = Sponge.getServer().getPlayer(entry.getKey()).orElseThrow(() -> new RuntimeException(String.format("No player with "
-                    + "UUID %s 'found!", entry.getKey())));
             if (entry.getValue().dead) {
-                dead.add(player);
+                dead.add(entry.getValue());
             } else {
-                alive.add(player);
+                alive.add(entry.getValue());
             }
         }
 
         // Inverse alphabetical order
-        Comparator<Player> comparator = (p1, p2) -> -p1.getName().compareTo(p2.getName());
+        Comparator<PlayerData> comparator = (p1, p2) -> -p1.name.compareTo(p2.name);
 
         dead.sort(comparator);
         alive.sort(comparator);
@@ -137,11 +135,11 @@ public final class RoundScoreboard {
         int position = 0;
 
         for (int i = 0; i < dead.size(); i++, position++) {
-            this.playerData.get(dead.get(i).getUniqueId()).score.setScore(position);
+            this.playerData.get(dead.get(i).uuid).score.setScore(position);
         }
 
         for (int i = 0; i < alive.size(); i++, position++) {
-            this.playerData.get(alive.get(i).getUniqueId()).score.setScore(position);
+            this.playerData.get(alive.get(i).uuid).score.setScore(position);
         }
 
         emptyLineScore.setScore(++position);
@@ -151,13 +149,17 @@ public final class RoundScoreboard {
 
     private class PlayerData {
 
+        String name;
         Score score;
         Team team;
         boolean dead;
+        UUID uuid;
 
-        PlayerData(Score score, Team team) {
+        PlayerData(Score score, Team team, String name, UUID uuid) {
+            this.name = name;
             this.score = score;
             this.team = team;
+            this.uuid = uuid;
         }
     }
 }

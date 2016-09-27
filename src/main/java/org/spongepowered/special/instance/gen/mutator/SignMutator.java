@@ -34,11 +34,11 @@ import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 import org.spongepowered.special.instance.gen.InstanceMutator;
 
-public abstract class SignMutator extends InstanceMutator {
+abstract class SignMutator extends InstanceMutator {
 
     private final String sign_id;
 
-    public SignMutator(String id, String name, String sign_id) {
+    SignMutator(String id, String name, String sign_id) {
         super(id, name);
         this.sign_id = sign_id;
     }
@@ -63,7 +63,7 @@ public abstract class SignMutator extends InstanceMutator {
         final Sign sign = (Sign) tileEntity;
         if (!sign.lines().get(0).toPlain().equalsIgnoreCase(this.sign_id)) {
             if (sign.lines().get(1).toPlain().equalsIgnoreCase(this.sign_id)) {
-                System.err.println(String.format("Found mismatched sign at % %s %s", x, y, z));
+                Special.instance.getLogger().error("Found mismatched sign at {}x {}y {}z!", x, y, z);
             } else {
                 return null;
             }

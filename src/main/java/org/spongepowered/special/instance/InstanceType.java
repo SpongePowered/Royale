@@ -27,7 +27,6 @@ package org.spongepowered.special.instance;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
@@ -76,7 +75,7 @@ public final class InstanceType implements CatalogType {
 
     private InstanceType(String id, Builder builder) {
         this.id = id;
-        this.name = builder.name == null ? id : builder.name;
+        this.name = "Last Man Standing";
         this.nameTemplate = builder.nameTemplate;
         this.centerX = builder.centerX;
         this.centerZ = builder.centerZ;
@@ -443,16 +442,16 @@ public final class InstanceType implements CatalogType {
 
             adapter.load();
             final InstanceTypeConfiguration config = adapter.getConfig();
-            config.general.name = this.name;
+            config.general.name = "Last Man Standing";
             config.general.nameTemplate = this.nameTemplate;
             config.general.centerX = this.centerX;
             config.general.centerZ = this.centerZ;
-            config.general.minX =    this.minX;
-            config.general.minY =    this.minY;
-            config.general.minZ =    this.minZ;
-            config.general.maxX =    this.maxX;
-            config.general.maxY =    this.maxY;
-            config.general.maxZ =    this.maxZ;
+            config.general.minX = this.minX;
+            config.general.minY = this.minY;
+            config.general.minZ = this.minZ;
+            config.general.maxX = this.maxX;
+            config.general.maxY = this.maxY;
+            config.general.maxZ = this.maxZ;
             config.general.worldBorderCenterX = this.worldBorderX;
             config.general.worldBorderCenterZ = this.worldBorderZ;
             config.general.worldBorderRadius = this.worldBorderRadius;

@@ -38,13 +38,13 @@ import org.spongepowered.api.util.weighted.VariableAmount;
 import java.util.List;
 import java.util.Random;
 
-public class PotionItemArchetype extends BasicItemArchetype {
+class PotionItemArchetype extends BasicItemArchetype {
 
     private final VariableAmount power;
     private final VariableAmount duration;
     private final PotionEffectType effect;
 
-    public PotionItemArchetype(Type type, VariableAmount quantity, PotionEffectType effect, VariableAmount power, VariableAmount duration) {
+    PotionItemArchetype(Type type, VariableAmount quantity, PotionEffectType effect, VariableAmount power, VariableAmount duration) {
         super(type.getItemType(), quantity);
         this.effect = checkNotNull(effect);
         this.power = checkNotNull(power);

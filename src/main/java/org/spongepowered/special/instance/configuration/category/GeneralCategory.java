@@ -47,10 +47,14 @@ public final class GeneralCategory extends AbstractConfigurationCategory {
     @Setting(value = "center-z", comment = "The center of the map on the z-axis. 'min-z' and 'max-z' are relative to this coordinate.")
     public int centerZ = Constants.Map.DEFAULT_CENTER_Z;
 
-    @Setting(value = "min-x", comment = "The minimum x-coordinate of the map, relative to center-x. This is inclusive, so 'center-x + min-x' will be the actual minimum coordinate.")
+    @Setting(value = "min-x",
+            comment = "The minimum x-coordinate of the map, relative to center-x. This is inclusive, so 'center-x + min-x' will be the actual "
+                    + "minimum coordinate.")
     public int minX = -Constants.Map.DEFAULT_MAP_WIDTH;
 
-    @Setting(value = "max-x", comment = "The maximum x-coordinate of the map, relative to center-x. This is exclusive, so 'center-x + max-x' will be one greater than the actual maximum coordinate.")
+    @Setting(value = "max-x",
+            comment = "The maximum x-coordinate of the map, relative to center-x. This is exclusive, so 'center-x + max-x' will be one greater than"
+                    + " the actual maximum coordinate.")
     public int maxX = Constants.Map.DEFAULT_MAP_WIDTH;
 
     @Setting(value = "min-y", comment = "The minimum y-coordinate of the map.")
@@ -59,10 +63,14 @@ public final class GeneralCategory extends AbstractConfigurationCategory {
     @Setting(value = "max-y", comment = "The maximum y-coordinate of the map.")
     public int maxY = Constants.Map.DEFAULT_MAP_MAX_Y;
 
-    @Setting(value = "min-z", comment = "The minimum z-coordinate of the map, relative to center-z. This is inclusive, so 'center-z + min-z' will be the actual minimum coordinate")
+    @Setting(value = "min-z",
+            comment = "The minimum z-coordinate of the map, relative to center-z. This is inclusive, so 'center-z + min-z' will be the actual "
+                    + "minimum coordinate")
     public int minZ = -Constants.Map.DEFAULT_MAP_LENGTH;
 
-    @Setting(value = "max-z", comment = "The maximum z-coordinate of the map, relative to center-z. This is exclusive, so 'center-z + max-z' will be one greater than the actual maximum coordinate.")
+    @Setting(value = "max-z",
+            comment = "The maximum z-coordinate of the map, relative to center-z. This is exclusive, so 'center-z + max-z' will be one greater than"
+                    + " the actual maximum coordinate.")
     public int maxZ = Constants.Map.DEFAULT_MAP_LENGTH;
 
     @Setting(value = "world-border-center-x", comment = "The center of the world border on the x-axis")

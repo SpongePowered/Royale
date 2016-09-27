@@ -51,28 +51,28 @@ public final class Loot {
 
     // @formatter:off
 
-    public static final LootTable<ItemArchetype> low_level = new LootTable<>();
-    public static final LootTable<ItemArchetype> mid_level = new LootTable<>();
-    public static final LootTable<ItemArchetype> high_level = new LootTable<>();
-    public static final LootTable<ItemArchetype> rare_level = new LootTable<>();
+    private static final LootTable<ItemArchetype> low_level = new LootTable<>();
+    private static final LootTable<ItemArchetype> mid_level = new LootTable<>();
+    private static final LootTable<ItemArchetype> high_level = new LootTable<>();
+    private static final LootTable<ItemArchetype> rare_level = new LootTable<>();
 
-    public static final WeightedTable<ItemArchetype> basic_food = new WeightedTable<>();
-    public static final WeightedTable<ItemArchetype> high_food = new WeightedTable<>();
+    private static final WeightedTable<ItemArchetype> basic_food = new WeightedTable<>();
+    private static final WeightedTable<ItemArchetype> high_food = new WeightedTable<>();
 
-    public static final WeightedTable<ItemArchetype> basic_combat = new WeightedTable<>();
-    public static final WeightedTable<ItemArchetype> basic_ranged = new WeightedTable<>();
+    private static final WeightedTable<ItemArchetype> basic_combat = new WeightedTable<>();
+    private static final WeightedTable<ItemArchetype> basic_ranged = new WeightedTable<>();
 
-    public static final WeightedTable<ItemArchetype> mid_combat = new WeightedTable<>();
-    public static final WeightedTable<ItemArchetype> mid_ranged = new WeightedTable<>();
+    private static final WeightedTable<ItemArchetype> mid_combat = new WeightedTable<>();
+    private static final WeightedTable<ItemArchetype> mid_ranged = new WeightedTable<>();
 
-    public static final ChanceTable<ItemArchetype> high_combat = new ChanceTable<>();
+    private static final ChanceTable<ItemArchetype> high_combat = new ChanceTable<>();
 
-    public static final WeightedTable<ItemArchetype> rare_items = new WeightedTable<>();
+    private static final WeightedTable<ItemArchetype> rare_items = new WeightedTable<>();
 
-    public static final ChanceTable<ItemArchetype> weird_items = new ChanceTable<>();
+    private static final ChanceTable<ItemArchetype> weird_items = new ChanceTable<>();
 
-    public static final WeightedTable<ItemArchetype> basic_potions = new WeightedTable<>();
-    public static final WeightedTable<ItemArchetype> high_potions = new WeightedTable<>();
+    private static final WeightedTable<ItemArchetype> basic_potions = new WeightedTable<>();
+    private static final WeightedTable<ItemArchetype> high_potions = new WeightedTable<>();
 
     private static final Map<String, LootTable<ItemArchetype>> loot_tables = Maps.newHashMap();
 
@@ -86,11 +86,13 @@ public final class Loot {
 
         low_level.addTable(basic_food);
         low_level.addTable(basic_combat);
+        low_level.addTable(basic_ranged);
         low_level.addTable(weird_items);
 
         mid_level.addTable(basic_food);
         mid_level.addTable(basic_potions);
         mid_level.addTable(mid_combat);
+        mid_level.addTable(mid_ranged);
         mid_level.addTable(high_food);
         mid_level.addTable(weird_items);
 

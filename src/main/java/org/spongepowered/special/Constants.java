@@ -87,7 +87,7 @@ public class Constants {
         public static final int DEFAULT_MAP_WIDTH = 250;
         public static final int DEFAULT_MAP_MIN_Y = 0;
         public static final int DEFAULT_MAP_MAX_Y = 256;
-        public static final int MAXIMUM_WORLD_NAME_LENGTH = 15;
+        static final int MAXIMUM_WORLD_NAME_LENGTH = 15;
         public static final int DEFAULT_WORLD_BORDER_CENTER_X = 0;
         public static final int DEFAULT_WORLD_BORDER_CENTER_Z = 0;
         public static final int DEFAULT_WORLD_BORDER_RADIUS = 250;
@@ -141,12 +141,12 @@ public class Constants {
             public static final String SIGN_HEADER = "Join Game";
 
             static final WorldArchetype lobbyArchetype = WorldArchetype.builder().from(WorldArchetypes.THE_END)
-                    .gameMode(GameModes.ADVENTURE)
+                    .gameMode(GameModes.SURVIVAL)
                     .loadsOnStartup(true)
                     .difficulty(Difficulties.EASY)
                     .generateSpawnOnLoad(true)
                     .dimension(DimensionTypes.OVERWORLD)
-                    .generator(GeneratorTypes.THE_END) // TODO Remove when Inscrutable has Lobby map
+                    .generator(GeneratorTypes.THE_END)
                     .pvp(false)
                     .keepsSpawnLoaded(true)
                     .serializationBehavior(SerializationBehaviors.NONE)
@@ -158,10 +158,11 @@ public class Constants {
     }
 
     public static final class Permissions {
+
         public static final String ADMIN = Meta.ID + ".admin";
-        public static final String WORLD_MODIFIED_COMMAND = Meta.ID + ".command.worldmodified";
-        public static final String WORLD_LOAD_COMMAND = Meta.ID + ".command.worldload";
-        public static final String WORLD_UNLOAD_COMMAND = Meta.ID + ".command.worldunload";
+        static final String WORLD_MODIFIED_COMMAND = Meta.ID + ".command.worldmodified";
+        static final String WORLD_LOAD_COMMAND = Meta.ID + ".command.worldload";
+        static final String WORLD_UNLOAD_COMMAND = Meta.ID + ".command.worldunload";
 
         private Permissions() {
         }

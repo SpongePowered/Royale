@@ -53,8 +53,8 @@ public final class ChestMutator extends SignMutator {
 
         Special.instance.getLogger().debug("Generating loot chest via table [" + lootTableId + "] at " + x + "x " + y + "y " + z + "z.");
 
-        area.setBlock(x, y, z, BlockTypes.CHEST.getDefaultState().with(Keys.DIRECTION, state.get(Keys.DIRECTION).get()).get(), Special.instance
-                .getPluginCause());
+        area.setBlock(x, y, z, BlockTypes.CHEST.getDefaultState().with(Keys.DIRECTION, state.get(Keys.DIRECTION).orElse(null)).orElse(null), Special
+                .instance.getPluginCause());
 
         final TileEntity tileEntity = area.getTileEntity(x, y, z).orElse(null);
         if (tileEntity == null) {

@@ -120,18 +120,6 @@ public final class InstanceTypeRegistryModule implements AdditionalCatalogRegist
         } catch (IOException | ObjectMappingException e) {
             throw new RuntimeException("Failed to iterate over the instance type configuration files!");
         }
-
-        // Load shipped defaults if we found no config file for it
-        if (!this.types.containsKey("last_man_standing")) {
-            try {
-                this.registerAdditionalCatalog(InstanceType.builder()
-                        .mutator("chest")
-                        .mutator("player_spawn")
-                        .build("last_man_standing", "Last Man Standing"));
-            } catch (IOException | ObjectMappingException e) {
-                throw new RuntimeException("Failed to register default instance types!");
-            }
-        }
     }
 
     private static final class Holder {

@@ -39,7 +39,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Random;
 
-public class EnchantedItemArchetype implements ItemArchetype {
+class EnchantedItemArchetype implements ItemArchetype {
 
     private final boolean unbreakable;
     private final ItemType type;
@@ -47,7 +47,7 @@ public class EnchantedItemArchetype implements ItemArchetype {
     private final Text name;
     private final VariableAmount quantity;
 
-    public EnchantedItemArchetype(ItemType type, VariableAmount quantity, boolean unbreakable, Text name, Map<Enchantment, VariableAmount>
+    EnchantedItemArchetype(ItemType type, VariableAmount quantity, boolean unbreakable, Text name, Map<Enchantment, VariableAmount>
             enchantments) {
         this.type = checkNotNull(type);
         this.quantity = checkNotNull(quantity);
@@ -64,7 +64,7 @@ public class EnchantedItemArchetype implements ItemArchetype {
                 .quantity(amount)
                 .build();
 
-        final EnchantmentData enchantmentData = itemStack.getOrCreate(EnchantmentData.class).get();
+        final EnchantmentData enchantmentData = itemStack.getOrCreate(EnchantmentData.class).orElse(null);
         for (Map.Entry<Enchantment, VariableAmount> entry : enchantments.entrySet()) {
             enchantmentData.addElement(new ItemEnchantment(entry.getKey(), entry.getValue().getFlooredAmount(rand)));
         }

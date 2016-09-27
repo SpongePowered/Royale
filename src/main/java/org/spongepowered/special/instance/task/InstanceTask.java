@@ -29,7 +29,7 @@ import org.spongepowered.special.instance.Instance;
 
 import java.util.function.Consumer;
 
-public abstract class InstanceTask implements Consumer<Task>  {
+public abstract class InstanceTask implements Consumer<Task> {
 
     private final Instance instance;
 

@@ -29,11 +29,15 @@ import static com.google.common.base.Preconditions.checkState;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.EntityEquipmentSlot;
+import net.minecraft.item.ItemStack;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
@@ -44,8 +48,8 @@ import org.spongepowered.special.instance.exception.UnknownInstanceException;
 import org.spongepowered.special.instance.scoreboard.RoundScoreboard;
 import org.spongepowered.special.instance.task.CleanupTask;
 import org.spongepowered.special.instance.task.EndTask;
-import org.spongepowered.special.instance.task.ProgressTask;
 import org.spongepowered.special.instance.task.InstanceTask;
+import org.spongepowered.special.instance.task.ProgressTask;
 import org.spongepowered.special.instance.task.StartTask;
 
 import java.lang.ref.WeakReference;
@@ -101,7 +105,7 @@ public final class Instance {
         return state;
     }
 
-    public RoundScoreboard getScoreboard() {
+    RoundScoreboard getScoreboard() {
         return scoreboard;
     }
 
@@ -109,15 +113,11 @@ public final class Instance {
         return registeredPlayers;
     }
 
-    public Deque<Vector3d> getUnusedSpawns() {
-        return unusedSpawns;
-    }
-
-    public Map<UUID, Vector3d> getPlayerSpawns() {
+    Map<UUID, Vector3d> getPlayerSpawns() {
         return playerSpawns;
     }
 
-    public Map<UUID, PlayerDeathRecord> getPlayerDeaths() {
+    Map<UUID, PlayerDeathRecord> getPlayerDeaths() {
         return playerDeaths;
     }
 
@@ -157,7 +157,7 @@ public final class Instance {
         this.state = state;
     }
 
-    public boolean canRegisterPlayer(Player player) {
+    boolean canRegisterMorePlayers() {
         return this.unusedSpawns.size() != 0;
     }
 
@@ -173,9 +173,12 @@ public final class Instance {
     public void spawnPlayer(Player player) {
         checkState(this.registeredPlayers.contains(player.getUniqueId()), "Attempted to spawn a player into this round who wasn't registered!");
 
+        final World world = this.worldRef.get();
+        checkState(world != null, "Instance world ref is null!");
+
         // If the player has a consumed spawn and this method is called, we put them back at spawn
         if (this.playerSpawns.containsKey(player.getUniqueId())) {
-            player.setLocation(new Location<>(this.worldRef.get(), this.playerSpawns.get(player.getUniqueId())));
+            player.setLocation(new Location<>(world, this.playerSpawns.get(player.getUniqueId())));
             return;
         }
 
@@ -186,7 +189,7 @@ public final class Instance {
 
         this.scoreboard.addPlayer(player);
 
-        player.setLocation(new Location<>(this.worldRef.get(), player_spawn));
+        player.setLocation(new Location<>(world, player_spawn));
 
         int playerCount = this.instanceType.getAutomaticStartPlayerCount();
         if (playerCount == this.registeredPlayers.size() && this.state == State.IDLE) {
@@ -213,22 +216,23 @@ public final class Instance {
 
     private void convertPlayerToCombatant(Player player, boolean first) {
         player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
-        player.offer(Keys.CAN_FLY, false);
-        player.offer(Keys.HEALTH, player.get(Keys.MAX_HEALTH).get());
-        Utils.resetHungerAndPotions(player);
+        Utils.resetHealthHungerAndPotions(player);
 
         if (first) {
             player.getInventory().clear();
 
             for (ItemStackSnapshot snapshot : this.instanceType.getDefaultItems()) {
-                player.getInventory().offer(snapshot.createStack());
+                if (snapshot.getType() == ItemTypes.ELYTRA) {
+                    ((EntityPlayerMP) player).setItemStackToSlot(EntityEquipmentSlot.CHEST, (ItemStack) (Object) snapshot.createStack());
+                } else {
+                    player.getInventory().offer(snapshot.createStack());
+                }
             }
         }
     }
 
     void convertPlayerToSpectator(Player player) {
         player.offer(Keys.GAME_MODE, GameModes.SPECTATOR);
-        player.offer(Keys.CAN_FLY, true);
     }
 
     private void onStateAdvance(State next) {
@@ -318,25 +322,6 @@ public final class Instance {
                 .toString();
     }
 
-    interface IState {
-
-        default boolean canAnyoneMove() {
-            return true;
-        }
-
-        default boolean canAnyoneInteract() {
-            return false;
-        }
-
-        default boolean doesCancelTasksOnAdvance() {
-            return true;
-        }
-
-        default boolean doesCheckRoundStatusOnAdvance() {
-            return true;
-        }
-    }
-
     public enum State implements IState {
 
         IDLE {
@@ -399,32 +384,42 @@ public final class Instance {
         }
     }
 
-    public static class PlayerDeathRecord {
+    interface IState {
+
+        default boolean canAnyoneMove() {
+            return true;
+        }
+
+        default boolean canAnyoneInteract() {
+            return false;
+        }
+
+        default boolean doesCancelTasksOnAdvance() {
+            return true;
+        }
+
+        default boolean doesCheckRoundStatusOnAdvance() {
+            return true;
+        }
+    }
+
+    /**
+     * TODO Put this to use in a future feature.
+     */
+    private static class PlayerDeathRecord {
 
         private final UUID victim;
         private final Cause causeOfDeath;
         private final Instant timeOfDeath;
 
-        public PlayerDeathRecord(Player victim, Cause causeOfDeath) {
+        PlayerDeathRecord(Player victim, Cause causeOfDeath) {
             this(victim, causeOfDeath, Instant.now());
         }
 
-        public PlayerDeathRecord(Player victim, Cause causeOfDeath, Instant timeOfDeath) {
+        PlayerDeathRecord(Player victim, Cause causeOfDeath, Instant timeOfDeath) {
             this.victim = victim.getUniqueId();
             this.causeOfDeath = causeOfDeath;
             this.timeOfDeath = timeOfDeath;
-        }
-
-        public UUID getVictim() {
-            return victim;
-        }
-
-        public Cause getCauseOfDeath() {
-            return causeOfDeath;
-        }
-
-        public Instant getTimeOfDeath() {
-            return timeOfDeath;
         }
     }
 }

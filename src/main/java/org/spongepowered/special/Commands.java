@@ -42,6 +42,7 @@ import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColor;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Location;
@@ -63,6 +64,8 @@ import java.util.Random;
 
 final class Commands {
 
+    private static final Random random = new Random();
+
     private static final CommandSpec createCommand = CommandSpec.builder()
             .permission(Constants.Meta.ID + ".command.create")
             .description(Text.of("Creates an instance."))
@@ -75,24 +78,27 @@ final class Commands {
 
                 if (instanceType == null) {
                     Collection<InstanceType> types = InstanceTypeRegistryModule.getInstance().getAll();
-                    instanceType = Iterables.get(types, new Random().nextInt(types.size()));
+                    instanceType = Iterables.get(types, random.nextInt(types.size()));
                 }
 
                 if (targetProperties == null) {
                     Optional<WorldProperties> properties = Sponge.getServer().getWorldProperties(instanceType.getId());
                     if (!properties.isPresent()) {
-                        src.sendMessage(Text.of(TextColors.RED, String.format("Unable to find a world using instance type id of %s", instanceType.getId())));
+                        src.sendMessage(
+                                Text.of(TextColors.RED, String.format("Unable to find a world using instance type id of %s", instanceType.getId())));
                         return CommandResult.empty();
                     }
                     targetProperties = properties.get();
                 }
 
                 if (targetProperties.getWorldName().length() > Constants.Map.MAXIMUM_WORLD_NAME_LENGTH) {
-                    throw new CommandException(Text.of(String.format("World name %s is too long! It must be at most %s characters!", targetProperties.getWorldName(), Constants.Map.MAXIMUM_WORLD_NAME_LENGTH)));
+                    throw new CommandException(Text.of(String
+                            .format("World name %s is too long! It must be at most %s characters!", targetProperties.getWorldName(),
+                                    Constants.Map.MAXIMUM_WORLD_NAME_LENGTH)));
                 }
 
                 src.sendMessage(Text.of("Creating an instance from [", format(TextColors.GREEN, targetProperties.getWorldName()), "] using instance ",
-                                "type ", format(TextColors.LIGHT_PURPLE, instanceType.getName()), "."));
+                        "type ", format(TextColors.LIGHT_PURPLE, instanceType.getName()), "."));
 
                 try {
                     Special.instance.getInstanceManager().createInstance(targetProperties.getWorldName(), instanceType);
@@ -101,6 +107,20 @@ final class Commands {
                 }
 
                 src.sendMessage(Text.of("Created instance for [", format(TextColors.GREEN, targetProperties.getWorldName()), "]."));
+                for (Player player : Sponge.getServer().getOnlinePlayers()) {
+                    if (player.getWorld().getName().equalsIgnoreCase(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
+
+                        final WorldProperties finalTargetProperties = targetProperties;
+                        player.sendMessage(Text.builder().onClick(TextActions.executeCallback(commandSource -> {
+                            Optional<Instance> inst = Special.instance.getInstanceManager().getInstance(finalTargetProperties.getWorldName());
+                            if (inst.isPresent()) {
+                                inst.get().registerPlayer((Player) commandSource);
+                                inst.get().spawnPlayer((Player) commandSource);
+                            }
+                        })).append(Text.of("[", TextColors.RED, targetProperties.getWorldName(), TextColors.RESET, "] is ready! "
+                                + "Right-click this message or the sign to join!")).build());
+                    }
+                }
                 return CommandResult.success();
             })
             .build();
@@ -174,7 +194,9 @@ final class Commands {
                 if (optWorldProperties.isPresent()) {
                     Optional<World> opt = Sponge.getServer().getWorld(optWorldProperties.get().getUniqueId());
                     if (!opt.isPresent() && Special.instance.getInstanceManager().getInstance(optWorldProperties.get().getWorldName()).isPresent()) {
-                        src.sendMessage(Text.of(Text.of(TextColors.YELLOW, String.format("World %s was unloaded, but the instance still exists! Ending instance.", optWorldProperties.get().getWorldName()))));
+                        src.sendMessage(Text.of(Text.of(TextColors.YELLOW,
+                                String.format("World %s was unloaded, but the instance still exists! Ending instance.",
+                                        optWorldProperties.get().getWorldName()))));
                         try {
                             Special.instance.getInstanceManager().endInstance(optWorldProperties.get().getWorldName(), true);
                         } catch (UnknownInstanceException e) {
@@ -260,8 +282,9 @@ final class Commands {
                 try {
                     adapter.load();
                 } catch (IOException | ObjectMappingException e) {
-                    throw new CommandException(Text.of("Unable to load configuration for instance type [", format(TextColors.LIGHT_PURPLE, instanceType
-                            .getId()), "]."));
+                    throw new CommandException(
+                            Text.of("Unable to load configuration for instance type [", format(TextColors.LIGHT_PURPLE, instanceType
+                                    .getId()), "]."));
                 }
 
                 instanceType.injectFromConfig(adapter.getConfig());
@@ -333,11 +356,12 @@ final class Commands {
             .arguments(world(Text.of("world")), optional(bool(Text.of("modified")), true))
             .permission(Constants.Permissions.WORLD_MODIFIED_COMMAND)
             .executor((src, args) -> {
-                WorldProperties properties = args.<WorldProperties>getOne("world").get();
-                boolean modified = args.<Boolean>getOne("modified").get();
+                WorldProperties properties = args.<WorldProperties>getOne("world").orElse(null);
+                boolean modified = args.<Boolean>getOne("modified").orElse(null);
                 Special.instance.getInstanceManager().setWorldModified(properties.getWorldName(), modified);
 
-                src.sendMessage(Text.of(TextColors.GREEN, String.format("Set modified state of world %s to %s!", properties.getWorldName(), modified)));
+                src.sendMessage(
+                        Text.of(TextColors.GREEN, String.format("Set modified state of world %s to %s!", properties.getWorldName(), modified)));
                 return CommandResult.success();
             })
             .build();
@@ -347,7 +371,7 @@ final class Commands {
             .arguments(world(Text.of("world")))
             .permission(Constants.Permissions.WORLD_LOAD_COMMAND)
             .executor((src, args) -> {
-                WorldProperties properties = args.<WorldProperties>getOne("world").get();
+                WorldProperties properties = args.<WorldProperties>getOne("world").orElse(null);
 
                 if (Sponge.getServer().getWorld(properties.getUniqueId()).isPresent()) {
                     src.sendMessage(Text.of(TextColors.YELLOW, String.format("World %s is already loaded!", properties.getWorldName())));
@@ -370,7 +394,7 @@ final class Commands {
             .arguments(world(Text.of("world")))
             .permission(Constants.Permissions.WORLD_UNLOAD_COMMAND)
             .executor((src, args) -> {
-                WorldProperties properties = args.<WorldProperties>getOne("world").get();
+                WorldProperties properties = args.<WorldProperties>getOne("world").orElse(null);
 
                 Optional<World> world = Sponge.getServer().getWorld(properties.getUniqueId());
                 if (!world.isPresent()) {
@@ -379,7 +403,9 @@ final class Commands {
                 }
 
                 if (Special.instance.getInstanceManager().getInstance(properties.getWorldName()).isPresent()) {
-                    src.sendMessage(Text.of(TextColors.RED, String.format("Instance %s is currently running! Use '/s end %s' to end it!", properties.getWorldName(), properties.getWorldName())));
+                    src.sendMessage(Text.of(TextColors.RED,
+                            String.format("Instance %s is currently running! Use '/s end %s' to end it!", properties.getWorldName(),
+                                    properties.getWorldName())));
                     return CommandResult.empty();
                 }
 

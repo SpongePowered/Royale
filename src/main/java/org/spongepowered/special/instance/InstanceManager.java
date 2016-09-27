@@ -26,6 +26,7 @@ package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import com.google.common.collect.Iterables;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -42,6 +43,8 @@ import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.block.tileentity.ChangeSignEvent;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.cause.NamedCause;
+import org.spongepowered.api.event.cause.entity.damage.DamageTypes;
+import org.spongepowered.api.event.cause.entity.damage.source.DamageSource;
 import org.spongepowered.api.event.entity.AttackEntityEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.DestructEntityEvent;
@@ -51,7 +54,6 @@ import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-import org.spongepowered.api.scoreboard.Scoreboard;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Dimension;
@@ -65,7 +67,6 @@ import org.spongepowered.special.instance.exception.UnknownInstanceException;
 import org.spongepowered.special.instance.gen.InstanceMutatorPipeline;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -155,7 +156,8 @@ public final class InstanceManager {
     }
 
     public void setWorldModified(String instanceName, boolean modified) {
-        System.err.println(String.format("[Mutator] Setting fast pass availablity for instance %s to %s", instanceName, !modified));
+        Special.instance.getLogger().error("[Mutator] Setting fast pass availability for instance {} to {}.", instanceName, !modified);
+
         if (modified) {
             this.canUseFastPass.remove(instanceName);
         } else {
@@ -295,8 +297,8 @@ public final class InstanceManager {
                 // If a Player has already spawned, this means they are playing. See if the instance allows movement
                 if (fromInstance.getPlayerSpawns().containsKey(player.getUniqueId()) && !fromInstance.getState().canAnyoneMove()) {
                     if (!event.getFromTransform().getPosition().equals(event.getToTransform().getPosition())) {
-                        // Don't cancel the event, to allow people to look aroundn
-                        Transform transform = event.getToTransform().setPosition(event.getFromTransform().getPosition());
+                        // Don't cancel the event, to allow people to look around.
+                        final Transform<World> transform = event.getToTransform().setPosition(event.getFromTransform().getPosition());
                         event.setToTransform(transform);
                     }
                     return;
@@ -326,24 +328,13 @@ public final class InstanceManager {
                             player.setScoreboard(toInstance.getScoreboard().getHandle());
                         }
 
-                    } else if (toWorld.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME) && !player
-                            .hasPermission(Constants.Permissions.ADMIN)) {
+                    } else if (toWorld.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
                         // Going from a non-instance world to lobby
-                        player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
-                        player.offer(Keys.CAN_FLY, true);
+                        this.giveLobbySetting(player);
                     }
                 }
             }
         }
-    }
-
-    private void giveLobbySetting(Player player) {
-        player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
-        player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
-        player.offer(Keys.HEALTH, player.get(Keys.MAX_HEALTH).get());
-        player.offer(Keys.GAME_MODE, GameModes.ADVENTURE);
-        player.offer(Keys.CAN_FLY, true);
-        Utils.resetHungerAndPotions(player);
     }
 
     @Listener(order = Order.LAST)
@@ -354,6 +345,7 @@ public final class InstanceManager {
         if (instance != null) {
             if (instance.getRegisteredPlayers().contains(player.getUniqueId())) {
                 instance.disqualifyPlayer(player, event.getCause());
+                player.respawnPlayer();
                 if (instance.isRoundOver()) {
                     instance.advanceTo(Instance.State.PRE_END);
                 }
@@ -389,21 +381,12 @@ public final class InstanceManager {
         if (fromInstance != null) {
             if (toInstance != null && fromInstance.equals(toInstance)) {
                 fromInstance.convertPlayerToSpectator(player);
-            } else if (toInstance != null){
+                Sponge.getScheduler().createTaskBuilder().execute(task -> fromInstance.convertPlayerToSpectator(player)).submit(Special.instance);
+            } else if (toInstance != null) {
                 player.setScoreboard(toInstance.getScoreboard().getHandle());
             } else {
-                player.setScoreboard(Sponge.getServer().getServerScoreboard().get());
+                player.setScoreboard(Sponge.getServer().getServerScoreboard().orElse(null));
             }
-        }
-    }
-
-    @Listener(order = Order.LAST)
-    public void onInteract(InteractEvent event, @Root Player player) {
-        final World world = player.getWorld();
-        final Instance instance = getInstance(world.getName()).orElse(null);
-
-        if (instance != null && !instance.getState().canAnyoneInteract() && instance.getRegisteredPlayers().contains(player.getUniqueId())) {
-            event.setCancelled(true);
         }
     }
 
@@ -422,17 +405,28 @@ public final class InstanceManager {
 
     @Listener
     public void onDamageEntity(DamageEntityEvent event) {
-        if (event.getTargetEntity().getWorld().getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
-            event.setCancelled(true);
+        if (event.getTargetEntity() instanceof Player) {
+            final Player player = (Player) event.getTargetEntity();
+
+            final Object root = event.getCause().root();
+
+            if (root instanceof DamageSource) {
+                final DamageSource source = (DamageSource) root;
+
+                if (!(source.getType().equals(DamageTypes.FALL) || source.getType().equals(DamageTypes.VOID)) && player.getWorld().getName()
+                        .equalsIgnoreCase(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
+                    event.setCancelled(true);
+                }
+            }
         }
     }
 
     @Listener
-    public void onSignText(ChangeSignEvent event, @Root Player player) {
+    public void onChangeSign(ChangeSignEvent event, @Root Player player) {
         if (this.isTpSign(event.getText().lines().get())) {
             if (player.hasPermission(Constants.Permissions.ADMIN)) {
-                player.sendMessage(Text.of(TextColors.GREEN, "Sucessfully created world teleportation sign!"));
-                event.getText().setElement(0, Text.of(TextColors.AQUA, event.getText().get(0).get()));
+                player.sendMessage(Text.of(TextColors.GREEN, "Successfully created world teleportation sign!"));
+                event.getText().setElement(0, Text.of(TextColors.AQUA, event.getText().get(0).orElse(null)));
             } else {
                 player.sendMessage(Text.of(TextColors.RED, "You don't have permission to create a world teleportation sign!"));
                 event.setCancelled(true);
@@ -441,37 +435,79 @@ public final class InstanceManager {
     }
 
     @Listener
-    public void onSignClick(InteractBlockEvent.Secondary.MainHand event, @Root Player player, @Getter("getTargetBlock") BlockSnapshot block) {
-        block.getLocation().flatMap(Location::getTileEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
-            if (this.isTpSign(lines)) {
-                String name = lines.get(1).toPlain();
-                Optional<Instance> instance = Special.instance.getInstanceManager().getInstance(name);
-                if (instance.isPresent()) {
-                    if (!instance.get().canRegisterPlayer(player)) {
-                        player.sendMessage(Text.of(TextColors.RED, "World is full!"));
-                        return;
+    public void onInteract(InteractEvent event, @Root Player player) {
+
+        final World world = player.getWorld();
+        final Instance instance = getInstance(world.getName()).orElse(null);
+
+        if (instance != null && !instance.getState().canAnyoneInteract() && instance.getRegisteredPlayers().contains(player.getUniqueId())) {
+            event.setCancelled(true);
+        }
+
+        if (event instanceof InteractBlockEvent.Secondary.MainHand) {
+            final BlockSnapshot block = ((InteractBlockEvent.Secondary.MainHand) event).getTargetBlock();
+
+            block.getLocation().flatMap(Location::getTileEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
+                if (this.isTpSign(lines)) {
+                    String name = lines.get(1).toPlain();
+                    Optional<Instance> optInstance = Special.instance.getInstanceManager().getInstance(name);
+                    if (optInstance.isPresent()) {
+                        if (!optInstance.get().canRegisterMorePlayers(player)) {
+                            player.sendMessage(Text.of(TextColors.RED, "World is full!"));
+                            return;
+                        }
+                        player.sendMessage(Text.of(TextColors.GREEN, "Joining world " + name));
+                        optInstance.get().registerPlayer(player);
+                        optInstance.get().spawnPlayer(player);
+                    } else {
+                        if (name.equals("")) {
+                            Collection<Instance> instances = Special.instance.getInstanceManager().getAll();
+                            if (instances.size() != 1) {
+                                player.sendMessage(
+                                        Text.of(TextColors.RED, String.format("Unable to automatically join select - there are %s to choose "
+                                                        + "from.",
+                                                instances.size())));
+                                return;
+
+                            }
+                            final Instance realInstance = Iterables.getFirst(instances, null);
+                            if (realInstance != null) {
+                                realInstance.registerPlayer(player);
+                                realInstance.spawnPlayer(player);
+                            }
+                        }
+                        player.sendMessage(Text.of(TextColors.RED, String.format("World %s isn't up yet!", name)));
                     }
-                    player.sendMessage(Text.of(TextColors.GREEN, "Joining world " + name));
-                    instance.get().registerPlayer(player);
-                    instance.get().spawnPlayer(player);
-                } else {
-                    player.sendMessage(Text.of(TextColors.RED, String.format("World %s isn't up yet!", name)));
                 }
-            }
-        });
+            });
+        }
     }
 
     @Listener
     public void onChangeBlock(ChangeBlockEvent event, @First Player player) {
         String name = event.getTargetWorld().getName();
+        if (name.equalsIgnoreCase(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
+            event.setCancelled(true);
+            return;
+        }
+
         if (!this.getInstance(name).isPresent() && this.canUseFastPass.contains(name)) {
             this.setWorldModified(name, true);
-            player.sendMessages(Text.of(TextColors.YELLOW, String.format("You have modified the world '%s' - mutators will take longer to run the next time an instance of this map is started.\n" +
-                                             "If you make any modifications outside of the game, make sure to run '/worldmodified %s' so that your changes are detected.", name, name)));
+            player.sendMessages(Text.of(TextColors.YELLOW, String.format(
+                    "You have modified the world '%s' - mutators will take longer to run the next time an instance of this map is started.\n" +
+                            "If you make any modifications outside of the game, make sure to run '/worldmodified %s' so that your changes are "
+                            + "detected.",
+                    name, name)));
         }
     }
 
+    private void giveLobbySetting(Player player) {
+        player.setScoreboard(Sponge.getServer().getServerScoreboard().orElse(null));
+        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
+        Utils.resetHealthHungerAndPotions(player);
+    }
+
     private boolean isTpSign(List<Text> lines) {
-        return lines.get(0).toPlain().equalsIgnoreCase(Constants.Map.Lobby.SIGN_HEADER);
+        return lines.size() != 0 && lines.get(0).toPlain().equalsIgnoreCase(Constants.Map.Lobby.SIGN_HEADER);
     }
 }

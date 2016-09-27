@@ -25,6 +25,10 @@
 package org.spongepowered.special.instance.task;
 
 import com.flowpowered.math.vector.Vector3d;
+import com.google.common.collect.Lists;
+import net.minecraft.init.MobEffects;
+import net.minecraft.potion.PotionEffect;
+import net.minecraft.potion.PotionUtils;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.key.Keys;
 import org.spongepowered.api.data.type.HandTypes;
@@ -42,6 +46,7 @@ import org.spongepowered.api.entity.living.Agent;
 import org.spongepowered.api.entity.living.Human;
 import org.spongepowered.api.entity.living.Ranger;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.scheduler.Task;
@@ -116,7 +121,7 @@ public final class CleanupTask extends InstanceTask {
                         final Goal<Agent> targetGoal = human.getGoal(GoalTypes.TARGET).orElse(null);
                         targetGoal.addTask(0, FindNearestAttackableTargetAITask.builder().chance(1).target(Player.class).filter(living -> {
                             if (living instanceof Player) {
-                                if (CleanupTask.this.getInstance().getRegisteredPlayers().contains(living.getUniqueId())) {
+                                if (this.getInstance().getRegisteredPlayers().contains(living.getUniqueId())) {
                                     return true;
                                 }
                             }
@@ -135,6 +140,12 @@ public final class CleanupTask extends InstanceTask {
                             normalGoal.addTask(1, RangeAgentAITask.builder().moveSpeed(0.4D).attackRadius(20f).delayBetweenAttacks(10).build((Ranger)
                                     human));
                             human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.BOW, 1));
+                            ItemStack tipped = ItemStack.of(ItemTypes.TIPPED_ARROW, 1);
+                            tipped = (ItemStack) (Object) PotionUtils.appendEffects((net.minecraft.item.ItemStack) (Object) tipped, Lists
+                                    .newArrayList(new PotionEffect
+                                            (MobEffects.GLOWING, 60), new PotionEffect(MobEffects.SLOWNESS, 60)));
+
+                            human.setItemInHand(HandTypes.OFF_HAND, tipped);
                             ranger = true;
                         } else {
                             normalGoal.addTask(1, AttackLivingAITask.builder().longMemory().speed(0.4D).build(human));
@@ -154,7 +165,7 @@ public final class CleanupTask extends InstanceTask {
 
                 // Blow this place to pieces
                 for (Player player : world.getPlayers()) {
-                    if (!player.isOnline()) {
+                    if (!player.isOnline() || player.isRemoved() || player.get(Keys.GAME_MODE).get() == GameModes.SPECTATOR) {
                         continue;
                     }
 

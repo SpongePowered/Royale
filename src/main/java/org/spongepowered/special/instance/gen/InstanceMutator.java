@@ -53,7 +53,7 @@ public abstract class InstanceMutator implements CatalogType {
         return this.name;
     }
 
-    public void visitInstance(Instance instance) {
+    void visitInstance(Instance instance) {
         Special.instance.getLogger().info("Mutating instance [" + instance.getName() + "] with mutator [" + this.getId() + "]...");
     }
 

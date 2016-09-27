@@ -34,6 +34,7 @@ import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.text.title.Title;
+import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 
 import java.util.List;
@@ -47,6 +48,7 @@ public final class EndTask extends InstanceTask {
 
     private Task handle;
     private Title title;
+    private Title winnerTitle;
     private long endLengthRemaining;
 
     public EndTask(Instance instance, List<UUID> winners) {
@@ -79,11 +81,22 @@ public final class EndTask extends InstanceTask {
                     Text.of(TextColors.GREEN, winner.get().get(Keys.DISPLAY_NAME).get(), TextColors.WHITE, " is the winner!") :
                     Text.of(TextColors.YELLOW, "Draw");
 
+            final Text winnerContent = winner.isPresent() ?
+                    Text.of(TextColors.GREEN, "You are the winner!") :
+                    Text.of(TextColors.YELLOW, "Draw");
+
             this.title = Title.builder()
                     .fadeIn(0)
                     .fadeOut(20)
                     .stay((int) ((this.endLengthTotal - 1) * 20))
                     .title(content)
+                    .build();
+
+            this.winnerTitle = Title.builder()
+                    .fadeIn(0)
+                    .fadeOut(20)
+                    .stay((int) ((this.endLengthTotal - 1) * 20))
+                    .title(winnerContent)
                     .build();
 
             if (winner.isPresent()) {
@@ -92,13 +105,23 @@ public final class EndTask extends InstanceTask {
                                 .count(30)
                                 .build(),
                         winner.get().getLocation().getPosition());
-            }
 
-            getInstance().getHandle().ifPresent((world) -> {
-                if (world.isLoaded()) {
-                    world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> onlinePlayer.sendTitle(title));
-                }
-            });
+                getInstance().getHandle().ifPresent((world) -> {
+                    if (world.isLoaded()) {
+                        world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> {
+                            if (onlinePlayer.getUniqueId().equals(winner.get().getUniqueId())) {
+                                onlinePlayer.sendTitle(this.winnerTitle);
+                            } else {
+                                onlinePlayer.sendTitle(title);
+                            }
+                        });
+                    }
+                });
+
+                Sponge.getServer().getBroadcastChannel()
+                        .send(Text.of(TextColors.RED, winner.get().getName(), TextColors.RESET, " has won the game!"));
+                Special.instance.getLogger().info("Round finished!");
+            }
         }
 
         this.endLengthRemaining--;

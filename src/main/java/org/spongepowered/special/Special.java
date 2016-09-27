@@ -27,13 +27,17 @@ package org.spongepowered.special;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.game.state.GameConstructionEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
+import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
+import org.spongepowered.api.text.Text;
 import org.spongepowered.special.instance.InstanceManager;
 import org.spongepowered.special.instance.InstanceType;
 import org.spongepowered.special.instance.InstanceTypeRegistryModule;
@@ -57,13 +61,11 @@ import javax.inject.Inject;
 public final class Special {
 
     public static Special instance;
-
+    private final InstanceManager instanceManager = new InstanceManager();
+    private final Random random = new Random();
     @Inject private Logger logger;
     @Inject private PluginContainer container;
     @Inject @ConfigDir(sharedRoot = false) private Path configPath;
-
-    private final InstanceManager instanceManager = new InstanceManager();
-    private final Random random = new Random();
     private Cause pluginCause;
 
     @Listener
@@ -90,6 +92,12 @@ public final class Special {
     public void onGameStartingServer(GameStartingServerEvent event) throws IOException {
         Sponge.getServer()
                 .loadWorld(Sponge.getServer().createWorldProperties(Constants.Map.Lobby.DEFAULT_LOBBY_NAME, Constants.Map.Lobby.lobbyArchetype));
+    }
+
+    @Listener
+    public void onGameChat(MessageChannelEvent.Chat event, @Root Player player) {
+        event.setCancelled(true);
+        player.sendMessage(Text.of("Chat has been disabled."));
     }
 
     public Logger getLogger() {
