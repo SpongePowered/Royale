@@ -7,25 +7,30 @@ buildscript {
             url = 'https://oss.sonatype.org/content/repositories/public/'
         }
         maven {
-            name = 'sponge'
-            url = 'http://repo.spongepowered.org/maven'
+            name = 'sponge-new'
+            url = 'https://repo-new.spongepowered.org/repository/maven-public/'
         }
         maven {
-            url = 'https://plugins.gradle.org/m2/'
+            name = 'sponge'
+            url = 'https://repo.spongepowered.org/maven/'
         }
+        gradlePluginPortal()
     }
     dependencies {
         classpath 'gradle.plugin.nl.javadude.gradle.plugins:license-gradle-plugin:0.12.1'
-        classpath 'org.spongepowered:spongegradle:0.5.+'
     }
+}
+
+plugins {
+    id 'java'
+    id 'idea'
+    //id("org.spongepowered.gradle.plugin") version("0.11.5")
 }
 
 group = project.group
 version = "${project.minecraftVersion}-r${project.apiVersion.split("-")[0]}"
 
 apply plugin: 'com.github.hierynomus.license'
-apply plugin: 'org.spongepowered.gradle'
-apply plugin: 'org.spongepowered.plugin'
 
 defaultTasks 'clean', 'licenseFormat', 'build'
 
@@ -42,13 +47,17 @@ repositories {
         url = 'https://oss.sonatype.org/content/repositories/public/'
     }
     maven {
+        name = 'sponge-new'
+        url = 'https://repo-new.spongepowered.org/repository/maven-public/'
+    }
+    maven {
         name = 'sponge'
-        url = 'http://repo.spongepowered.org/maven'
+        url = 'https://repo.spongepowered.org/maven/'
     }
 }
 
 dependencies {
-    compile 'org.spongepowered:spongeapi:5.+'
+    compile 'org.spongepowered:spongeapi:8.0.0-SNAPSHOT'
     compile 'commons-io:commons-io:2.5'
 }
 
