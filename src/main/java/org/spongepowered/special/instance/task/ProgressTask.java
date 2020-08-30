@@ -27,6 +27,7 @@ package org.spongepowered.special.instance.task;
 import org.spongepowered.api.boss.BossBarColors;
 import org.spongepowered.api.boss.BossBarOverlays;
 import org.spongepowered.api.boss.ServerBossBar;
+import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.world.World;
@@ -47,7 +48,7 @@ public final class ProgressTask extends InstanceTask {
     private final long roundLengthTotal;
     private long roundLengthRemaining;
 
-    private Task handle;
+    private ScheduledTask handle;
 
     public ProgressTask(Instance instance) {
         super(instance);
@@ -63,7 +64,7 @@ public final class ProgressTask extends InstanceTask {
     }
 
     @Override
-    public void accept(Task task) {
+    public void accept(ScheduledTask task) {
         this.handle = task;
 
         final World world = this.getInstance().getHandle().orElse(null);

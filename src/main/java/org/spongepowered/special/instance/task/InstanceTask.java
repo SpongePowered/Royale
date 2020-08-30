@@ -24,12 +24,13 @@
  */
 package org.spongepowered.special.instance.task;
 
+import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.special.instance.Instance;
 
 import java.util.function.Consumer;
 
-public abstract class InstanceTask implements Consumer<Task> {
+public abstract class InstanceTask implements Consumer<ScheduledTask> {
 
     private final Instance instance;
 

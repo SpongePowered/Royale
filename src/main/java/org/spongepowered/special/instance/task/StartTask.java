@@ -25,6 +25,7 @@
 package org.spongepowered.special.instance.task;
 
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -41,7 +42,7 @@ public final class StartTask extends InstanceTask {
 
     private int seconds = 0;
 
-    private Task handle;
+    private ScheduledTask handle;
 
     public StartTask(Instance instance) {
         super(instance);
@@ -70,7 +71,7 @@ public final class StartTask extends InstanceTask {
     }
 
     @Override
-    public void accept(Task task) {
+    public void accept(ScheduledTask task) {
         this.handle = task;
 
         final World world = this.getInstance().getHandle().orElse(null);

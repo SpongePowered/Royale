@@ -26,6 +26,8 @@ package org.spongepowered.special.instance;
 
 import org.spongepowered.api.Sponge;
 
+import java.util.function.Supplier;
+
 /**
  * Built-in {@link InstanceType}s shipped by default.
  */

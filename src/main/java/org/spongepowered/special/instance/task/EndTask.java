@@ -30,6 +30,7 @@ import org.spongepowered.api.effect.particle.ParticleEffect;
 import org.spongepowered.api.effect.particle.ParticleTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
@@ -46,7 +47,7 @@ public final class EndTask extends InstanceTask {
     private final List<UUID> winners;
     private final long endLengthTotal;
 
-    private Task handle;
+    private ScheduledTask handle;
     private Title title;
     private Title winnerTitle;
     private long endLengthRemaining;
@@ -59,7 +60,7 @@ public final class EndTask extends InstanceTask {
     }
 
     @Override
-    public void accept(Task task) {
+    public void accept(ScheduledTask task) {
 
         this.handle = task;
 
