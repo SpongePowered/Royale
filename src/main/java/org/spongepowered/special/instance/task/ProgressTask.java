@@ -24,26 +24,21 @@
  */
 package org.spongepowered.special.instance.task;
 
-import org.spongepowered.api.boss.BossBarColors;
-import org.spongepowered.api.boss.BossBarOverlays;
-import org.spongepowered.api.boss.ServerBossBar;
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.TextComponent;
 import org.spongepowered.api.scheduler.ScheduledTask;
-import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.special.instance.Instance;
 
 import java.util.stream.Collectors;
 
 public final class ProgressTask extends InstanceTask {
 
-    private final ServerBossBar bossBar = ServerBossBar.builder()
-            .color(BossBarColors.GREEN)
-            .playEndBossMusic(false)
-            .visible(true)
-            .overlay(BossBarOverlays.PROGRESS)
-            .name(Text.of("Time remaining"))
-            .build();
+    private final BossBar bossBar = BossBar.of(
+            TextComponent.of("Time remaining"),
+            0.0f,
+            BossBar.Color.GREEN,
+            BossBar.Overlay.PROGRESS);
 
     private final long roundLengthTotal;
     private long roundLengthRemaining;
@@ -67,7 +62,7 @@ public final class ProgressTask extends InstanceTask {
     public void accept(ScheduledTask task) {
         this.handle = task;
 
-        final World world = this.getInstance().getHandle().orElse(null);
+        final ServerWorld world = this.getInstance().getHandle().orElse(null);
 
         // Make sure the world is still around and loaded
         if (world != null && world.isLoaded()) {
@@ -76,22 +71,22 @@ public final class ProgressTask extends InstanceTask {
             }
 
             final float percent = (float) this.roundLengthRemaining * 1f / this.roundLengthTotal;
-            this.bossBar.setPercent(percent);
+            this.bossBar.percent(percent);
 
             if (percent < 0.33) {
-                this.bossBar.setColor(BossBarColors.RED);
+                this.bossBar.color(BossBar.Color.RED);
             } else if (percent < 0.66) {
-                this.bossBar.setColor(BossBarColors.YELLOW);
+                this.bossBar.color(BossBar.Color.YELLOW);
             } else {
-                this.bossBar.setColor(BossBarColors.GREEN);
+                this.bossBar.color(BossBar.Color.GREEN);
             }
 
             int seconds = (int) this.roundLengthRemaining % 60;
             if (this.roundLengthRemaining > 60) {
                 int minutes = (int) this.roundLengthRemaining / 60;
-                this.bossBar.setName(Text.of(String.format("Time remaining: %02d:%02d", minutes, seconds)));
+                this.bossBar.name(TextComponent.of(String.format("Time remaining: %02d:%02d", minutes, seconds)));
             } else {
-                this.bossBar.setName(Text.of(String.format("Time remaining: %02d", seconds)));
+                this.bossBar.name(TextComponent.of(String.format("Time remaining: %02d", seconds)));
             }
 
             this.bossBar.addPlayers(world.getPlayers().stream().filter(player -> player.isOnline() && !this.bossBar.getPlayers().contains(player))

@@ -24,6 +24,7 @@
  */
 package org.spongepowered.special.instance.gen.mutator;
 
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.entity.BlockEntity;
@@ -47,7 +48,7 @@ public final class ChestMutator extends SignMutator {
 
     @Override
     public BlockState visitSign(Instance instance, BoundedWorldView<?> area, BlockState state, int x, int y, int z, Sign sign) {
-        final String lootTableId = sign.lines().get(1).toPlain();
+        final String lootTableId = PlainComponentSerializer.plain().serialize(sign.lines().get(1));
         final LootTable<ItemArchetype> lootTable = Loot.getTable(lootTableId);
         final List<ItemArchetype> items = lootTable.get(Special.instance.getRandom());
 

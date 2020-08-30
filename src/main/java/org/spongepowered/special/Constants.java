@@ -38,6 +38,7 @@ import org.spongepowered.api.world.SerializationBehaviors;
 import org.spongepowered.api.world.WorldArchetype;
 import org.spongepowered.api.world.WorldArchetypes;
 import org.spongepowered.api.world.difficulty.Difficulties;
+import org.spongepowered.api.world.dimension.DimensionTypes;
 import org.spongepowered.special.instance.gen.InstanceMutator;
 import org.spongepowered.special.instance.gen.InstanceMutatorRegistryModule;
 
@@ -61,7 +62,7 @@ public class Constants {
 
         public static final String ID = "special";
         static final String NAME = "Special";
-        static final String VERSION = "1.10.2-r5.0";
+        static final String VERSION = "1.10.2-r5.0"; // TODO update this
         static final String AUTHORS = "SpongePowered";
         static final String URL = "https://www.spongepowered.org";
         static final String DESCRIPTION = "Skywars but with a Sponge twist. Anaheim, CA - Minecon 2016";
@@ -138,15 +139,15 @@ public class Constants {
 
         public static final class Lobby {
 
-            public static final String DEFAULT_LOBBY_NAME = Constants.Meta.ID + "_lobby";
+            public static final ResourceKey DEFAULT_LOBBY_NAME = Constants.Meta.ID + "_lobby";
             public static final String SIGN_HEADER = "Join Game";
 
-            static final WorldArchetype lobbyArchetype = WorldArchetype.builder().from(WorldArchetypes.THE_END)
+            static final WorldArchetype lobbyArchetype = WorldArchetype.builder().from(WorldArchetypes.THE_END.get())
                     .gameMode(GameModes.SURVIVAL)
-                    .loadsOnStartup(true)
+                    .loadOnStartup(true)
                     .difficulty(Difficulties.EASY)
                     .generateSpawnOnLoad(true)
-                    .dimension(DimensionTypes.OVERWORLD)
+                    .dimensionType(DimensionTypes.OVERWORLD.get())
                     .generator(GeneratorTypes.THE_END)
                     .pvp(false)
                     .keepsSpawnLoaded(true)

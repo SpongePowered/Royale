@@ -24,7 +24,7 @@
  */
 package org.spongepowered.special.instance.gen;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.BlockState;
@@ -48,7 +48,7 @@ public abstract class InstanceMutator implements CatalogType {
     }
 
     void visitInstance(Instance instance) {
-        Special.instance.getLogger().info("Mutating instance [" + instance.getName() + "] with mutator [" + this.getId() + "]...");
+        Special.instance.getLogger().info("Mutating instance [" + instance.getName() + "] with mutator [" + this.getKey() + "]...");
     }
 
     public BlockState visitBlock(Instance instance, BoundedWorldView<?> area, BlockState state, int x, int y, int z) {
@@ -74,9 +74,8 @@ public abstract class InstanceMutator implements CatalogType {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("id", this.id)
-                .add("name", this.name)
                 .toString();
     }
 }

@@ -26,7 +26,7 @@ package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.registry.AdditionalCatalogRegistryModule;
 import org.spongepowered.api.registry.CatalogTypeAlreadyRegisteredException;
@@ -86,7 +86,7 @@ public final class InstanceTypeRegistryModule implements AdditionalCatalogRegist
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("types", this.getAll())
                 .toString();
     }

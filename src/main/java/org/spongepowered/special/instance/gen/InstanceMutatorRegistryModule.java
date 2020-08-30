@@ -26,7 +26,7 @@ package org.spongepowered.special.instance.gen;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import org.spongepowered.api.registry.AdditionalCatalogRegistryModule;
 import org.spongepowered.api.registry.CatalogTypeAlreadyRegisteredException;
 import org.spongepowered.api.registry.RegistrationPhase;
@@ -80,7 +80,7 @@ public final class InstanceMutatorRegistryModule implements AdditionalCatalogReg
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("maps", this.getAll())
                 .toString();
     }

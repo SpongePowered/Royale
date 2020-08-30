@@ -25,6 +25,7 @@
 package org.spongepowered.special;
 
 import com.google.inject.Inject;
+import net.kyori.adventure.text.TextComponent;
 import org.apache.logging.log4j.Logger;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
@@ -38,6 +39,7 @@ import org.spongepowered.api.event.game.state.GameConstructionEvent;
 import org.spongepowered.api.event.game.state.GamePreInitializationEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.event.message.MessageChannelEvent;
+import org.spongepowered.api.event.message.PlayerChatEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.text.Text;
@@ -91,9 +93,9 @@ public final class Special {
     }
 
     @Listener
-    public void onGameChat(MessageChannelEvent.Chat event, @Root Player player) {
+    public void onGameChat(PlayerChatEvent event, @Root Player player) {
         event.setCancelled(true);
-        player.sendMessage(Text.of("Chat has been disabled."));
+        player.sendMessage(TextComponent.of("Chat has been disabled."));
     }
 
     public Logger getLogger() {

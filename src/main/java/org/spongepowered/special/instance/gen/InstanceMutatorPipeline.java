@@ -24,7 +24,8 @@
  */
 package org.spongepowered.special.instance.gen;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
+import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.util.PositionOutOfBoundsException;
 import org.spongepowered.api.world.BoundedWorldView;
@@ -42,7 +43,7 @@ import java.util.Set;
  */
 public final class InstanceMutatorPipeline {
 
-    private static final Map<String, Map<Vector3i, BlockState>> positionCache = new HashMap<>();
+    private static final Map<ResourceKey, Map<Vector3i, BlockState>> positionCache = new HashMap<>();
     private final Set<InstanceMutator> mutators = new HashSet<>();
 
     public Set<InstanceMutator> getMutators() {
@@ -95,7 +96,7 @@ public final class InstanceMutatorPipeline {
         positionCache.put(instance.getName(), cache);
     }
 
-    private boolean canPerformFastPass(String name, BoundedWorldView<?> extent) {
+    private boolean canPerformFastPass(ResourceKey name, BoundedWorldView<?> extent) {
         Map<Vector3i, BlockState> cache = positionCache.get(name);
 
         // We don't have any cached positions, so we can't do a fast pass
@@ -123,7 +124,7 @@ public final class InstanceMutatorPipeline {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("mutators", this.mutators)
                 .toString();
     }

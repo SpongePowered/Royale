@@ -28,6 +28,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
+import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.entity.living.player.Player;
@@ -36,10 +37,9 @@ import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.ServerLocation;
-import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.special.Constants;
@@ -68,7 +68,7 @@ import java.util.concurrent.TimeUnit;
 
 public final class Instance {
 
-    private final String worldName;
+    private final ResourceKey worldName;
     private final InstanceType instanceType;
     private final WeakReference<ServerWorld> worldRef;
     private final Set<UUID> registeredPlayers = new HashSet<>();
@@ -79,7 +79,7 @@ public final class Instance {
     private final RoundScoreboard scoreboard;
     private State state = State.IDLE;
 
-    public Instance(String worldName, InstanceType instanceType, ServerWorld world) {
+    public Instance(ResourceKey worldName, InstanceType instanceType, ServerWorld world) {
         this.worldName = worldName;
         this.instanceType = instanceType;
         this.worldRef = new WeakReference<>(world);
@@ -89,7 +89,7 @@ public final class Instance {
         world.getBorder().setWarningDistance(0);
     }
 
-    public String getName() {
+    public ResourceKey getName() {
         return worldName;
     }
 
@@ -232,17 +232,17 @@ public final class Instance {
     }
 
     void convertPlayerToSpectator(Player player) {
-        player.offer(Keys.GAME_MODE, GameModes.SPECTATOR);
+        player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
     }
 
     private void onStateAdvance(State next) {
         if (next.doesCancelTasksOnAdvance()) {
             // Cancel previous tasks when advancing a state. Prevents stale state tasks
             for (UUID uuid : this.tasks) {
-                final Task task = Sponge.getScheduler().getTaskById(uuid).orElse(null);
+                final ScheduledTask task = Sponge.getServer().getScheduler().getTaskById(uuid).orElse(null);
                 if (task != null) {
-                    if (task.getConsumer() instanceof InstanceTask) {
-                        ((InstanceTask) task.getConsumer()).cancel();
+                    if (task.getTask().getConsumer() instanceof InstanceTask) {
+                        ((InstanceTask) task.getTask().getConsumer()).cancel();
                     } else {
                         task.cancel();
                     }
@@ -252,41 +252,41 @@ public final class Instance {
 
         switch (next) {
             case PRE_START:
-                this.tasks.add(Task.builder()
+                this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
                         .execute(new StartTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Meta.ID + " - Start Countdown - " + this.worldName)
-                        .submit(Special.instance)
+                        .build())
                         .getUniqueId());
                 break;
             case POST_START:
-                this.tasks.add(Task.builder()
+                this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
                         .execute(new ProgressTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Meta.ID + " - Progress Countdown - " + this.worldName)
-                        .submit(Special.instance)
+                        .build())
                         .getUniqueId());
                 break;
             case RUNNING:
                 // TODO This activates before any additional code is called in the round task. Useless state for now, could be handy later
                 break;
             case CLEANUP:
-                this.tasks.add(Task.builder()
+                this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
                         .execute(new CleanupTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Meta.ID + " - Cleanup - " + this.worldName)
-                        .submit(Special.instance)
+                        .build())
                         .getUniqueId());
                 break;
             case PRE_END:
                 final List<UUID> winners = new ArrayList<>();
                 winners.addAll(this.playerSpawns.keySet());
                 winners.removeAll(this.playerDeaths.keySet());
-                this.tasks.add(Task.builder()
+                this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
                         .execute(new EndTask(this, winners))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Meta.ID + " - End Countdown - " + this.worldName)
-                        .submit(Special.instance)
+                        .build())
                         .getUniqueId());
                 break;
             case POST_END:
@@ -315,7 +315,7 @@ public final class Instance {
 
     @Override
     public String toString() {
-        return com.google.common.base.Objects.toStringHelper(this)
+        return com.google.common.base.MoreObjects.toStringHelper(this)
                 .add("name", this.worldName)
                 .add("type", this.instanceType)
                 .add("state", this.state)

@@ -24,20 +24,21 @@
  */
 package org.spongepowered.special.instance.task;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.Title;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.particle.ParticleEffect;
 import org.spongepowered.api.effect.particle.ParticleTypes;
 import org.spongepowered.api.entity.living.player.Player;
-import org.spongepowered.api.entity.living.player.User;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.scheduler.ScheduledTask;
-import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.title.Title;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -71,56 +72,49 @@ public final class EndTask extends InstanceTask {
         // First tick, kickoff end sequence
         if (this.endLengthTotal == this.endLengthRemaining) {
 
-            final Optional<Player> winner;
+            final Optional<ServerPlayer> winner;
             if (this.winners.size() > 1) {
                 winner = Optional.empty();
             } else {
                 winner = Sponge.getServer().getPlayer(winners.get(0));
             }
 
-            final Text content = winner.isPresent() ?
-                    Text.of(TextColors.GREEN, winner.get().get(Keys.DISPLAY_NAME).get(), TextColors.WHITE, " is the winner!") :
-                    Text.of(TextColors.YELLOW, "Draw");
+            final Component content = winner.isPresent() ?
+                    TextComponent.of(winner.get().get(Keys.DISPLAY_NAME).get(), NamedTextColor.GREEN)
+                            .append(TextComponent.of(" is the winner!", NamedTextColor.WHITE)) :
+                    TextComponent.of("Draw", NamedTextColor.YELLOW);
 
-            final Text winnerContent = winner.isPresent() ?
-                    Text.of(TextColors.GREEN, "You are the winner!") :
-                    Text.of(TextColors.YELLOW, "Draw");
+            final Component winnerContent = winner.isPresent() ?
+                    TextComponent.of("You are the winner!", NamedTextColor.GREEN) :
+                    TextComponent.of("Draw", NamedTextColor.YELLOW);
 
-            this.title = Title.builder()
-                    .fadeIn(0)
-                    .fadeOut(20)
-                    .stay((int) ((this.endLengthTotal - 1) * 20))
-                    .title(content)
-                    .build();
+            this.title = Title.of(content, TextComponent.empty(),
+                    Title.Times.of(Duration.ZERO, Duration.ofSeconds(this.endLengthTotal - 1), Duration.ofSeconds(1)));
 
-            this.winnerTitle = Title.builder()
-                    .fadeIn(0)
-                    .fadeOut(20)
-                    .stay((int) ((this.endLengthTotal - 1) * 20))
-                    .title(winnerContent)
-                    .build();
+            this.winnerTitle = Title.of(winnerContent, TextComponent.empty(),
+                    Title.Times.of(Duration.ZERO, Duration.ofSeconds(this.endLengthTotal - 1), Duration.ofSeconds(1)));
 
             if (winner.isPresent()) {
                 winner.get().spawnParticles(ParticleEffect.builder()
                                 .type(ParticleTypes.FIREWORKS_SPARK)
-                                .count(30)
+                                .quantity(30)
                                 .build(),
                         winner.get().getLocation().getPosition());
 
                 getInstance().getHandle().ifPresent((world) -> {
                     if (world.isLoaded()) {
-                        world.getPlayers().stream().filter(User::isOnline).forEach(onlinePlayer -> {
+                        for (ServerPlayer onlinePlayer : world.getPlayers()) {
                             if (onlinePlayer.getUniqueId().equals(winner.get().getUniqueId())) {
-                                onlinePlayer.sendTitle(this.winnerTitle);
+                                onlinePlayer.showTitle(this.winnerTitle);
                             } else {
-                                onlinePlayer.sendTitle(title);
+                                onlinePlayer.showTitle(title);
                             }
-                        });
+                        }
                     }
                 });
 
-                Sponge.getServer().getBroadcastChannel()
-                        .send(Text.of(TextColors.RED, winner.get().getName(), TextColors.RESET, " has won the game!"));
+                Sponge.getServer().getBroadcastAudience()
+                        .sendMessage(TextComponent.of(winner.get().getName(), NamedTextColor.RED).append(" has won the game!", NamedTextColor.RESET));
                 Special.instance.getLogger().info("Round finished!");
             }
         }

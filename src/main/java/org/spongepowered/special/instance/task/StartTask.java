@@ -24,15 +24,14 @@
  */
 package org.spongepowered.special.instance.task;
 
-import org.spongepowered.api.entity.living.player.User;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.Title;
 import org.spongepowered.api.scheduler.ScheduledTask;
-import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.title.Title;
-import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.special.instance.Instance;
 
+import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -47,19 +46,16 @@ public final class StartTask extends InstanceTask {
     public StartTask(Instance instance) {
         super(instance);
 
-        final Title.Builder builder = Title.builder()
-                .stay(12)
-                .fadeIn(0)
-                .fadeOut(8);
+        final Title.Times times = Title.Times.of(Duration.ZERO, Duration.ofMillis(600), Duration.ofMillis(400));
 
         for (long i = instance.getType().getRoundStartLength(); i > 0; i--) {
 
-            startTitles.add(builder.title(Text.of(TextColors.DARK_RED, i)).build());
+            startTitles.add(Title.of(TextComponent.of(i, NamedTextColor.DARK_RED), TextComponent.empty(), times));
 
             if (i == 3) {
-                startTitles.add(builder.title(Text.of(TextColors.RED, "2")).build());
-                startTitles.add(builder.title(Text.of(TextColors.GOLD, "1")).build());
-                startTitles.add(builder.title(instance.getType().getRoundStartTemplate().apply().build()).build());
+                startTitles.add(Title.of(TextComponent.of("2", NamedTextColor.RED), TextComponent.empty(), times));
+                startTitles.add(Title.of(TextComponent.of("1", NamedTextColor.GOLD), TextComponent.empty(), times));
+                startTitles.add(Title.of(instance.getType().getRoundStartTemplate().apply().build(), TextComponent.empty(), times));
                 break;
             }
         }
@@ -74,7 +70,7 @@ public final class StartTask extends InstanceTask {
     public void accept(ScheduledTask task) {
         this.handle = task;
 
-        final World world = this.getInstance().getHandle().orElse(null);
+        final ServerWorld world = this.getInstance().getHandle().orElse(null);
 
         // TODO If world is null or not loaded, shut this handle down and log it.
 
@@ -82,7 +78,7 @@ public final class StartTask extends InstanceTask {
         if (world != null && world.isLoaded()) {
 
             // Make sure a player ref isn't still here
-            world.getPlayers().stream().filter(User::isOnline).forEach(player -> player.sendTitle(startTitles.get(seconds)));
+            world.getPlayers().forEach(player -> player.showTitle(startTitles.get(seconds)));
 
             seconds++;
 

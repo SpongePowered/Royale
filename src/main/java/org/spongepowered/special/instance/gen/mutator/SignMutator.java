@@ -24,10 +24,10 @@
  */
 package org.spongepowered.special.instance.gen.mutator;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.world.BoundedWorldView;
@@ -54,8 +54,8 @@ abstract class SignMutator extends InstanceMutator {
         }
 
         final Sign sign = (Sign) blockEntity;
-        if (!sign.lines().get(0).toPlain().equalsIgnoreCase(this.sign_id)) {
-            if (sign.lines().get(1).toPlain().equalsIgnoreCase(this.sign_id)) {
+        if (!PlainComponentSerializer.plain().serialize(sign.lines().get(0)).equalsIgnoreCase(this.sign_id)) {
+            if (PlainComponentSerializer.plain().serialize(sign.lines().get(1)).equalsIgnoreCase(this.sign_id)) {
                 Special.instance.getLogger().error("Found mismatched sign at {}x {}y {}z!", x, y, z);
             } else {
                 return null;
@@ -67,9 +67,8 @@ abstract class SignMutator extends InstanceMutator {
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
-                .add("id", this.getId())
-                .add("name", this.getName())
+        return MoreObjects.toStringHelper(this)
+                .add("key", this.getKey())
                 .add("signId", this.sign_id)
                 .toString();
     }

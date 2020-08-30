@@ -24,16 +24,16 @@
  */
 package org.spongepowered.special.instance.scoreboard;
 
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.scoreboard.Score;
 import org.spongepowered.api.scoreboard.Scoreboard;
 import org.spongepowered.api.scoreboard.Team;
-import org.spongepowered.api.scoreboard.critieria.Criteria;
+import org.spongepowered.api.scoreboard.criteria.Criteria;
 import org.spongepowered.api.scoreboard.displayslot.DisplaySlots;
 import org.spongepowered.api.scoreboard.objective.Objective;
-import org.spongepowered.api.text.Text;
-import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.text.format.TextStyles;
 import org.spongepowered.special.instance.Instance;
 
 import java.util.ArrayList;
@@ -65,18 +65,19 @@ public final class RoundScoreboard {
     public RoundScoreboard(Instance instance) {
         this.scoreboard = Scoreboard.builder().build();
         this.objective =
-                Objective.builder().name("main").displayName(Text.of(TextColors.GREEN, instance.getName())).criterion(Criteria.DUMMY).build();
+                Objective.builder().name("main").displayName(TextComponent.of(instance.getName().toString(), NamedTextColor.GREEN))
+                        .criterion(Criteria.DUMMY).build();
 
         // Instance type
-        instanceTypeScore = this.objective.getOrCreateScore(Text.of(TextColors.RED, instance.getType().getName()));
+        instanceTypeScore = this.objective.getOrCreateScore(TextComponent.of(instance.getType().getKey().toString(), NamedTextColor.RED));
         instanceTypeScore.setScore(0);
 
         // Dashes
-        dashesScore = this.objective.getOrCreateScore(Text.of("----------------"));
+        dashesScore = this.objective.getOrCreateScore(TextComponent.of("----------------"));
         dashesScore.setScore(0);
 
         // Empty line
-        emptyLineScore = this.objective.getOrCreateScore(Text.EMPTY);
+        emptyLineScore = this.objective.getOrCreateScore(TextComponent.empty());
         emptyLineScore.setScore(0);
 
         this.scoreboard.addObjective(objective);
@@ -90,7 +91,7 @@ public final class RoundScoreboard {
     }
 
     public void addPlayer(Player player) {
-        final Score score = this.objective.getOrCreateScore(Text.of(player.getName()));
+        final Score score = this.objective.getOrCreateScore(TextComponent.of(player.getName()));
         score.setScore(0);
 
         Team team = Team.builder().name(player.getName()).build();
@@ -108,7 +109,7 @@ public final class RoundScoreboard {
             throw new IllegalArgumentException(String.format("Player %s is not on this scoreboard!", player.getName()));
         }
         PlayerData data = this.playerData.get(player.getUniqueId());
-        data.team.setPrefix(Text.of(TextStyles.STRIKETHROUGH, ""));
+        data.team.setPrefix(TextComponent.of("", null, TextDecoration.STRIKETHROUGH));
         data.dead = true;
 
         this.sortScoreboard();
