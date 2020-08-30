@@ -26,22 +26,22 @@ package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.inventory.EntityEquipmentSlot;
-import net.minecraft.item.ItemStack;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
-import org.spongepowered.api.event.cause.Cause;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.ServerLocation;
 import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.exception.UnknownInstanceException;
@@ -70,7 +70,7 @@ public final class Instance {
 
     private final String worldName;
     private final InstanceType instanceType;
-    private final WeakReference<World> worldRef;
+    private final WeakReference<ServerWorld> worldRef;
     private final Set<UUID> registeredPlayers = new HashSet<>();
     private final Deque<Vector3d> unusedSpawns = Queues.newArrayDeque();
     private final Map<UUID, Vector3d> playerSpawns = new HashMap<>();
@@ -79,14 +79,14 @@ public final class Instance {
     private final RoundScoreboard scoreboard;
     private State state = State.IDLE;
 
-    public Instance(String worldName, InstanceType instanceType, World world) {
+    public Instance(String worldName, InstanceType instanceType, ServerWorld world) {
         this.worldName = worldName;
         this.instanceType = instanceType;
         this.worldRef = new WeakReference<>(world);
         this.scoreboard = new RoundScoreboard(this);
-        world.getWorldBorder().setCenter(instanceType.getWorldBorderX(), instanceType.getWorldBorderZ());
-        world.getWorldBorder().setDiameter(instanceType.getWorldBorderRadius() * 2);
-        world.getWorldBorder().setWarningDistance(0);
+        world.getBorder().setCenter(instanceType.getWorldBorderX(), instanceType.getWorldBorderZ());
+        world.getBorder().setDiameter(instanceType.getWorldBorderRadius() * 2);
+        world.getBorder().setWarningDistance(0);
     }
 
     public String getName() {
@@ -97,7 +97,7 @@ public final class Instance {
         return this.instanceType;
     }
 
-    public Optional<World> getHandle() {
+    public Optional<ServerWorld> getHandle() {
         return Optional.ofNullable(this.worldRef.get());
     }
 
@@ -170,15 +170,15 @@ public final class Instance {
         this.unusedSpawns.push(spawn);
     }
 
-    public void spawnPlayer(Player player) {
+    public void spawnPlayer(ServerPlayer player) {
         checkState(this.registeredPlayers.contains(player.getUniqueId()), "Attempted to spawn a player into this round who wasn't registered!");
 
-        final World world = this.worldRef.get();
+        final ServerWorld world = this.worldRef.get();
         checkState(world != null, "Instance world ref is null!");
 
         // If the player has a consumed spawn and this method is called, we put them back at spawn
         if (this.playerSpawns.containsKey(player.getUniqueId())) {
-            player.setLocation(new Location<>(world, this.playerSpawns.get(player.getUniqueId())));
+            player.setLocation(ServerLocation.of(world, this.playerSpawns.get(player.getUniqueId())));
             return;
         }
 
@@ -189,7 +189,7 @@ public final class Instance {
 
         this.scoreboard.addPlayer(player);
 
-        player.setLocation(new Location<>(world, player_spawn));
+        player.setLocation(ServerLocation.of(world, player_spawn));
 
         int playerCount = this.instanceType.getAutomaticStartPlayerCount();
         if (playerCount == this.registeredPlayers.size() && this.state == State.IDLE) {
@@ -215,7 +215,7 @@ public final class Instance {
     }
 
     private void convertPlayerToCombatant(Player player, boolean first) {
-        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
+        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
         Utils.resetHealthHungerAndPotions(player);
 
         if (first) {
@@ -223,7 +223,7 @@ public final class Instance {
 
             for (ItemStackSnapshot snapshot : this.instanceType.getDefaultItems()) {
                 if (snapshot.getType() == ItemTypes.ELYTRA) {
-                    ((EntityPlayerMP) player).setItemStackToSlot(EntityEquipmentSlot.CHEST, (ItemStack) (Object) snapshot.createStack());
+                    player.setChest(snapshot.createStack());
                 } else {
                     player.getInventory().offer(snapshot.createStack());
                 }

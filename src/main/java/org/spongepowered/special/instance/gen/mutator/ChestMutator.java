@@ -26,12 +26,12 @@ package org.spongepowered.special.instance.gen.mutator;
 
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
-import org.spongepowered.api.block.tileentity.Sign;
-import org.spongepowered.api.block.tileentity.TileEntity;
-import org.spongepowered.api.block.tileentity.carrier.Chest;
-import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.block.entity.BlockEntity;
+import org.spongepowered.api.block.entity.Sign;
+import org.spongepowered.api.block.entity.carrier.chest.Chest;
+import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.util.weighted.LootTable;
-import org.spongepowered.api.world.extent.Extent;
+import org.spongepowered.api.world.BoundedWorldView;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 import org.spongepowered.special.instance.gen.loot.ItemArchetype;
@@ -42,30 +42,29 @@ import java.util.List;
 public final class ChestMutator extends SignMutator {
 
     public ChestMutator() {
-        super("chest", "Chest Mutator", "chest");
+        super("chest", "chest");
     }
 
     @Override
-    public BlockState visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign) {
+    public BlockState visitSign(Instance instance, BoundedWorldView<?> area, BlockState state, int x, int y, int z, Sign sign) {
         final String lootTableId = sign.lines().get(1).toPlain();
         final LootTable<ItemArchetype> lootTable = Loot.getTable(lootTableId);
         final List<ItemArchetype> items = lootTable.get(Special.instance.getRandom());
 
         Special.instance.getLogger().debug("Generating loot chest via table [" + lootTableId + "] at " + x + "x " + y + "y " + z + "z.");
 
-        area.setBlock(x, y, z, BlockTypes.CHEST.getDefaultState().with(Keys.DIRECTION, state.get(Keys.DIRECTION).orElse(null)).orElse(null), Special
-                .instance.getPluginCause());
+        area.setBlock(x, y, z, BlockTypes.CHEST.get().getDefaultState().with(Keys.DIRECTION, state.get(Keys.DIRECTION).orElse(null)).orElse(null));
 
-        final TileEntity tileEntity = area.getTileEntity(x, y, z).orElse(null);
-        if (tileEntity == null) {
+        final BlockEntity blockEntity = area.getBlockEntity(x, y, z).orElse(null);
+        if (blockEntity == null) {
             throw new IllegalStateException("Something is quite wrong...we set a Chest down yet found no tile entity. This is a serious "
                     + "issue likely due to server misconfiguration!");
-        } else if (!(tileEntity instanceof Chest)) {
-            throw new IllegalStateException("Something is quite wrong...we set a Chest down yet found a [" + tileEntity.getClass()
+        } else if (!(blockEntity instanceof Chest)) {
+            throw new IllegalStateException("Something is quite wrong...we set a Chest down yet found a [" + blockEntity.getClass()
                     .getSimpleName() + "] instead. This is a serious issue likely due to server misconfiguration!");
         }
 
-        final Chest chest = (Chest) tileEntity;
+        final Chest chest = (Chest) blockEntity;
         for (ItemArchetype item : items) {
             chest.getInventory().offer(item.create(Special.instance.getRandom()));
         }

@@ -27,14 +27,16 @@ package org.spongepowered.special.instance;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.Iterables;
+import net.kyori.adventure.text.Component;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.entity.Entity;
-import org.spongepowered.api.entity.Transform;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.action.InteractEvent;
@@ -46,20 +48,24 @@ import org.spongepowered.api.event.cause.NamedCause;
 import org.spongepowered.api.event.cause.entity.damage.DamageTypes;
 import org.spongepowered.api.event.cause.entity.damage.source.DamageSource;
 import org.spongepowered.api.event.entity.AttackEntityEvent;
+import org.spongepowered.api.event.entity.ChangeEntityWorldEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.DestructEntityEvent;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
-import org.spongepowered.api.event.entity.living.humanoid.player.RespawnPlayerEvent;
+import org.spongepowered.api.event.entity.living.player.RespawnPlayerEvent;
 import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Root;
-import org.spongepowered.api.event.network.ClientConnectionEvent;
+import org.spongepowered.api.event.network.ServerSideConnectionEvent;
+import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.world.Dimension;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.SerializationBehaviors;
+import org.spongepowered.api.world.ServerLocation;
 import org.spongepowered.api.world.World;
+import org.spongepowered.api.world.dimension.DimensionType;
+import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.exception.InstanceAlreadyExistsException;
@@ -96,48 +102,31 @@ public final class InstanceManager {
         }
 
         Instance instance;
-        World world = Sponge.getServer().getWorld(instanceName).orElse(null);
+        ServerWorld world = Sponge.getServer().getWorld(instanceName).orElse(null);
 
         if (world == null) {
             world = Sponge.getServer().loadWorld(instanceName).orElse(null);
             if (world == null) {
                 throw new IOException("Failed to load instance [" + instanceName + "]!");
             }
-
-            world.setKeepSpawnLoaded(true);
-            world.setSerializationBehavior(SerializationBehaviors.NONE);
-
-            instance = new Instance(instanceName, type, world);
-
-            this.instances.put(world.getName(), instance);
-            List<Instance> instances = this.instancesByTypes.get(type);
-            if (instances == null) {
-                instances = new LinkedList<>();
-                this.instancesByTypes.put(type, instances);
-
-            }
-            instances.add(instance);
-
-            final InstanceMutatorPipeline pipeline = type.getMutatorPipeline();
-            pipeline.mutate(instance, this.canUseFastPass.contains(world.getName()));
-        } else {
-            world.setKeepSpawnLoaded(true);
-            world.setSerializationBehavior(SerializationBehaviors.NONE);
-
-            instance = new Instance(instanceName, type, world);
-
-            this.instances.put(world.getName(), instance);
-            List<Instance> instances = this.instancesByTypes.get(type);
-            if (instances == null) {
-                instances = new LinkedList<>();
-                this.instancesByTypes.put(type, instances);
-
-            }
-            instances.add(instance);
-
-            final InstanceMutatorPipeline pipeline = type.getMutatorPipeline();
-            pipeline.mutate(instance, this.canUseFastPass.contains(world.getName()));
         }
+
+        world.getProperties().setKeepSpawnLoaded(true);
+        world.getProperties().setSerializationBehavior(SerializationBehaviors.NONE);
+
+        instance = new Instance(instanceName, type, world);
+
+        this.instances.put(world.getName(), instance);
+        List<Instance> instances = this.instancesByTypes.get(type);
+        if (instances == null) {
+            instances = new LinkedList<>();
+            this.instancesByTypes.put(type, instances);
+
+        }
+        instances.add(instance);
+
+        final InstanceMutatorPipeline pipeline = type.getMutatorPipeline();
+        pipeline.mutate(instance, this.canUseFastPass.contains(world.getName()));
     }
 
     /**
@@ -180,18 +169,18 @@ public final class InstanceManager {
 
     void unloadInstance(Instance instance) {
         final Server server = Sponge.getServer();
-        final World world = instance.getHandle().orElse(null);
+        final ServerWorld world = instance.getHandle().orElse(null);
 
         if (world == null) {
             this.instances.remove(instance.getName());
             return;
         }
 
-        final World lobby = server.getWorld(Constants.Map.Lobby.DEFAULT_LOBBY_NAME).orElseThrow(() -> new RuntimeException("Lobby world was not "
-                + "found!"));
+        final ServerWorld lobby = server.getWorldManager().getWorld(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)
+                .orElseThrow(() -> new RuntimeException("Lobby world was not found!"));
 
         // Move everyone out
-        for (Player player : world.getPlayers()) {
+        for (ServerPlayer player : world.getPlayers()) {
             if (instance.getRegisteredPlayers().contains(player.getUniqueId())) {
                 if (player.isRemoved()) {
                     this.forceRespawning.add(player.getUniqueId());
@@ -202,7 +191,7 @@ public final class InstanceManager {
                 player.getInventory().clear();
             }
 
-            player.setLocation(lobby.getSpawnLocation());
+            player.setLocation(ServerLocation.of(lobby, lobby.getProperties().getSpawnPosition()));
         }
 
         this.instances.remove(instance.getName());
@@ -215,7 +204,7 @@ public final class InstanceManager {
             }
         }
 
-        if (!server.unloadWorld(world)) {
+        if (!server.getWorldManager().unloadWorld(world)) {
             throw new RuntimeException("Failed to unload instance world!"); // TODO Specialized exception
         }
 
@@ -241,18 +230,18 @@ public final class InstanceManager {
     }
 
     @Listener(order = Order.LAST)
-    public void onClientConnection(ClientConnectionEvent event, @First Player player) {
+    public void onClientConnection(ServerSideConnectionEvent event, @First ServerPlayer player) {
         // We only care about these events
-        if (!(event instanceof ClientConnectionEvent.Join || event instanceof ClientConnectionEvent.Disconnect)) {
+        if (!(event instanceof ServerSideConnectionEvent.Join || event instanceof ServerSideConnectionEvent.Disconnect)) {
             return;
         }
 
-        final World world = player.getWorld();
+        final ServerWorld world = player.getWorld();
         final Instance instance = getInstance(world.getName()).orElse(null);
 
         if (instance != null) {
             if (instance.getRegisteredPlayers().contains(player.getUniqueId())) {
-                if (event instanceof ClientConnectionEvent.Join) {
+                if (event instanceof ServerSideConnectionEvent.Join) {
                     // Player has played before, disconnected...let them come back as spectator
                     if (instance.getPlayerDeaths().containsKey(player.getUniqueId())) {
                         instance.convertPlayerToSpectator(player);
@@ -273,14 +262,43 @@ public final class InstanceManager {
     @Listener(order = Order.LAST)
     public void onMoveEntity(MoveEntityEvent event) {
 
-        if (!(event.getTargetEntity() instanceof Player)) {
+        if (!(event.getEntity() instanceof ServerPlayer)) {
             // We only care about Players.
             return;
         }
 
-        final Player player = (Player) event.getTargetEntity();
-        final World fromWorld = event.getFromTransform().getExtent();
-        final World toWorld = event.getToTransform().getExtent();
+        final ServerPlayer player = (ServerPlayer) event.getEntity();
+        final World world = player.getWorld();
+
+        final Instance instance = getInstance(world.getName()).orElse(null);
+
+        // Movement inner-instance
+        if (instance != null) {
+            // We only care about registered players
+            if (instance.getRegisteredPlayers().contains(player.getUniqueId())) {
+                // If a Player has already spawned, this means they are playing. See if the instance allows movement
+                if (instance.getPlayerSpawns().containsKey(player.getUniqueId()) && !instance.getState().canAnyoneMove()) {
+                    if (!event.getOriginalPosition().equals(event.getDestinationPosition())) {
+                        // Don't cancel the event, to allow people to look around.
+                        event.setDestinationPosition(event.getOriginalPosition());
+                    }
+                }
+            }
+        }
+    }
+
+
+    @Listener(order = Order.LAST)
+    public void onChangeEntityWorld(ChangeEntityWorldEvent event) {
+
+        if (!(event.getEntity() instanceof ServerPlayer)) {
+            // We only care about Players.
+            return;
+        }
+
+        final ServerPlayer player = (ServerPlayer) event.getEntity();
+        final ServerWorld fromWorld = event.getOriginalWorld();
+        final ServerWorld toWorld = event.getDestinationWorld();
 
         final Instance fromInstance = getInstance(fromWorld.getName()).orElse(null);
         final Instance toInstance = getInstance(toWorld.getName()).orElse(null);
@@ -290,55 +308,36 @@ public final class InstanceManager {
             return;
         }
 
-        // Movement inner-instance
-        if (fromInstance != null && toInstance != null && fromInstance.equals(toInstance)) {
-            // We only care about registered players
+        if (fromInstance != null) {
+            // Switching out of instance means we kill them in the instance they left
             if (fromInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
-                // If a Player has already spawned, this means they are playing. See if the instance allows movement
-                if (fromInstance.getPlayerSpawns().containsKey(player.getUniqueId()) && !fromInstance.getState().canAnyoneMove()) {
-                    if (!event.getFromTransform().getPosition().equals(event.getToTransform().getPosition())) {
-                        // Don't cancel the event, to allow people to look around.
-                        final Transform<World> transform = event.getToTransform().setPosition(event.getFromTransform().getPosition());
-                        event.setToTransform(transform);
-                    }
-                    return;
+                fromInstance.disqualifyPlayer(player, Cause.of(NamedCause.source(fromInstance)));
+                if (fromInstance.isRoundOver()) {
+                    fromInstance.advanceTo(Instance.State.PRE_END);
                 }
-            }
-        }
 
-        // Switching worlds
-        if (!fromWorld.getUniqueId().equals(toWorld.getUniqueId())) {
-            if (fromInstance != null) {
-                // Switching out of instance means we kill them in the instance they left
-                if (fromInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
-                    fromInstance.disqualifyPlayer(player, Cause.of(NamedCause.source(fromInstance)));
-                    if (fromInstance.isRoundOver()) {
-                        fromInstance.advanceTo(Instance.State.PRE_END);
+                // Set them back to the default scoreboard
+                this.giveLobbySetting(player);
+            } else {
+                // Switching into an instance
+                if (toInstance != null && toInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
+                    // Already dead here? Adjust them as a spectator
+                    if (toInstance.getPlayerDeaths().containsKey(player.getUniqueId())) {
+                        toInstance.convertPlayerToSpectator(player);
+
+                        player.setScoreboard(toInstance.getScoreboard().getHandle());
                     }
 
-                    // Set them back to the default scoreboard
+                } else if (toWorld.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
+                    // Going from a non-instance world to lobby
                     this.giveLobbySetting(player);
-                } else {
-                    // Switching into an instance
-                    if (toInstance != null && toInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
-                        // Already dead here? Adjust them as a spectator
-                        if (toInstance.getPlayerDeaths().containsKey(player.getUniqueId())) {
-                            toInstance.convertPlayerToSpectator(player);
-
-                            player.setScoreboard(toInstance.getScoreboard().getHandle());
-                        }
-
-                    } else if (toWorld.getName().equals(Constants.Map.Lobby.DEFAULT_LOBBY_NAME)) {
-                        // Going from a non-instance world to lobby
-                        this.giveLobbySetting(player);
-                    }
                 }
             }
         }
     }
 
     @Listener(order = Order.LAST)
-    public void onDestructEntity(DestructEntityEvent.Death event, @Getter("getTargetEntity") Player player) {
+    public void onDestructEntity(DestructEntityEvent.Death event, @Getter("getEntity") ServerPlayer player) {
         final World world = player.getWorld();
         final Instance instance = getInstance(world.getName()).orElse(null);
 
@@ -354,13 +353,13 @@ public final class InstanceManager {
     }
 
     @Listener(order = Order.LAST)
-    public void onRespawnPlayer(RespawnPlayerEvent event, @Getter("getTargetEntity") Player player) {
+    public void onRespawnPlayer(RespawnPlayerEvent event, @Getter("getPlayer") ServerPlayer player) {
         if (this.forceRespawning.contains(player.getUniqueId())) {
             return;
         }
 
-        final World fromWorld = event.getFromTransform().getExtent();
-        World toWorld = event.getToTransform().getExtent();
+        final ServerWorld fromWorld = event.getFromLocation().getWorld();
+        ServerWorld toWorld = event.getToLocation().getWorld();
         final Instance fromInstance = getInstance(fromWorld.getName()).orElse(null);
         Instance toInstance = getInstance(toWorld.getName()).orElse(null);
 
@@ -368,20 +367,21 @@ public final class InstanceManager {
             if (fromInstance.getRegisteredPlayers().contains(player.getUniqueId())) {
                 // Sometimes an instance is using a dimension that doesn't allow respawns. Override that logic so long as the instance world is
                 // still loaded
-                final Dimension dimension = fromWorld.getDimension();
+                final DimensionType dimension = fromWorld.getDimensionType();
                 if (!dimension.allowsPlayerRespawns() && fromWorld.isLoaded()) {
-                    event.setToTransform(event.getFromTransform());
+                    event.setToLocation(event.getFromLocation());
+                    event.setToRotation(event.getFromRotation());
                 }
             }
         }
 
-        toWorld = event.getToTransform().getExtent();
+        toWorld = event.getToLocation().getWorld();
         toInstance = getInstance(toWorld.getName()).orElse(null);
 
         if (fromInstance != null) {
             if (toInstance != null && fromInstance.equals(toInstance)) {
                 fromInstance.convertPlayerToSpectator(player);
-                Sponge.getScheduler().createTaskBuilder().execute(task -> fromInstance.convertPlayerToSpectator(player)).submit(Special.instance);
+                Sponge.getServer().getScheduler().submit(Task.builder().execute(task -> fromInstance.convertPlayerToSpectator(player)).plugin(Special.instance).build());
             } else if (toInstance != null) {
                 player.setScoreboard(toInstance.getScoreboard().getHandle());
             } else {
@@ -392,7 +392,7 @@ public final class InstanceManager {
 
     @Listener(order = Order.LAST)
     public void onAttackEntity(AttackEntityEvent event) {
-        final Entity victim = event.getTargetEntity();
+        final Entity victim = event.getEntity();
         final World world = victim.getWorld();
         final Instance instance = getInstance(world.getName()).orElse(null);
 
@@ -405,8 +405,8 @@ public final class InstanceManager {
 
     @Listener
     public void onDamageEntity(DamageEntityEvent event) {
-        if (event.getTargetEntity() instanceof Player) {
-            final Player player = (Player) event.getTargetEntity();
+        if (event.getEntity() instanceof ServerPlayer) {
+            final ServerPlayer player = (ServerPlayer) event.getEntity();
 
             final Object root = event.getCause().root();
 
@@ -435,9 +435,9 @@ public final class InstanceManager {
     }
 
     @Listener
-    public void onInteract(InteractEvent event, @Root Player player) {
+    public void onInteract(InteractEvent event, @Root ServerPlayer player) {
 
-        final World world = player.getWorld();
+        final ServerWorld world = player.getWorld();
         final Instance instance = getInstance(world.getName()).orElse(null);
 
         if (instance != null && !instance.getState().canAnyoneInteract() && instance.getRegisteredPlayers().contains(player.getUniqueId())) {
@@ -447,7 +447,7 @@ public final class InstanceManager {
         if (event instanceof InteractBlockEvent.Secondary.MainHand) {
             final BlockSnapshot block = ((InteractBlockEvent.Secondary.MainHand) event).getTargetBlock();
 
-            block.getLocation().flatMap(Location::getTileEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
+            block.getLocation().flatMap(Location::getBlockEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
                 if (this.isTpSign(lines)) {
                     String name = lines.get(1).toPlain();
                     Optional<Instance> optInstance = Special.instance.getInstanceManager().getInstance(name);
@@ -493,7 +493,7 @@ public final class InstanceManager {
 
         if (!this.getInstance(name).isPresent() && this.canUseFastPass.contains(name)) {
             this.setWorldModified(name, true);
-            player.sendMessages(Text.of(TextColors.YELLOW, String.format(
+            player.sendMessage(Text.of(TextColors.YELLOW, String.format(
                     "You have modified the world '%s' - mutators will take longer to run the next time an instance of this map is started.\n" +
                             "If you make any modifications outside of the game, make sure to run '/worldmodified %s' so that your changes are "
                             + "detected.",
@@ -503,11 +503,11 @@ public final class InstanceManager {
 
     private void giveLobbySetting(Player player) {
         player.setScoreboard(Sponge.getServer().getServerScoreboard().orElse(null));
-        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL);
+        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
         Utils.resetHealthHungerAndPotions(player);
     }
 
-    private boolean isTpSign(List<Text> lines) {
+    private boolean isTpSign(List<Component> lines) {
         return lines.size() != 0 && lines.get(0).toPlain().equalsIgnoreCase(Constants.Map.Lobby.SIGN_HEADER);
     }
 }

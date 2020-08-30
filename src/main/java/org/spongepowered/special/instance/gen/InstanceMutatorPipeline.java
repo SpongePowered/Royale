@@ -24,11 +24,11 @@
  */
 package org.spongepowered.special.instance.gen;
 
-import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.Objects;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.util.PositionOutOfBoundsException;
-import org.spongepowered.api.world.extent.Extent;
+import org.spongepowered.api.world.BoundedWorldView;
+import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 
@@ -50,7 +50,8 @@ public final class InstanceMutatorPipeline {
     }
 
     public void mutate(Instance instance, boolean tryFastPass) {
-        final Extent area = instance.getHandle().get().getExtentView(instance.getType().getBlockMin(), instance.getType().getBlockMax());
+        final BoundedWorldView<?> area = instance.getHandle().get().getExtentView(instance.getType().getBlockMin(),
+                instance.getType().getBlockMax());
 
         if (!tryFastPass) {
             Special.instance.getLogger().error("[Mutator] Instance {} is not eligible for a fast pass! Using slow pass.", instance.getName());
@@ -94,7 +95,7 @@ public final class InstanceMutatorPipeline {
         positionCache.put(instance.getName(), cache);
     }
 
-    private boolean canPerformFastPass(String name, Extent extent) {
+    private boolean canPerformFastPass(String name, BoundedWorldView<?> extent) {
         Map<Vector3i, BlockState> cache = positionCache.get(name);
 
         // We don't have any cached positions, so we can't do a fast pass

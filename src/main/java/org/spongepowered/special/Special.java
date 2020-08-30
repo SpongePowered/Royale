@@ -24,10 +24,13 @@
  */
 package org.spongepowered.special;
 
+import com.google.inject.Inject;
+import org.apache.logging.log4j.Logger;
 import org.slf4j.Logger;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.entity.living.player.Player;
+import org.spongepowered.api.event.Cause;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.cause.Cause;
 import org.spongepowered.api.event.filter.cause.Root;
@@ -38,6 +41,8 @@ import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.text.Text;
+import org.spongepowered.plugin.PluginContainer;
+import org.spongepowered.plugin.jvm.Plugin;
 import org.spongepowered.special.instance.InstanceManager;
 import org.spongepowered.special.instance.InstanceType;
 import org.spongepowered.special.instance.InstanceTypeRegistryModule;
@@ -48,16 +53,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Random;
 
-import javax.inject.Inject;
-
-@Plugin(
-        id = Constants.Meta.ID,
-        name = Constants.Meta.NAME,
-        version = Constants.Meta.VERSION,
-        authors = Constants.Meta.AUTHORS,
-        url = Constants.Meta.URL,
-        description = Constants.Meta.DESCRIPTION
-)
+@Plugin(Constants.Meta.ID)
 public final class Special {
 
     public static Special instance;

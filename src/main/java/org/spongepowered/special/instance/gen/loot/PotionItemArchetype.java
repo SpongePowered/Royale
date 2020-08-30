@@ -27,7 +27,7 @@ package org.spongepowered.special.instance.gen.loot;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.Lists;
-import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.potion.PotionEffect;
 import org.spongepowered.api.effect.potion.PotionEffectType;
 import org.spongepowered.api.item.ItemType;
@@ -59,14 +59,14 @@ class PotionItemArchetype extends BasicItemArchetype {
         return ItemStack.builder()
                 .itemType(this.getType())
                 .quantity(amount)
-                .keyValue(Keys.POTION_EFFECTS, itemEffects)
+                .add(Keys.POTION_EFFECTS, itemEffects)
                 .build();
     }
 
     public enum Type {
-        NORMAL(ItemTypes.POTION),
-        SPLASH(ItemTypes.SPLASH_POTION),
-        LINGERING(ItemTypes.LINGERING_POTION);
+        NORMAL(ItemTypes.POTION.get()),
+        SPLASH(ItemTypes.SPLASH_POTION.get()),
+        LINGERING(ItemTypes.LINGERING_POTION.get());
 
         private ItemType itemType;
 

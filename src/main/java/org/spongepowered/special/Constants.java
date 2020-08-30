@@ -25,6 +25,7 @@
 package org.spongepowered.special;
 
 import ninja.leaping.configurate.ConfigurationOptions;
+import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -77,7 +78,7 @@ public class Constants {
 
         public static final ConfigurationOptions DEFAULT_OPTIONS = ConfigurationOptions.defaults();
 
-        public static final List<String> DEFAULT_MAP_MUTATOR_IDS = new ArrayList<>();
+        public static final List<ResourceKey> DEFAULT_MAP_MUTATOR_IDS = new ArrayList<>();
 
         public static final Set<InstanceMutator> DEFAULT_MAP_MUTATORS = new HashSet<>();
 

@@ -26,38 +26,32 @@ package org.spongepowered.special.instance.gen;
 
 import com.google.common.base.Objects;
 import org.spongepowered.api.CatalogType;
+import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.util.annotation.CatalogedBy;
-import org.spongepowered.api.world.extent.Extent;
+import org.spongepowered.api.world.BoundedWorldView;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 
 @CatalogedBy(InstanceMutators.class)
 public abstract class InstanceMutator implements CatalogType {
 
-    private final String id;
-    private final String name;
+    private final ResourceKey id;
 
-    protected InstanceMutator(String id, String name) {
+    protected InstanceMutator(ResourceKey id) {
         this.id = id;
-        this.name = name;
     }
 
     @Override
-    public final String getId() {
+    public final ResourceKey getKey() {
         return this.id;
-    }
-
-    @Override
-    public String getName() {
-        return this.name;
     }
 
     void visitInstance(Instance instance) {
         Special.instance.getLogger().info("Mutating instance [" + instance.getName() + "] with mutator [" + this.getId() + "]...");
     }
 
-    public BlockState visitBlock(Instance instance, Extent area, BlockState state, int x, int y, int z) {
+    public BlockState visitBlock(Instance instance, BoundedWorldView<?> area, BlockState state, int x, int y, int z) {
         return null;
     }
 

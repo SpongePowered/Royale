@@ -24,7 +24,7 @@
  */
 package org.spongepowered.special.instance;
 
-import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 
 import java.util.ArrayList;
@@ -32,7 +32,7 @@ import java.util.ArrayList;
 class Utils {
 
     static void resetHealthHungerAndPotions(Player player) {
-        player.offer(Keys.HEALTH, player.getValue(Keys.MAX_HEALTH).orElse(null).getMaxValue());
+        player.offer(Keys.HEALTH, player.getValue(Keys.MAX_HEALTH).orElse(null).get());
         resetHungerAndPotions(player);
     }
 

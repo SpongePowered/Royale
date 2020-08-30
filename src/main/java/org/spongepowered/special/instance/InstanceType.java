@@ -26,16 +26,17 @@ package org.spongepowered.special.instance;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.CatalogType;
+import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.api.util.ResettableBuilder;
 import org.spongepowered.api.util.annotation.CatalogedBy;
+import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.configuration.MappedConfigurationAdapter;
 import org.spongepowered.special.instance.configuration.InstanceTypeConfiguration;
@@ -54,7 +55,7 @@ import java.util.stream.Collectors;
 @CatalogedBy(InstanceTypes.class)
 public final class InstanceType implements CatalogType {
 
-    private String id, name;
+    private ResourceKey key;
     private TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
     private List<ItemStackSnapshot> defaultItems;
     private long roundStartLength, roundLength, roundEndLength;
@@ -73,8 +74,8 @@ public final class InstanceType implements CatalogType {
     private Vector3i min, max, size;
     private InstanceMutatorPipeline mutatorPipeline;
 
-    private InstanceType(String id, Builder builder) {
-        this.id = id;
+    private InstanceType(ResourceKey key, Builder builder) {
+        this.key = key;
         this.name = "Last Man Standing";
         this.nameTemplate = builder.nameTemplate;
         this.centerX = builder.centerX;
@@ -103,17 +104,12 @@ public final class InstanceType implements CatalogType {
     }
 
     public static Builder builder() {
-        return Sponge.getRegistry().createBuilder(Builder.class);
+        return Sponge.getRegistry().getBuilderRegistry().provideBuilder(Builder.class);
     }
 
     @Override
-    public String getId() {
-        return this.id;
-    }
-
-    @Override
-    public String getName() {
-        return this.name;
+    public ResourceKey getKey() {
+        return this.key;
     }
 
     public long getRoundStartLength() {
@@ -216,18 +212,18 @@ public final class InstanceType implements CatalogType {
             return false;
         }
         InstanceType instanceType = (InstanceType) o;
-        return java.util.Objects.equals(this.id, instanceType.id);
+        return java.util.Objects.equals(this.key, instanceType.key);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(this.id);
+        return java.util.Objects.hash(this.key);
     }
 
     @Override
     public String toString() {
         return "InstanceType{" +
-                "id='" + id + '\'' +
+                "id='" + key + '\'' +
                 ", name='" + name + '\'' +
                 ", nameTemplate=" + nameTemplate +
                 ", roundStartTemplate=" + roundStartTemplate +
@@ -456,7 +452,7 @@ public final class InstanceType implements CatalogType {
             config.general.worldBorderCenterZ = this.worldBorderZ;
             config.general.worldBorderRadius = this.worldBorderRadius;
             config.general.mapMutators.clear();
-            config.general.mapMutators.addAll(this.mutators.stream().map(InstanceMutator::getId).collect(Collectors.toList()));
+            config.general.mapMutators.addAll(this.mutators.stream().map(InstanceMutator::getKey).collect(Collectors.toList()));
 
             config.round.defaultItems.clear();
             config.round.defaultItems.addAll(this.defaultItems);

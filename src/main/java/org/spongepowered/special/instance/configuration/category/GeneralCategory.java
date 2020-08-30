@@ -26,6 +26,7 @@ package org.spongepowered.special.instance.configuration.category;
 
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.special.Constants;
 import org.spongepowered.special.configuration.AbstractConfigurationCategory;
@@ -83,6 +84,6 @@ public final class GeneralCategory extends AbstractConfigurationCategory {
     public int worldBorderRadius = Constants.Map.DEFAULT_WORLD_BORDER_RADIUS;
 
     @Setting(value = "map-mutators", comment = "Map Mutators to apply after the instance is loaded.")
-    public List<String> mapMutators = Constants.Map.DEFAULT_MAP_MUTATOR_IDS;
+    public List<ResourceKey> mapMutators = Constants.Map.DEFAULT_MAP_MUTATOR_IDS;
 
 }

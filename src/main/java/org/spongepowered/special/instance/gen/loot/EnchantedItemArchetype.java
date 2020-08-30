@@ -26,16 +26,17 @@ package org.spongepowered.special.instance.gen.loot;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import org.spongepowered.api.data.key.Keys;
-import org.spongepowered.api.data.manipulator.mutable.item.EnchantmentData;
-import org.spongepowered.api.data.meta.ItemEnchantment;
-import org.spongepowered.api.item.Enchantment;
+import net.kyori.adventure.text.Component;
+import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.item.ItemType;
+import org.spongepowered.api.item.enchantment.Enchantment;
+import org.spongepowered.api.item.enchantment.EnchantmentType;
 import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.text.Text;
 import org.spongepowered.api.util.weighted.VariableAmount;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -43,11 +44,11 @@ class EnchantedItemArchetype implements ItemArchetype {
 
     private final boolean unbreakable;
     private final ItemType type;
-    private final Map<Enchantment, VariableAmount> enchantments;
-    private final Text name;
+    private final Map<EnchantmentType, VariableAmount> enchantments;
+    private final Component name;
     private final VariableAmount quantity;
 
-    EnchantedItemArchetype(ItemType type, VariableAmount quantity, boolean unbreakable, Text name, Map<Enchantment, VariableAmount>
+    EnchantedItemArchetype(ItemType type, VariableAmount quantity, boolean unbreakable, Component name, Map<EnchantmentType, VariableAmount>
             enchantments) {
         this.type = checkNotNull(type);
         this.quantity = checkNotNull(quantity);
@@ -64,14 +65,17 @@ class EnchantedItemArchetype implements ItemArchetype {
                 .quantity(amount)
                 .build();
 
-        final EnchantmentData enchantmentData = itemStack.getOrCreate(EnchantmentData.class).orElse(null);
-        for (Map.Entry<Enchantment, VariableAmount> entry : enchantments.entrySet()) {
-            enchantmentData.addElement(new ItemEnchantment(entry.getKey(), entry.getValue().getFlooredAmount(rand)));
+        final List<Enchantment> enchantmentsToApply = new ArrayList<>();
+        for (Map.Entry<EnchantmentType, VariableAmount> entry : this.enchantments.entrySet()) {
+            final int level = entry.getValue().getFlooredAmount(rand);
+            if (level > 0) {
+                enchantmentsToApply.add(Enchantment.builder().type(entry.getKey()).level(level).build());
+            }
         }
 
-        itemStack.offer(enchantmentData);
+        itemStack.offer(Keys.APPLIED_ENCHANTMENTS, enchantmentsToApply);
         itemStack.offer(Keys.DISPLAY_NAME, name);
-        itemStack.offer(Keys.UNBREAKABLE, unbreakable);
+        itemStack.offer(Keys.IS_UNBREAKABLE, unbreakable);
 
         return itemStack;
     }
@@ -88,7 +92,7 @@ class EnchantedItemArchetype implements ItemArchetype {
         return this.unbreakable;
     }
 
-    public final Map<Enchantment, VariableAmount> getEnchantments() {
+    public final Map<EnchantmentType, VariableAmount> getEnchantments() {
         return Collections.unmodifiableMap(enchantments);
     }
 }

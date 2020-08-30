@@ -25,11 +25,12 @@
 package org.spongepowered.special.instance.gen.mutator;
 
 import com.google.common.base.Objects;
+import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
-import org.spongepowered.api.block.tileentity.Sign;
-import org.spongepowered.api.block.tileentity.TileEntity;
-import org.spongepowered.api.world.extent.Extent;
+import org.spongepowered.api.block.entity.BlockEntity;
+import org.spongepowered.api.block.entity.Sign;
+import org.spongepowered.api.world.BoundedWorldView;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 import org.spongepowered.special.instance.gen.InstanceMutator;
@@ -38,29 +39,21 @@ abstract class SignMutator extends InstanceMutator {
 
     private final String sign_id;
 
-    SignMutator(String id, String name, String sign_id) {
-        super(id, name);
+    SignMutator(ResourceKey key, String sign_id) {
+        super(key);
         this.sign_id = sign_id;
     }
 
-    public abstract BlockState visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign);
+    public abstract BlockState visitSign(Instance instance, BoundedWorldView<?> area, BlockState state, int x, int y, int z, Sign sign);
 
     @Override
-    public BlockState visitBlock(Instance instance, Extent area, BlockState state, int x, int y, int z) {
-        if (state.getType() != BlockTypes.STANDING_SIGN && state.getType() != BlockTypes.WALL_SIGN) {
+    public BlockState visitBlock(Instance instance, BoundedWorldView<?> area, BlockState state, int x, int y, int z) {
+        final BlockEntity blockEntity = area.getBlockEntity(x, y, z).orElse(null);
+        if (!(blockEntity instanceof Sign)) {
             return null;
         }
 
-        final TileEntity tileEntity = area.getTileEntity(x, y, z).orElse(null);
-        if (tileEntity == null) {
-            throw new IllegalStateException("Something is quite wrong...we have a sign type yet found no tile entity. This is a serious "
-                    + "issue likely due to server misconfiguration!");
-        } else if (!(tileEntity instanceof Sign)) {
-            throw new IllegalStateException("Something is quite wrong...we have a sign type yet found a [" + tileEntity.getClass()
-                    .getSimpleName() + "] instead. This is a serious issue likely due to server misconfiguration!");
-        }
-
-        final Sign sign = (Sign) tileEntity;
+        final Sign sign = (Sign) blockEntity;
         if (!sign.lines().get(0).toPlain().equalsIgnoreCase(this.sign_id)) {
             if (sign.lines().get(1).toPlain().equalsIgnoreCase(this.sign_id)) {
                 Special.instance.getLogger().error("Found mismatched sign at {}x {}y {}z!", x, y, z);

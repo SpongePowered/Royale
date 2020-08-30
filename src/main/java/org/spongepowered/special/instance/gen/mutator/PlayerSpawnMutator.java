@@ -24,11 +24,11 @@
  */
 package org.spongepowered.special.instance.gen.mutator;
 
-import com.flowpowered.math.vector.Vector3d;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
-import org.spongepowered.api.block.tileentity.Sign;
-import org.spongepowered.api.world.extent.Extent;
+import org.spongepowered.api.block.entity.Sign;
+import org.spongepowered.api.world.BoundedWorldView;
+import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 
@@ -39,8 +39,8 @@ public final class PlayerSpawnMutator extends SignMutator {
     }
 
     @Override
-    public BlockState visitSign(Instance instance, Extent area, BlockState state, int x, int y, int z, Sign sign) {
-        area.setBlock(x, y, z, BlockTypes.AIR.getDefaultState(), Special.instance.getPluginCause());
+    public BlockState visitSign(Instance instance, BoundedWorldView<?> area, BlockState state, int x, int y, int z, Sign sign) {
+        area.setBlock(x, y, z, BlockTypes.AIR.get().getDefaultState());
 
         instance.addPlayerSpawn(new Vector3d(x + 0.5, y + 0.0125, z + 0.5));
 
