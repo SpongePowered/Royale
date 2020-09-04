@@ -25,6 +25,7 @@
 package org.spongepowered.special.instance.task;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.LinearComponents;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
@@ -80,8 +81,8 @@ public final class EndTask extends InstanceTask {
             }
 
             final Component content = winner.isPresent() ?
-                    TextComponent.of(winner.get().get(Keys.DISPLAY_NAME).get(), NamedTextColor.GREEN)
-                            .append(TextComponent.of(" is the winner!", NamedTextColor.WHITE)) :
+                    LinearComponents.linear(NamedTextColor.GREEN, winner.get().get(Keys.DISPLAY_NAME).get(),
+                            NamedTextColor.WHITE, TextComponent.of(" is the winner!")) :
                     TextComponent.of("Draw", NamedTextColor.YELLOW);
 
             final Component winnerContent = winner.isPresent() ?
@@ -114,7 +115,8 @@ public final class EndTask extends InstanceTask {
                 });
 
                 Sponge.getServer().getBroadcastAudience()
-                        .sendMessage(TextComponent.of(winner.get().getName(), NamedTextColor.RED).append(" has won the game!", NamedTextColor.RESET));
+                        .sendMessage(LinearComponents.linear(NamedTextColor.GREEN, winner.get().get(Keys.DISPLAY_NAME).get(),
+                                NamedTextColor.WHITE, TextComponent.of(" has won the game!")));
                 Special.instance.getLogger().info("Round finished!");
             }
         }

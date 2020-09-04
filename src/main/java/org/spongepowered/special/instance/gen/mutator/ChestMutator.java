@@ -33,6 +33,7 @@ import org.spongepowered.api.block.entity.carrier.chest.Chest;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.util.weighted.LootTable;
 import org.spongepowered.api.world.BoundedWorldView;
+import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 import org.spongepowered.special.instance.gen.loot.ItemArchetype;
@@ -43,7 +44,7 @@ import java.util.List;
 public final class ChestMutator extends SignMutator {
 
     public ChestMutator() {
-        super("chest", "chest");
+        super(Constants.key("chest"), "chest");
     }
 
     @Override

@@ -71,6 +71,10 @@ public class Constants {
         }
     }
 
+    public static ResourceKey key(String id) {
+        return ResourceKey.of(Meta.ID, id);
+    }
+
     public static final class Map {
 
         public static final Path PATH_CONFIG_INSTANCE_TYPES = Special.instance.getConfigPath().resolve("types");
@@ -103,7 +107,7 @@ public class Constants {
                 }
             }
 
-            DEFAULT_MAP_MUTATOR_IDS.add("player_spawn");
+            DEFAULT_MAP_MUTATOR_IDS.add(Constants.key("player_spawn"));
 
             DEFAULT_MAP_MUTATORS.add(InstanceMutatorRegistryModule.getInstance().getById("player_spawn").get());
         }
@@ -139,7 +143,7 @@ public class Constants {
 
         public static final class Lobby {
 
-            public static final ResourceKey DEFAULT_LOBBY_NAME = Constants.Meta.ID + "_lobby";
+            public static final ResourceKey DEFAULT_LOBBY_NAME = Constants.key("lobby");
             public static final String SIGN_HEADER = "Join Game";
 
             static final WorldArchetype lobbyArchetype = WorldArchetype.builder().from(WorldArchetypes.THE_END.get())

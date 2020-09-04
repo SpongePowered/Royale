@@ -32,6 +32,7 @@ import static org.spongepowered.special.instance.gen.loot.PotionItemArchetype.Ty
 
 import com.google.common.collect.Maps;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.LinearComponents;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.effect.potion.PotionEffectType;

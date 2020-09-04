@@ -29,13 +29,14 @@ import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.world.BoundedWorldView;
 import org.spongepowered.math.vector.Vector3d;
+import org.spongepowered.special.Constants;
 import org.spongepowered.special.Special;
 import org.spongepowered.special.instance.Instance;
 
 public final class PlayerSpawnMutator extends SignMutator {
 
     public PlayerSpawnMutator() {
-        super("player_spawn", "Player Spawn Finder", "player_spawn");
+        super(Constants.key("player_spawn"), "player_spawn");
     }
 
     @Override

@@ -84,7 +84,7 @@ public final class InstanceMutatorPipeline {
         Special.instance.getLogger().error("[Mutator] Performing slow pass for instance {} - {} blocks total.", instance.getName(), size.getX() *
                 size.getY() * size.getZ());
 
-        area.getBlockWorker(Special.instance.getPluginCause()).iterate((v, x, y, z) -> {
+        area.getBlockWorker().iterate((v, x, y, z) -> {
             for (InstanceMutator mutator : this.mutators) {
                 BlockState expectedState = mutator.visitBlock(instance, area, v.getBlock(x, y, z), x, y, z);
                 if (expectedState != null) {

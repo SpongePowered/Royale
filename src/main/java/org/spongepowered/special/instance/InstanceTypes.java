@@ -38,7 +38,8 @@ public final class InstanceTypes {
     /**
      * The default instance type. Up to 6 players battle until one man is left standing.
      */
-    public static final InstanceType LAST_MAN_STANDING = Sponge.getRegistry().getType(InstanceType.class, "last_man_standing").orElse(null);
+    public static final Supplier<InstanceType> LAST_MAN_STANDING = Sponge.getRegistry().getCatalogRegistry().provideSupplier(InstanceType.class,
+            "last_man_standing");
 
     // SORTFIELDS:OFF
 }

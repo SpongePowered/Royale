@@ -34,6 +34,7 @@ import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.text.TextTemplate;
+import org.spongepowered.api.util.NamedCatalogBuilder;
 import org.spongepowered.api.util.ResettableBuilder;
 import org.spongepowered.api.util.annotation.CatalogedBy;
 import org.spongepowered.math.vector.Vector3i;
@@ -56,6 +57,7 @@ import java.util.stream.Collectors;
 public final class InstanceType implements CatalogType {
 
     private ResourceKey key;
+    private String name;
     private TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
     private List<ItemStackSnapshot> defaultItems;
     private long roundStartLength, roundLength, roundEndLength;
@@ -74,9 +76,9 @@ public final class InstanceType implements CatalogType {
     private Vector3i min, max, size;
     private InstanceMutatorPipeline mutatorPipeline;
 
-    private InstanceType(ResourceKey key, Builder builder) {
-        this.key = key;
-        this.name = "Last Man Standing";
+    private InstanceType(Builder builder) {
+        this.key = builder.key;
+        this.name = builder.name;
         this.nameTemplate = builder.nameTemplate;
         this.centerX = builder.centerX;
         this.centerZ = builder.centerZ;
@@ -110,6 +112,10 @@ public final class InstanceType implements CatalogType {
     @Override
     public ResourceKey getKey() {
         return this.key;
+    }
+
+    public String getName() {
+        return this.name;
     }
 
     public long getRoundStartLength() {
@@ -190,7 +196,8 @@ public final class InstanceType implements CatalogType {
         this.maxY = value.general.maxY;
         this.maxZ = value.general.maxZ;
         this.mutatorPipeline.getMutators().clear();
-        this.mutatorPipeline.getMutators().addAll(InstanceMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators));
+        value.general.mapMutators.stream().map(k -> Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, k).get())
+                .forEach(this.mutatorPipeline.getMutators()::add);
         this.defaultItems.clear();
         this.defaultItems.addAll(value.round.defaultItems);
         this.roundStartTemplate = value.round.startTemplate;
@@ -248,8 +255,9 @@ public final class InstanceType implements CatalogType {
                 '}';
     }
 
-    public static final class Builder implements ResettableBuilder<InstanceType, Builder> {
+    public static final class Builder implements NamedCatalogBuilder<InstanceType, Builder> {
 
+        ResourceKey key;
         String name;
         TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
         List<ItemStackSnapshot> defaultItems;
@@ -273,8 +281,8 @@ public final class InstanceType implements CatalogType {
             reset();
         }
 
-        @Override
         public Builder from(InstanceType value) {
+            this.key = key;
             this.name = value.name;
             this.nameTemplate = value.nameTemplate;
             this.centerX = value.centerX;
@@ -351,6 +359,13 @@ public final class InstanceType implements CatalogType {
             return this;
         }
 
+        @Override
+        public Builder key(ResourceKey key) {
+            this.key = key;
+            return this;
+        }
+
+        @Override
         public Builder name(String name) {
             this.name = name;
             return this;
@@ -408,31 +423,22 @@ public final class InstanceType implements CatalogType {
             return this;
         }
 
-        public Builder mutator(String mutator_id) {
-            Optional<InstanceMutator> mutator = InstanceMutatorRegistryModule.getInstance().getById(mutator_id);
+        public Builder mutator(ResourceKey mutator_id) {
+            Optional<InstanceMutator> mutator = Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, mutator_id);
             if (mutator.isPresent()) {
                 this.mutators.add(mutator.get());
             }
             return this;
         }
 
-        public InstanceType build(String id, String name) throws IOException, ObjectMappingException {
-            checkNotNull(id);
-            checkNotNull(this.nameTemplate);
-            checkNotNull(this.roundStartTemplate);
-            checkNotNull(this.roundEndTemplate);
-            this.name(name);
-
-            return this.build(id);
-        }
-
-        public InstanceType build(String id) throws IOException, ObjectMappingException {
-            checkNotNull(id);
+        @Override
+        public InstanceType build() {
+            checkNotNull(this.key);
             checkNotNull(this.nameTemplate);
             checkNotNull(this.roundStartTemplate);
             checkNotNull(this.roundEndTemplate);
 
-            final Path configPath = Constants.Map.PATH_CONFIG_INSTANCE_TYPES.resolve(id + ".conf");
+            final Path configPath = Constants.Map.PATH_CONFIG_INSTANCE_TYPES.resolve(this.key.getValue() + ".conf");
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
                     .class, Constants.Map.DEFAULT_OPTIONS, configPath);
 
@@ -464,7 +470,7 @@ public final class InstanceType implements CatalogType {
             config.round.automaticStartPlayerCount = this.automaticStartPlayerCount;
             adapter.save();
 
-            return new InstanceType(id, this);
+            return new InstanceType(this);
         }
     }
 }
