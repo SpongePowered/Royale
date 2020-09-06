@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -24,8 +24,6 @@
  */
 package org.spongepowered.royale.instance.gen.loot;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.google.common.collect.Lists;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.potion.PotionEffect;
@@ -36,6 +34,7 @@ import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.util.weighted.VariableAmount;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 class PotionItemArchetype extends BasicItemArchetype {
@@ -47,9 +46,9 @@ class PotionItemArchetype extends BasicItemArchetype {
     PotionItemArchetype(final Type type, final VariableAmount quantity, final PotionEffectType effect, final VariableAmount power,
             final VariableAmount duration) {
         super(type.getItemType(), quantity);
-        this.effect = checkNotNull(effect);
-        this.power = checkNotNull(power);
-        this.duration = checkNotNull(duration);
+        this.effect = Objects.requireNonNull(effect);
+        this.power = Objects.requireNonNull(power);
+        this.duration = Objects.requireNonNull(duration);
     }
 
     @Override

@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -46,7 +46,7 @@ import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
-import org.spongepowered.royale.instance.scoreboard.RoundScoreboard;
+import org.spongepowered.royale.instance.scoreboard.InstanceScoreboard;
 import org.spongepowered.royale.instance.task.CleanupTask;
 import org.spongepowered.royale.instance.task.EndTask;
 import org.spongepowered.royale.instance.task.InstanceTask;
@@ -77,7 +77,7 @@ public final class Instance {
     private final Set<UUID> playerDeaths = new HashSet<>();
     private final Set<UUID> tasks = Sets.newLinkedHashSet();
     private final Map<Vector3i, BlockState> positionCache;
-    private final RoundScoreboard scoreboard;
+    private final InstanceScoreboard scoreboard;
     private State state = State.IDLE;
 
     public Instance(final Server server, final InstanceManager instanceManager, final ResourceKey worldKey, final InstanceType instanceType) {
@@ -85,7 +85,7 @@ public final class Instance {
         this.instanceManager = instanceManager;
         this.worldKey = worldKey;
         this.instanceType = instanceType;
-        this.scoreboard = new RoundScoreboard(this);
+        this.scoreboard = new InstanceScoreboard(this);
         this.positionCache = new HashMap<>();
 
         final ServerWorld world = this.server.getWorldManager().getWorld(worldKey)
@@ -117,7 +117,7 @@ public final class Instance {
         return this.state;
     }
 
-    public RoundScoreboard getScoreboard() {
+    public InstanceScoreboard getScoreboard() {
         return this.scoreboard;
     }
 

@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -52,12 +52,12 @@ public class Constants {
     }
 
     public static final class Plugin {
-        public static final String ID = Royale.instance.getPlugin().getMetadata().getId();
+        public static final String ID = "royale";
     }
 
     public static final class Map {
 
-        public static final Path PATH_CONFIG_INSTANCE_TYPES = Royale.instance.getConfigFile().resolve("types");
+        public static final Path INSTANCE_TYPES_FOLDER = Royale.instance.getConfigFile().resolve("types");
 
         public static final ConfigurationOptions DEFAULT_OPTIONS = ConfigurationOptions.defaults();
 
@@ -77,11 +77,11 @@ public class Constants {
         public static final int DEFAULT_WORLD_BORDER_RADIUS = 250;
 
         static {
-            if (Files.notExists(PATH_CONFIG_INSTANCE_TYPES)) {
+            if (Files.notExists(INSTANCE_TYPES_FOLDER)) {
                 try {
-                    Files.createDirectories(PATH_CONFIG_INSTANCE_TYPES);
+                    Files.createDirectories(INSTANCE_TYPES_FOLDER);
                 } catch (IOException e) {
-                    throw new RuntimeException("Failed to create maps directory [" + PATH_CONFIG_INSTANCE_TYPES + "]!");
+                    throw new RuntimeException("Failed to create maps directory [" + INSTANCE_TYPES_FOLDER + "]!");
                 }
             }
 

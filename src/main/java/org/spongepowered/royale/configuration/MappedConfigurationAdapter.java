@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -39,31 +39,31 @@ import java.nio.file.Path;
 public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
 
     private final Class<T> configClass;
-    private final Path configPath;
+    private final Path configFile;
     private final HoconConfigurationLoader loader;
     private final ObjectMapper<T>.BoundInstance mapper;
 
     private ConfigurationNode root;
     private T config;
 
-    public MappedConfigurationAdapter(Class<T> configClass, ConfigurationOptions options, Path configPath) {
+    public MappedConfigurationAdapter(final Class<T> configClass, final ConfigurationOptions options, final Path configFile) {
         this.configClass = configClass;
-        this.configPath = configPath;
+        this.configFile = configFile;
         this.loader = HoconConfigurationLoader.builder()
                 .setRenderOptions(ConfigRenderOptions.defaults().setFormatted(true).setComments(true).setOriginComments(false))
                 .setDefaultOptions(options)
-                .setPath(configPath).build();
+                .setPath(configFile).build();
         try {
             this.mapper = ObjectMapper.forClass(configClass).bindToNew();
         } catch (ObjectMappingException e) {
             throw new RuntimeException("Failed to construct mapper for config class [" + configClass + "]!");
         }
         this.root = SimpleCommentedConfigurationNode.root(options);
-        if (Files.notExists(configPath)) {
+        if (Files.notExists(configFile)) {
             try {
                 this.save();
             } catch (IOException | ObjectMappingException e) {
-                throw new RuntimeException("Failed to save config for class [" + configClass + "] from [" + configPath + "]!", e);
+                throw new RuntimeException("Failed to save config for class [" + configClass + "] from [" + configFile + "]!", e);
             }
         }
     }
@@ -72,8 +72,8 @@ public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
         return configClass;
     }
 
-    public Path getConfigPath() {
-        return this.configPath;
+    public Path getConfigFile() {
+        return this.configFile;
     }
 
     public T getConfig() {

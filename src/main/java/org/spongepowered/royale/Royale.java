@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -26,6 +26,7 @@ package org.spongepowered.royale;
 
 import com.google.inject.Inject;
 import net.kyori.adventure.text.TextComponent;
+import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
@@ -52,7 +53,7 @@ import org.spongepowered.royale.instance.gen.mutator.PlayerSpawnMutator;
 import java.nio.file.Path;
 import java.util.Random;
 
-@Plugin(Constants.Meta.ID)
+@Plugin(Constants.Plugin.ID)
 public final class Royale {
 
     public static Royale instance;
@@ -74,6 +75,18 @@ public final class Royale {
         this.random = new Random();
     }
 
+    public PluginContainer getPlugin() {
+        return this.plugin;
+    }
+
+    public Path getConfigFile() {
+        return this.configFile;
+    }
+
+    public Random getRandom() {
+        return this.random;
+    }
+
     @Listener
     public void onConstructPlugin(final ConstructPluginEvent event) {
         this.eventManager.registerListeners(this.plugin, this.instanceManager);
@@ -81,8 +94,8 @@ public final class Royale {
 
     @Listener
     public void onRegisterCatalogs(final RegisterCatalogRegistryEvent event) {
-        event.register(InstanceMutator.class, Constants.key("instance_mutator"));
-        event.register(InstanceType.class, Constants.key("instance_type"));
+        event.register(InstanceMutator.class, ResourceKey.of(this.plugin, "instance_mutator"));
+        event.register(InstanceType.class, ResourceKey.of(this.plugin, "instance_type"));
     }
 
     @Listener
@@ -103,7 +116,7 @@ public final class Royale {
 
     @Listener
     public void onRegisterCommands(final RegisterCommandEvent<Command.Parameterized> event) {
-        event.register(this.plugin, Commands.rootCommand, Constants.Meta.ID, Constants.Meta.ID.substring(0, 1));
+        event.register(this.plugin, Commands.rootCommand, Constants.Plugin.ID, Constants.Plugin.ID.substring(0, 1));
     }
 
     @Listener
@@ -120,17 +133,5 @@ public final class Royale {
     public void onGameChat(final PlayerChatEvent event, @Root final Player player) {
         event.setCancelled(true);
         player.sendMessage(TextComponent.of("Chat has been disabled."));
-    }
-
-    public PluginContainer getPlugin() {
-        return this.plugin;
-    }
-
-    public Path getConfigFile() {
-        return this.configFile;
-    }
-
-    public Random getRandom() {
-        return this.random;
     }
 }

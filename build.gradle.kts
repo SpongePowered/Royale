@@ -39,3 +39,15 @@ tasks {
         }
     }
 }
+
+license {
+    (this as ExtensionAware).extra.apply {
+        this["name"] = project.properties["name"]
+        this["organization"] = project.properties["organization"]
+        this["url"] = project.properties["url"]
+    }
+    header = project.file("HEADER.txt")
+
+    include("**/*.java")
+    newLine = false
+}

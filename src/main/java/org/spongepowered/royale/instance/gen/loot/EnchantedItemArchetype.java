@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -24,8 +24,6 @@
  */
 package org.spongepowered.royale.instance.gen.loot;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import net.kyori.adventure.text.Component;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.item.ItemType;
@@ -38,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 
 class EnchantedItemArchetype implements ItemArchetype {
@@ -50,11 +49,11 @@ class EnchantedItemArchetype implements ItemArchetype {
 
     EnchantedItemArchetype(final ItemType type, final VariableAmount quantity, final boolean unbreakable, final Component name,
             final Map<EnchantmentType, VariableAmount> enchantments) {
-        this.type = checkNotNull(type);
-        this.quantity = checkNotNull(quantity);
-        this.unbreakable = checkNotNull(unbreakable);
-        this.name = checkNotNull(name);
-        this.enchantments = checkNotNull(enchantments);
+        this.type = Objects.requireNonNull(type);
+        this.quantity = Objects.requireNonNull(quantity);
+        this.unbreakable = unbreakable;
+        this.name = Objects.requireNonNull(name);
+        this.enchantments = Objects.requireNonNull(enchantments);
     }
 
     @Override

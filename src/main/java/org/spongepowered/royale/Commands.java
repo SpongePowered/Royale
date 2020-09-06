@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -24,7 +24,7 @@
  */
 package org.spongepowered.royale;
 
-import static org.spongepowered.api.command.parameter.Parameter.*; // TODO
+import static org.spongepowered.api.command.parameter.Parameter.*;
 
 import com.google.common.collect.Iterables;
 import net.kyori.adventure.text.LinearComponents;
@@ -53,11 +53,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.Random;
 
 final class Commands {
-
-    private static final Random random = new Random();
 
     private static final Command.Parameterized createCommand = Command.builder()
             .setPermission(Constants.Meta.ID + ".command.create")
@@ -287,7 +284,7 @@ final class Commands {
                 final InstanceType instanceType = context.<InstanceType>getOne("instanceType").orElseThrow(() -> new CommandException(TextComponent.of
                         ("Specified instance is not valid!")));
 
-                final Path configPath = Constants.Map.PATH_CONFIG_INSTANCE_TYPES.resolve(instanceType.getId() + ".conf");
+                final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(instanceType.getId() + ".conf");
                 final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
                         InstanceTypeConfiguration.class, Constants.Map.DEFAULT_OPTIONS, configPath);
 

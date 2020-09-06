@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -56,14 +56,14 @@ import java.util.UUID;
  *          PlayerC
  *          PlayerD (imagine this one is got a strikethrough as they lost)
  */
-public final class RoundScoreboard {
+public final class InstanceScoreboard {
 
     private final Scoreboard scoreboard;
     private final Objective objective;
     private final Score instanceTypeScore, dashesScore, emptyLineScore;
     private final Map<UUID, PlayerData> playerData = new HashMap<>();
 
-    public RoundScoreboard(final Instance instance) {
+    public InstanceScoreboard(final Instance instance) {
         this.scoreboard = Scoreboard.builder().build();
         this.objective =
                 Objective.builder().name("main").displayName(TextComponent.of(instance.getWorldKey().toString(), NamedTextColor.GREEN))

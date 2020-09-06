@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -34,7 +34,6 @@ import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.Instance;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -51,7 +50,7 @@ public final class InstanceMutatorPipeline {
     }
 
     public Collection<InstanceMutator> getMutators() {
-        return Collections.unmodifiableCollection(this.mutators);
+        return this.mutators;
     }
 
     public void mutate(final Instance instance, final boolean tryFastPass) {

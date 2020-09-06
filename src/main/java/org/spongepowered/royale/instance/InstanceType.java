@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -26,7 +26,7 @@ package org.spongepowered.royale.instance;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.spongepowered.api.CatalogType;
+import org.spongepowered.api.NamedCatalogType;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
@@ -46,27 +46,16 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public final class InstanceType implements CatalogType {
+public final class InstanceType implements NamedCatalogType {
 
-    private ResourceKey key;
+    private final ResourceKey key;
+    private final InstanceMutatorPipeline mutatorPipeline;
     private String name;
     private TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
-    private List<ItemStackSnapshot> defaultItems;
+    private final List<ItemStackSnapshot> defaultItems;
     private long roundStartLength, roundLength, roundEndLength;
-    private int centerX;
-    private int centerZ;
-    private int minX;
-    private int minY;
-    private int minZ;
-    private int maxX;
-    private int maxY;
-    private int maxZ;
-    private int automaticStartPlayerCount;
-    private int worldBorderX;
-    private int worldBorderZ;
-    private int worldBorderRadius;
+    private int centerX, centerZ, minX, minY, minZ, maxX, maxY, maxZ, automaticStartPlayerCount, worldBorderX, worldBorderZ, worldBorderRadius;
     private Vector3i min, max, size;
-    private InstanceMutatorPipeline mutatorPipeline;
 
     private InstanceType(final Builder builder) {
         this.key = builder.key;
@@ -106,6 +95,7 @@ public final class InstanceType implements CatalogType {
         return this.key;
     }
 
+    @Override
     public String getName() {
         return this.name;
     }
@@ -222,28 +212,28 @@ public final class InstanceType implements CatalogType {
     @Override
     public String toString() {
         return "InstanceType{" +
-                "id='" + key + '\'' +
-                ", name='" + name + '\'' +
-                ", nameTemplate=" + nameTemplate +
-                ", roundStartTemplate=" + roundStartTemplate +
-                ", roundEndTemplate=" + roundEndTemplate +
-                ", defaultItems=" + defaultItems +
-                ", roundStartLength=" + roundStartLength +
-                ", roundLength=" + roundLength +
-                ", roundEndLength=" + roundEndLength +
-                ", centerX=" + centerX +
-                ", centerZ=" + centerZ +
-                ", minX=" + minX +
-                ", minY=" + minY +
-                ", minZ=" + minZ +
-                ", maxX=" + maxX +
-                ", maxY=" + maxY +
-                ", maxZ=" + maxZ +
-                ", automaticStartPlayerCount=" + automaticStartPlayerCount +
-                ", min=" + min +
-                ", max=" + max +
-                ", size=" + size +
-                ", mutatorPipeline=" + mutatorPipeline +
+                "id='" + this.key + '\'' +
+                ", name='" + this.name + '\'' +
+                ", nameTemplate=" + this.nameTemplate +
+                ", roundStartTemplate=" + this.roundStartTemplate +
+                ", roundEndTemplate=" + this.roundEndTemplate +
+                ", defaultItems=" + this.defaultItems +
+                ", roundStartLength=" + this.roundStartLength +
+                ", roundLength=" + this.roundLength +
+                ", roundEndLength=" + this.roundEndLength +
+                ", centerX=" + this.centerX +
+                ", centerZ=" + this.centerZ +
+                ", minX=" + this.minX +
+                ", minY=" + this.minY +
+                ", minZ=" + this.minZ +
+                ", maxX=" + this.maxX +
+                ", maxY=" + this.maxY +
+                ", maxZ=" + this.maxZ +
+                ", automaticStartPlayerCount=" + this.automaticStartPlayerCount +
+                ", min=" + this.min +
+                ", max=" + this.max +
+                ", size=" + this.size +
+                ", mutatorPipeline=" + this.mutatorPipeline +
                 '}';
     }
 
@@ -270,11 +260,11 @@ public final class InstanceType implements CatalogType {
         private int worldBorderRadius;
 
         public Builder() {
-            reset();
+            this.reset();
         }
 
         public Builder from(final InstanceType value) {
-            this.key = key;
+            this.key = value.key;
             this.name = value.name;
             this.nameTemplate = value.nameTemplate;
             this.centerX = value.centerX;
@@ -300,7 +290,7 @@ public final class InstanceType implements CatalogType {
             return this;
         }
 
-        public Builder from(InstanceTypeConfiguration value) {
+        public Builder from(final InstanceTypeConfiguration value) {
             this.name = value.general.name;
             this.nameTemplate = value.general.nameTemplate;
             this.centerX = value.general.centerX;
@@ -352,13 +342,13 @@ public final class InstanceType implements CatalogType {
         }
 
         @Override
-        public Builder key(ResourceKey key) {
+        public Builder key(final ResourceKey key) {
             this.key = key;
             return this;
         }
 
         @Override
-        public Builder name(String name) {
+        public Builder name(final String name) {
             this.name = name;
             return this;
         }
@@ -373,12 +363,12 @@ public final class InstanceType implements CatalogType {
             return this;
         }
 
-        public Builder roundStartLength(long length) {
+        public Builder roundStartLength(final long length) {
             this.roundStartLength = length;
             return this;
         }
 
-        public Builder roundLength(long length) {
+        public Builder roundLength(final long length) {
             this.roundStartLength = length;
             return this;
         }
@@ -388,38 +378,38 @@ public final class InstanceType implements CatalogType {
             return this;
         }
 
-        public Builder roundEndLength(long length) {
+        public Builder roundEndLength(final long length) {
             this.roundEndLength = length;
             return this;
         }
 
-        public Builder item(ItemStackSnapshot item) {
+        public Builder item(final ItemStackSnapshot item) {
             Objects.requireNonNull(item);
             this.defaultItems.add(item);
             return this;
         }
 
-        public Builder items(Collection<ItemStackSnapshot> items) {
+        public Builder items(final Collection<ItemStackSnapshot> items) {
             Objects.requireNonNull(items);
             this.defaultItems.addAll(items);
             return this;
         }
 
-        public Builder mutator(InstanceMutator mutator) {
-            this.mutators.add(Objects.requireNonNull(mutator));
+        public Builder mutator(final InstanceMutator mutator) {
+            Objects.requireNonNull(mutator);
+            this.mutators.add(mutator);
             return this;
         }
 
-        public Builder automaticStartPlayerCount(int playerCount) {
+        public Builder automaticStartPlayerCount(final int playerCount) {
             this.automaticStartPlayerCount = playerCount;
             return this;
         }
 
-        public Builder mutator(ResourceKey mutator_id) {
-            Optional<InstanceMutator> mutator = Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, mutator_id);
-            if (mutator.isPresent()) {
-                this.mutators.add(mutator.get());
-            }
+        public Builder mutator(final ResourceKey key) {
+            Objects.requireNonNull(key);
+            Optional<InstanceMutator> mutator = Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, key);
+            mutator.ifPresent(instanceMutator -> this.mutators.add(instanceMutator));
             return this;
         }
 
@@ -430,7 +420,7 @@ public final class InstanceType implements CatalogType {
             Objects.requireNonNull(this.roundStartTemplate);
             Objects.requireNonNull(this.roundEndTemplate);
 
-            final Path configPath = Constants.Map.PATH_CONFIG_INSTANCE_TYPES.resolve(this.key.getValue() + ".conf");
+            final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(this.key.getValue() + ".conf");
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
                     .class, Constants.Map.DEFAULT_OPTIONS, configPath);
 

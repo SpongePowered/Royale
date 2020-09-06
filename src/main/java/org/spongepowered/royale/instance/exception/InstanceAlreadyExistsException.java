@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -26,7 +26,7 @@ package org.spongepowered.royale.instance.exception;
 
 public final class InstanceAlreadyExistsException extends Exception {
 
-    public InstanceAlreadyExistsException(String instance) {
+    public InstanceAlreadyExistsException(final String instance) {
         super(String.format("Attempt to create instance '%s' but it already exists!", instance));
     }
 }

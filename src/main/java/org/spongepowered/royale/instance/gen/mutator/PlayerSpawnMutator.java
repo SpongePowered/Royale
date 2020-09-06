@@ -1,5 +1,5 @@
-/**
- * This file is part of Special, licensed under the MIT License (MIT).
+/*
+ * This file is part of Royale, licensed under the MIT License (MIT).
  *
  * Copyright (c) SpongePowered <http://github.com/SpongePowered>
  * Copyright (c) contributors
@@ -47,7 +47,7 @@ public final class PlayerSpawnMutator extends SignMutator {
 
         instance.addPlayerSpawn(new Vector3d(x + 0.5, y + 0.0125, z + 0.5));
 
-        Royale.instance.getPlugin().getLogger().info("Found player spawn at " + x + "x " + y + "y " + z + "z.");
+        Royale.instance.getPlugin().getLogger().debug("Found player spawn at {}x, {}y, {}z.", x, y, z);
 
         return state;
     }
