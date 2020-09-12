@@ -65,13 +65,12 @@ public final class Royale {
     private final Random random;
 
     @Inject
-    public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final EventManager eventManager,
-            final InstanceManager instanceManager) {
+    public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final EventManager eventManager) {
         Royale.instance = this;
         this.plugin = plugin;
         this.configFile = configFile;
         this.eventManager = eventManager;
-        this.instanceManager = instanceManager;
+        this.instanceManager = new InstanceManager();
         this.random = new Random();
     }
 
@@ -116,7 +115,8 @@ public final class Royale {
 
     @Listener
     public void onRegisterCommands(final RegisterCommandEvent<Command.Parameterized> event) {
-        event.register(this.plugin, Commands.rootCommand, Constants.Plugin.ID, Constants.Plugin.ID.substring(0, 1));
+        event.register(this.plugin, Commands.rootCommand(this.random, this.instanceManager),
+                Constants.Plugin.ID, Constants.Plugin.ID.substring(0, 1));
     }
 
     @Listener

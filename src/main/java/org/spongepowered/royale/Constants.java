@@ -26,6 +26,7 @@ package org.spongepowered.royale;
 
 import ninja.leaping.configurate.ConfigurationOptions;
 import org.spongepowered.api.ResourceKey;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -80,14 +81,14 @@ public class Constants {
             if (Files.notExists(INSTANCE_TYPES_FOLDER)) {
                 try {
                     Files.createDirectories(INSTANCE_TYPES_FOLDER);
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     throw new RuntimeException("Failed to create maps directory [" + INSTANCE_TYPES_FOLDER + "]!");
                 }
             }
 
             DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.instance.getPlugin().getMetadata().getId(), "player_spawn"));
 
-            DEFAULT_MAP_MUTATORS.add(InstanceMutatorRegistryModule.getInstance().getById("player_spawn").get());
+            DEFAULT_MAP_MUTATORS.add(Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, ResourceKey.resolve("royale:player_spawn")).get());
         }
 
         private Map() {
