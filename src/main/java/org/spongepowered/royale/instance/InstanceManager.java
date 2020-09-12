@@ -78,6 +78,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Singleton
 public final class InstanceManager {
@@ -378,12 +379,12 @@ public final class InstanceManager {
 
     @Listener
     public void onChangeSign(final ChangeSignEvent event, @Root final ServerPlayer player) {
-        if (this.isTpSign(event.getText().lines().get())) {
+        if (this.isTpSign(event.getText().get())) {
             if (player.hasPermission(Constants.Permissions.ADMIN)) {
-                player.sendMessage(Text.of(TextColors.GREEN, "Successfully created world teleportation sign!"));
-                event.getText().setElement(0, Text.of(TextColors.AQUA, event.getText().get(0).orElse(null)));
+                player.sendMessage(TextComponent.of("Successfully created world teleportation sign!", NamedTextColor.GREEN));
+                event.getText().set(0, event.getText().get(0).colorIfAbsent(NamedTextColor.AQUA));
             } else {
-                player.sendMessage(Text.of(TextColors.RED, "You do not have permission to create a world teleportation sign!"));
+                player.sendMessage(TextComponent.of("You do not have permission to create a world teleportation sign!", NamedTextColor.RED));
                 event.setCancelled(true);
             }
         }
@@ -446,13 +447,18 @@ public final class InstanceManager {
             }
         }
 
-        if (!this.getInstance(name).isPresent() && this.canUseFastPass.contains(name)) {
-            this.setWorldModified(name, true);
-            player.sendMessage(TextComponent.of(String.format(
-                                "You have modified the world '%s' - mutators will take longer to run the next time an instance of this map is started.\n" +
-                                        "If you make any modifications outside of the game, make sure to run '/worldmodified %s' so that your changes are "
-                                        + "detected.",
-                                name, name), NamedTextColor.YELLOW));
+        final Set<ResourceKey> uniqueWorlds = event.getTransactions().stream()
+                .map(x -> x.getOriginal().getWorld())
+                .collect(Collectors.toSet());
+        for (ResourceKey name : uniqueWorlds) {
+            if (!this.getInstance(name).isPresent() && this.canUseFastPass.contains(name)) {
+                this.setWorldModified(name, true);
+                player.sendMessage(TextComponent.of(String.format(
+                        "You have modified the world '%s' - mutators will take longer to run the next time an instance of this map is started.\n" +
+                                "If you make any modifications outside of the game, make sure to run '/worldmodified %s' so that your changes are "
+                                + "detected.",
+                        name, name), NamedTextColor.YELLOW));
+            }
         }
     }
 

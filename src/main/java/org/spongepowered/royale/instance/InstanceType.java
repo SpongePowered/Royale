@@ -304,7 +304,10 @@ public final class InstanceType implements NamedCatalogType {
             this.worldBorderX = value.general.worldBorderCenterX;
             this.worldBorderZ = value.general.worldBorderCenterZ;
             this.worldBorderRadius = value.general.worldBorderRadius;
-            this.mutators = InstanceMutatorRegistryModule.getInstance().mapStrings(value.general.mapMutators);
+            this.mutators = value.general.mapMutators.stream()
+                    .map(x -> Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, x)
+                            .orElseThrow(() -> new IllegalArgumentException("Unknown mutator " + x)))
+                    .collect(Collectors.toSet());
             this.defaultItems = Lists.newLinkedList(value.round.defaultItems);
             this.roundStartTemplate = value.round.startTemplate;
             this.roundEndTemplate = value.round.endTemplate;

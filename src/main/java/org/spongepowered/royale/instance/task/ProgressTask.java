@@ -26,10 +26,16 @@ package org.spongepowered.royale.instance.task;
 
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.TextComponent;
+import org.spongepowered.api.Sponge;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.instance.Instance;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public final class ProgressTask extends InstanceTask {
@@ -39,6 +45,7 @@ public final class ProgressTask extends InstanceTask {
             0.0f,
             BossBar.Color.GREEN,
             BossBar.Overlay.PROGRESS);
+    private final Set<UUID> bossBarViewers = new HashSet<>();
 
     private final long roundLengthTotal;
     private long roundLengthRemaining;
@@ -54,7 +61,9 @@ public final class ProgressTask extends InstanceTask {
 
     @Override
     public void cancel() {
-        this.bossBar.removePlayers(this.bossBar.getPlayers());
+        for (final UUID profile : this.bossBarViewers) {
+            Sponge.getServer().getPlayer(profile).ifPresent(p -> p.hideBossBar(this.bossBar));
+        }
         this.handle.cancel();
     }
 
@@ -89,8 +98,11 @@ public final class ProgressTask extends InstanceTask {
                 this.bossBar.name(TextComponent.of(String.format("Time remaining: %02d", seconds)));
             }
 
-            this.bossBar.addPlayers(world.getPlayers().stream().filter(player -> player.isOnline() && !this.bossBar.getPlayers().contains(player))
-                    .collect(Collectors.toList()));
+            for (final ServerPlayer player : world.getPlayers()) {
+                if (this.bossBarViewers.add(player.getUniqueId())) {
+                    player.showBossBar(this.bossBar);
+                }
+            }
 
             this.roundLengthRemaining--;
             if (this.roundLengthRemaining < 0) {
