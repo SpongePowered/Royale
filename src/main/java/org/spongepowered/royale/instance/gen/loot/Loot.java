@@ -129,6 +129,7 @@ public final class Loot {
         Loot.basicFood.add(     item(   ItemTypes.BOWL.get(),                 range(1, 3)),   2);
         Loot.basicFood.add(     item(   ItemTypes.RED_MUSHROOM.get(),         range(1, 3)),   3);
         Loot.basicFood.add(     item(   ItemTypes.BROWN_MUSHROOM.get(),       range(1, 3)),   4);
+        Loot.basicFood.add(     item(   ItemTypes.HONEY_BOTTLE.get(),         range(1, 2)),   3);
 
         // high_food
         Loot.highFood.add(      item(   ItemTypes.COOKED_BEEF.get(),          range(1, 2)),   2);
@@ -166,18 +167,20 @@ public final class Loot {
         Loot.midCombat.add(     item(   ItemTypes.IRON_AXE.get(),             fixed(1)),      8);
         Loot.midCombat.add(     item(   ItemTypes.IRON_SWORD.get(),           fixed(1)),      8);
         Loot.midCombat.add(     item(   ItemTypes.SHIELD.get(),               fixed(1)),      12.5);
-        Loot.midCombat.add(     item(   ItemTypes.GOLDEN_HELMET.get(),        fixed(1)),      8);
+        Loot.midCombat.add(     item(   ItemTypes.GOLDEN_HELMET.get(),        fixed(1)),      7);
         Loot.midCombat.add(     item(   ItemTypes.GOLDEN_CHESTPLATE.get(),    fixed(1)),      2);
         Loot.midCombat.add(     item(   ItemTypes.GOLDEN_LEGGINGS.get(),      fixed(1)),      6);
-        Loot.midCombat.add(     item(   ItemTypes.GOLDEN_BOOTS.get(),         fixed(1)),      8);
+        Loot.midCombat.add(     item(   ItemTypes.GOLDEN_BOOTS.get(),         fixed(1)),      7);
         Loot.midCombat.add(     item(   ItemTypes.IRON_HELMET.get(),          fixed(1)),      4);
         Loot.midCombat.add(     item(   ItemTypes.IRON_CHESTPLATE.get(),      fixed(1)),      1);
         Loot.midCombat.add(     item(   ItemTypes.IRON_LEGGINGS.get(),        fixed(1)),      2);
         Loot.midCombat.add(     item(   ItemTypes.IRON_BOOTS.get(),           fixed(1)),      4);
+        Loot.midCombat.add(     item(   ItemTypes.TURTLE_HELMET.get(),        fixed(1)),      8);
 
         // mid_ranged
         Loot.midRanged.add(     item(   ItemTypes.BOW.get(),              fixed(1)),      5);
         Loot.midRanged.add(     item(   ItemTypes.ARROW.get(),            range(2, 6)),   10);
+        Loot.basicRanged.add(   item(   ItemTypes.TRIDENT.get(),          fixed(1)),      0.5);
         Loot.midRanged.add(item(ItemTypes.LEATHER_CHESTPLATE.get(), fixed(1), false,
                 TextComponent.of("Tough", NamedTextColor.RED),
                 new HashMap<EnchantmentType, VariableAmount>() {{
@@ -196,6 +199,7 @@ public final class Loot {
         Loot.highCombat.add(    item(   ItemTypes.DIAMOND_CHESTPLATE.get(),   fixed(1)),      0.0016);
         Loot.highCombat.add(    item(   ItemTypes.DIAMOND_LEGGINGS.get(),     fixed(1)),      0.002);
         Loot.highCombat.add(    item(   ItemTypes.DIAMOND_BOOTS.get(),        fixed(1)),      0.0024);
+        Loot.basicRanged.add(   item(   ItemTypes.TRIDENT.get(),              fixed(1)),      0.004);
 
         // rare_items
         Loot.rareItems.add(item(ItemTypes.DIAMOND_SWORD.get(), fixed(1), false,
@@ -204,29 +208,34 @@ public final class Loot {
                     put(EnchantmentTypes.FIRE_ASPECT.get(), range(1, 2));
                     put(EnchantmentTypes.KNOCKBACK.get(), range(1, 2));
                 }}), 0.0018);
-
         Loot.rareItems.add(item(ItemTypes.SHIELD.get(), fixed(1), true,
                 TextComponent.of("Unbreaking ", NamedTextColor.GRAY).append(TextComponent.of("Sponge", NamedTextColor.YELLOW)),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.UNBREAKING.get(), range(1, 3));
-                }}), 0.0018);
-
-        Loot.rareItems.add(item(ItemTypes.ELYTRA.get(), fixed(1)), 0.0125);
+                }}), 0.0015);
+        Loot.rareItems.add(item(ItemTypes.TRIDENT.get(), fixed(1), true,
+                TextComponent.of("Surfing ", NamedTextColor.CYAN).append(TextComponent.of("Spongie", NamedTextColor.YELLOW)),
+                new HashMap<EnchantmentType, VariableAmount>() {{
+                    put(EnchantmentTypes.RIPTIDE.get(), fixed(1));
+                }}), 0.0018);    
+        Loot.rareItems.add(item(ItemTypes.ELYTRA.get(), fixed(1)), 0.00125);
 
         // weird_items
-        Loot.weirdItems.add(    item(   ItemTypes.SPONGE.get(),           range(1, 6)),   15);
-        Loot.weirdItems.add(    item(   ItemTypes.ROTTEN_FLESH.get(),     range(1, 9)),   6);
-        Loot.weirdItems.add(    item(   ItemTypes.POISONOUS_POTATO.get(), range(1, 3)),   2.5);
+        Loot.weirdItems.add(    item(   ItemTypes.SPONGE.get(),                 range(1, 6)),   15);
+        Loot.weirdItems.add(    item(   ItemTypes.ROTTEN_FLESH.get(),           range(1, 9)),   6);
+        Loot.weirdItems.add(    item(   ItemTypes.POISONOUS_POTATO.get(),       range(1, 3)),   2.5);
+        Loot.weirdItems.add(    item(   ItemTypes.NAUTILUS_SHELL.get(),         fixed(1)),      4);
+        Loot.weirdItems.add(    item(   ItemTypes.TROPICAL_FISH_BUCKET.get(),   fixed(1)),      2);
 
         // basic_potions
 
-        Loot.basicPotions.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.FIRE_RESISTANCE.get(),  fixed(1),   range(200, 400)),   6);
-        Loot.basicPotions.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.INSTANT_HEALTH.get(),   fixed(1),   fixed(1)),          1);
-        Loot.basicPotions.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.NIGHT_VISION.get(),     fixed(1),   range(200, 400)),   3);
+        Loot.basicPotions.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.FIRE_RESISTANCE.get(),  fixed(1),   range(200, 400)),   1);
+        Loot.basicPotions.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.INSTANT_HEALTH.get(),   fixed(1),   fixed(1)),          3);
+        Loot.basicPotions.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.NIGHT_VISION.get(),     fixed(1),   range(200, 400)),   4);
         Loot.basicPotions.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.REGENERATION.get(),     fixed(1),   range(20, 80)),     2);
 
-        Loot.basicPotions.add(  potion(SPLASH,      fixed(1),       PotionEffectTypes.HUNGER.get(),           fixed(1),   range(100, 200)),   6);
-        Loot.basicPotions.add(  potion(SPLASH,      fixed(1),       PotionEffectTypes.INSTANT_DAMAGE.get(),   fixed(1),   fixed(1)),          1);
+        Loot.basicPotions.add(  potion(SPLASH,      fixed(1),       PotionEffectTypes.HUNGER.get(),           fixed(1),   range(100, 200)),   5);
+        Loot.basicPotions.add(  potion(SPLASH,      fixed(1),       PotionEffectTypes.INSTANT_DAMAGE.get(),   fixed(1),   fixed(1)),          2);
         Loot.basicPotions.add(  potion(SPLASH,      fixed(1),       PotionEffectTypes.SLOWNESS.get(),         fixed(1),   range(60, 200)),    6);
 
         // high_potions
@@ -235,7 +244,7 @@ public final class Loot {
         Loot.highPotions.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.INSTANT_HEALTH.get(),   fixed(1),   fixed(1)),          4   );
         Loot.highPotions.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.INVISIBILITY.get(),     fixed(1),   range(100, 200)),   1   );
         Loot.highPotions.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.JUMP_BOOST.get(),       fixed(1),   range(100, 200)),   4   );
-        Loot.highPotions.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.NIGHT_VISION.get(),     fixed(1),   range(200, 400)),   5   );
+        Loot.highPotions.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.NIGHT_VISION.get(),     fixed(1),   range(200, 400)),   6   );
         Loot.highPotions.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.REGENERATION.get(),     fixed(1),   range(40, 120)),    2   );
         Loot.highPotions.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.REGENERATION.get(),     fixed(2),   range(20, 100)),    0.1 );
         Loot.highPotions.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.SPEED.get(),            fixed(1),   range(100, 200)),   2   );
