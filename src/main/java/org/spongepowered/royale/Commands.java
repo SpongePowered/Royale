@@ -81,7 +81,7 @@ final class Commands {
                     return Collections.singletonList((ServerPlayer) cause.root());
                 }
                 return null;
-            }).build();
+            }).setKey("players").build();
     private static final Parameter.Value<ResourceKey> RESOURCE_KEY_ID_PARAMETER = Parameter.resourceKey().setKey("id").build();
     private static final Parameter.Value<String> NAME_OPTIONAL_PARAMETER = Parameter.string().setKey("name").build();
 
@@ -517,7 +517,8 @@ final class Commands {
                 .setExtendedDescription(Component.text("Displays available commands")) // TODO Do this better
                 .setExecutor(context -> {
                     context.sendMessage(Component.text("Some help should go here..."));
-                    context.sendMessage(new ComponentTemplate("Your name is <pl:sponge:name>").parse(context.getCause().root(), Collections.emptyMap()));
+                    context.sendMessage(new ComponentTemplate("Your name is <pl_sponge:name>").parse(context.getCause().root(),
+                            Collections.emptyMap()));
                     return CommandResult.success();
                 })
                 .child(Commands.createCommand(random, instanceManager), "create", "c")

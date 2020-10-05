@@ -26,9 +26,9 @@ package org.spongepowered.royale.template;
 
 import com.google.common.collect.ImmutableMap;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.Template;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 
 public final class ComponentTemplate {
 
-    private final static Pattern PLACEHOLDER_TAG = Pattern.compile("<(?<token>pl:(?<placeholder>.+:.+)(_(?<arg>.+))?)>");
+    private final static Pattern PLACEHOLDER_TAG = Pattern.compile("<(?<token>pl_(?<placeholder>.+:.+)(_(?<arg>.+))?)>");
     private final static ParserContextPair NULL_PLACEHOLDER = new ParserContextPair(null, null);
 
     private final String templatedString;
@@ -58,7 +58,7 @@ public final class ComponentTemplate {
     // Determines the placeholders available in the
     private static Map<String, ParserContextPair> determinePlaceholders(final String templatedString) {
         final ImmutableMap.Builder<String, ParserContextPair> mapBuilder = ImmutableMap.builder();
-        // scan the string for the token `<pl:.+:.+(_.+)?>`
+        // scan the string for the token `<pl_.+_.+(_.+)?>`
         final Matcher matcher = ComponentTemplate.PLACEHOLDER_TAG.matcher(templatedString);
         while (matcher.find()) {
             final String entry = matcher.group("token"); // entire thing needed for template matching
@@ -81,7 +81,10 @@ public final class ComponentTemplate {
 
     public Component parse(@Nullable final Object associatedObject, final Map<String, Component> arbitraryTokens) {
         final List<Template> templateList = new ArrayList<>();
-        this.detectedPlaceholders.forEach((key, component) -> templateList.add(Template.of(key, component.createComponent(associatedObject))));
+        System.out.println("Sending " + this.templatedString + " to MiniMessage");
+        // TODO: If/when MiniMessage works with components again, remove the plain serializer call.
+        this.detectedPlaceholders.forEach((key, component) -> templateList.add(
+                Template.of(key, PlainComponentSerializer.plain().serialize(component.createComponent(associatedObject)))));
         arbitraryTokens.forEach((key, component) -> templateList.add(Template.of(key, component)));
         return MiniMessage.get().parse(this.templatedString, templateList);
     }
