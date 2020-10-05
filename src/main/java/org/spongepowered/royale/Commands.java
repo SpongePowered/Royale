@@ -54,7 +54,6 @@ import org.spongepowered.royale.instance.InstanceManager;
 import org.spongepowered.royale.instance.InstanceType;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
-import org.spongepowered.royale.template.ComponentTemplate;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -353,7 +352,7 @@ final class Commands {
                     final InstanceType instanceType = context.requireOne(Commands.INSTANCE_TYPE_PARAMETER);
                     final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(instanceType.getKey().getValue() + ".conf");
                     final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
-                            InstanceTypeConfiguration.class, Constants.Map.DEFAULT_OPTIONS, configPath);
+                            InstanceTypeConfiguration.class, Constants.Map.CONFIGURATE_OPTIONS, configPath);
 
                     try {
                         adapter.load();
@@ -517,8 +516,6 @@ final class Commands {
                 .setExtendedDescription(Component.text("Displays available commands")) // TODO Do this better
                 .setExecutor(context -> {
                     context.sendMessage(Component.text("Some help should go here..."));
-                    context.sendMessage(new ComponentTemplate("Your name is <pl_sponge:name>").parse(context.getCause().root(),
-                            Collections.emptyMap()));
                     return CommandResult.success();
                 })
                 .child(Commands.createCommand(random, instanceManager), "create", "c")

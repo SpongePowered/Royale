@@ -24,7 +24,9 @@
  */
 package org.spongepowered.royale;
 
+import com.google.common.reflect.TypeToken;
 import ninja.leaping.configurate.ConfigurationOptions;
+import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
@@ -38,6 +40,7 @@ import org.spongepowered.api.world.difficulty.Difficulties;
 import org.spongepowered.api.world.dimension.DimensionTypes;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.template.ComponentTemplate;
+import org.spongepowered.royale.template.ComponentTemplateTypeSerializer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -61,7 +64,11 @@ public class Constants {
 
         public static final Path INSTANCE_TYPES_FOLDER = Royale.instance.getConfigFile().resolve("types");
 
-        public static final ConfigurationOptions DEFAULT_OPTIONS = ConfigurationOptions.defaults();
+        private static final TypeSerializerCollection TYPE_SERIALIZER_COLLECTION = TypeSerializerCollection.defaults()
+                .newChild()
+                .register(TypeToken.of(ComponentTemplate.class), new ComponentTemplateTypeSerializer());
+        public static final ConfigurationOptions CONFIGURATE_OPTIONS = ConfigurationOptions.defaults()
+                .withSerializers(Map.TYPE_SERIALIZER_COLLECTION);
 
         public static final List<ResourceKey> DEFAULT_MAP_MUTATOR_IDS = new ArrayList<>();
 

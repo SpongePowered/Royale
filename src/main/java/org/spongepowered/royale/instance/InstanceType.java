@@ -26,7 +26,6 @@ package org.spongepowered.royale.instance;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.NamedCatalogType;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
@@ -40,7 +39,6 @@ import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.instance.gen.InstanceMutatorPipeline;
 import org.spongepowered.royale.template.ComponentTemplate;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -428,7 +426,7 @@ public final class InstanceType implements NamedCatalogType {
 
             final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(this.key.getValue() + ".conf");
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
-                    .class, Constants.Map.DEFAULT_OPTIONS, configPath);
+                    .class, Constants.Map.CONFIGURATE_OPTIONS, configPath);
 
             try {
                 adapter.load();

@@ -24,6 +24,7 @@
  */
 package org.spongepowered.royale.configuration;
 
+import com.google.common.reflect.TypeToken;
 import com.typesafe.config.ConfigRenderOptions;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.ConfigurationOptions;
@@ -32,6 +33,9 @@ import ninja.leaping.configurate.commented.SimpleCommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMapper;
 import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
+import org.spongepowered.royale.template.ComponentTemplate;
+import org.spongepowered.royale.template.ComponentTemplateTypeSerializer;
 
 import java.io.IOException;
 import java.nio.file.Files;
