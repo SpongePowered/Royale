@@ -65,7 +65,7 @@ class EnchantedItemArchetype implements ItemArchetype {
                 .build();
 
         final List<Enchantment> enchantmentsToApply = new ArrayList<>();
-        for (Map.Entry<EnchantmentType, VariableAmount> entry : this.enchantments.entrySet()) {
+        for (final Map.Entry<EnchantmentType, VariableAmount> entry : this.enchantments.entrySet()) {
             final int level = entry.getValue().getFlooredAmount(rand);
             if (level > 0) {
                 enchantmentsToApply.add(Enchantment.builder().type(entry.getKey()).level(level).build());

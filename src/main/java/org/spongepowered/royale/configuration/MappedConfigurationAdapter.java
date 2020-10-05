@@ -27,6 +27,7 @@ package org.spongepowered.royale.configuration;
 import com.typesafe.config.ConfigRenderOptions;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.ConfigurationOptions;
+import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.commented.SimpleCommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.objectmapping.ObjectMapper;
@@ -55,14 +56,14 @@ public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
                 .setPath(configFile).build();
         try {
             this.mapper = ObjectMapper.forClass(configClass).bindToNew();
-        } catch (ObjectMappingException e) {
+        } catch (final ObjectMappingException e) {
             throw new RuntimeException("Failed to construct mapper for config class [" + configClass + "]!");
         }
-        this.root = SimpleCommentedConfigurationNode.root(options);
+        this.root = CommentedConfigurationNode.root(options);
         if (Files.notExists(configFile)) {
             try {
                 this.save();
-            } catch (IOException | ObjectMappingException e) {
+            } catch (final IOException | ObjectMappingException e) {
                 throw new RuntimeException("Failed to save config for class [" + configClass + "] from [" + configFile + "]!", e);
             }
         }

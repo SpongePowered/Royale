@@ -26,6 +26,7 @@ package org.spongepowered.royale.instance;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.NamedCatalogType;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
@@ -37,7 +38,9 @@ import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.instance.gen.InstanceMutatorPipeline;
+import org.spongepowered.royale.template.ComponentTemplate;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -51,7 +54,7 @@ public final class InstanceType implements NamedCatalogType {
     private final ResourceKey key;
     private final InstanceMutatorPipeline mutatorPipeline;
     private String name;
-    private TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
+    private ComponentTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
     private final List<ItemStackSnapshot> defaultItems;
     private long roundStartLength, roundLength, roundEndLength;
     private int centerX, centerZ, minX, minY, minZ, maxX, maxY, maxZ, automaticStartPlayerCount, worldBorderX, worldBorderZ, worldBorderRadius;
@@ -112,15 +115,15 @@ public final class InstanceType implements NamedCatalogType {
         return this.roundEndLength;
     }
 
-    public TextTemplate getNameTemplate() {
+    public ComponentTemplate getNameTemplate() {
         return this.nameTemplate;
     }
 
-    public TextTemplate getRoundStartTemplate() {
+    public ComponentTemplate getRoundStartTemplate() {
         return this.roundStartTemplate;
     }
 
-    public TextTemplate getRoundEndTemplate() {
+    public ComponentTemplate getRoundEndTemplate() {
         return this.roundEndTemplate;
     }
 
@@ -200,7 +203,7 @@ public final class InstanceType implements NamedCatalogType {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        InstanceType instanceType = (InstanceType) o;
+        final InstanceType instanceType = (InstanceType) o;
         return java.util.Objects.equals(this.key, instanceType.key);
     }
 
@@ -241,7 +244,7 @@ public final class InstanceType implements NamedCatalogType {
 
         ResourceKey key;
         String name;
-        TextTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
+        ComponentTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
         List<ItemStackSnapshot> defaultItems;
         long roundStartLength, roundLength, roundEndLength;
         int automaticStartPlayerCount;
@@ -356,12 +359,12 @@ public final class InstanceType implements NamedCatalogType {
             return this;
         }
 
-        public Builder nameTemplate(TextTemplate template) {
+        public Builder nameTemplate(final ComponentTemplate template) {
             this.nameTemplate = template;
             return this;
         }
 
-        public Builder roundStartTemplate(TextTemplate template) {
+        public Builder roundStartTemplate(final ComponentTemplate template) {
             this.roundStartTemplate = template;
             return this;
         }
@@ -376,7 +379,7 @@ public final class InstanceType implements NamedCatalogType {
             return this;
         }
 
-        public Builder roundEndTemplate(TextTemplate template) {
+        public Builder roundEndTemplate(final ComponentTemplate template) {
             this.roundEndTemplate = template;
             return this;
         }
@@ -411,7 +414,7 @@ public final class InstanceType implements NamedCatalogType {
 
         public Builder mutator(final ResourceKey key) {
             Objects.requireNonNull(key);
-            Optional<InstanceMutator> mutator = Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, key);
+            final Optional<InstanceMutator> mutator = Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, key);
             mutator.ifPresent(instanceMutator -> this.mutators.add(instanceMutator));
             return this;
         }
@@ -427,33 +430,37 @@ public final class InstanceType implements NamedCatalogType {
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
                     .class, Constants.Map.DEFAULT_OPTIONS, configPath);
 
-            adapter.load();
-            final InstanceTypeConfiguration config = adapter.getConfig();
-            config.general.name = "Last Man Standing";
-            config.general.nameTemplate = this.nameTemplate;
-            config.general.centerX = this.centerX;
-            config.general.centerZ = this.centerZ;
-            config.general.minX = this.minX;
-            config.general.minY = this.minY;
-            config.general.minZ = this.minZ;
-            config.general.maxX = this.maxX;
-            config.general.maxY = this.maxY;
-            config.general.maxZ = this.maxZ;
-            config.general.worldBorderCenterX = this.worldBorderX;
-            config.general.worldBorderCenterZ = this.worldBorderZ;
-            config.general.worldBorderRadius = this.worldBorderRadius;
-            config.general.mapMutators.clear();
-            config.general.mapMutators.addAll(this.mutators.stream().map(InstanceMutator::getKey).collect(Collectors.toList()));
+            try {
+                adapter.load();
+                final InstanceTypeConfiguration config = adapter.getConfig();
+                config.general.name = "Last Man Standing";
+                config.general.nameTemplate = this.nameTemplate;
+                config.general.centerX = this.centerX;
+                config.general.centerZ = this.centerZ;
+                config.general.minX = this.minX;
+                config.general.minY = this.minY;
+                config.general.minZ = this.minZ;
+                config.general.maxX = this.maxX;
+                config.general.maxY = this.maxY;
+                config.general.maxZ = this.maxZ;
+                config.general.worldBorderCenterX = this.worldBorderX;
+                config.general.worldBorderCenterZ = this.worldBorderZ;
+                config.general.worldBorderRadius = this.worldBorderRadius;
+                config.general.mapMutators.clear();
+                config.general.mapMutators.addAll(this.mutators.stream().map(InstanceMutator::getKey).collect(Collectors.toList()));
 
-            config.round.defaultItems.clear();
-            config.round.defaultItems.addAll(this.defaultItems);
-            config.round.start = this.roundStartLength;
-            config.round.startTemplate = this.roundStartTemplate;
-            config.round.length = this.roundLength;
-            config.round.end = this.roundEndLength;
-            config.round.endTemplate = this.roundEndTemplate;
-            config.round.automaticStartPlayerCount = this.automaticStartPlayerCount;
-            adapter.save();
+                config.round.defaultItems.clear();
+                config.round.defaultItems.addAll(this.defaultItems);
+                config.round.start = this.roundStartLength;
+                config.round.startTemplate = this.roundStartTemplate;
+                config.round.length = this.roundLength;
+                config.round.end = this.roundEndLength;
+                config.round.endTemplate = this.roundEndTemplate;
+                config.round.automaticStartPlayerCount = this.automaticStartPlayerCount;
+                adapter.save();
+            } catch (final Exception ex) {
+                throw new RuntimeException(ex);
+            }
 
             return new InstanceType(this);
         }

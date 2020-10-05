@@ -209,7 +209,7 @@ public final class Instance {
         }
 
         checkState(!this.unusedSpawns.isEmpty(), "No spawn available for player!");
-        Vector3d player_spawn = this.unusedSpawns.pop();
+        final Vector3d player_spawn = this.unusedSpawns.pop();
 
         this.playerSpawns.put(player.getUniqueId(), player_spawn);
 
@@ -217,11 +217,11 @@ public final class Instance {
 
         player.setLocation(ServerLocation.of(world, player_spawn));
 
-        int playerCount = this.instanceType.getAutomaticStartPlayerCount();
+        final int playerCount = this.instanceType.getAutomaticStartPlayerCount();
         if (playerCount == this.registeredPlayers.size() && this.state == State.IDLE) {
             try {
                 this.instanceManager.startInstance(this.worldKey);
-            } catch (UnknownInstanceException e) {
+            } catch (final UnknownInstanceException e) {
                 e.printStackTrace();
             }
         }
@@ -244,7 +244,7 @@ public final class Instance {
         if (first) {
             player.getInventory().clear();
 
-            for (ItemStackSnapshot snapshot : this.instanceType.getDefaultItems()) {
+            for (final ItemStackSnapshot snapshot : this.instanceType.getDefaultItems()) {
                 if (snapshot.getType() == ItemTypes.ELYTRA.get()) {
                     player.setChest(snapshot.createStack());
                 } else {
@@ -258,10 +258,10 @@ public final class Instance {
         player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
     }
 
-    private void onStateAdvance(State next) {
+    private void onStateAdvance(final State next) {
         if (next.doesCancelTasksOnAdvance()) {
             // Cancel previous tasks when advancing a state. Prevents stale state tasks
-            for (UUID uuid : this.tasks) {
+            for (final UUID uuid : this.tasks) {
                 final ScheduledTask task = Sponge.getServer().getScheduler().getTaskById(uuid).orElse(null);
                 if (task != null) {
                     if (task.getTask().getConsumer() instanceof InstanceTask) {

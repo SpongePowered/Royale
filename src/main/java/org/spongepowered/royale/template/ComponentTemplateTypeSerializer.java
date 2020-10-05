@@ -22,36 +22,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.royale.instance.gen.loot;
+package org.spongepowered.royale.template;
 
-import org.spongepowered.api.item.ItemType;
-import org.spongepowered.api.item.inventory.ItemStack;
-import org.spongepowered.api.util.weighted.VariableAmount;
+import com.google.common.reflect.TypeToken;
+import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.objectmapping.ObjectMappingException;
+import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.Objects;
-import java.util.Random;
+public final class ComponentTemplateTypeSerializer implements TypeSerializer<ComponentTemplate> {
 
-class BasicItemArchetype implements ItemArchetype {
-
-    private final ItemType type;
-    private final VariableAmount quantity;
-
-    BasicItemArchetype(final ItemType type, final VariableAmount quantity) {
-        this.type = Objects.requireNonNull(type);
-        this.quantity = Objects.requireNonNull(quantity);
+    @Override
+    public @Nullable ComponentTemplate deserialize(@NonNull final TypeToken<?> type, @NonNull final ConfigurationNode value)
+            throws ObjectMappingException {
+        final String string = value.getString();
+        if (string == null) {
+            return null;
+        }
+        return new ComponentTemplate(string);
     }
 
     @Override
-    public ItemStack create(final Random rand) {
-        final int amount = this.quantity.getFlooredAmount(rand);
-        return ItemStack.builder().itemType(this.type).quantity(amount).build();
+    public void serialize(@NonNull final TypeToken<?> type, @Nullable final ComponentTemplate obj, @NonNull final ConfigurationNode value)
+            throws ObjectMappingException {
+        if (obj != null) {
+            value.setValue(obj.getTemplatedString());
+        } else {
+            value.setValue(null);
+        }
     }
 
-    public final ItemType getType() {
-        return this.type;
-    }
-
-    final VariableAmount getQuantity() {
-        return this.quantity;
-    }
 }

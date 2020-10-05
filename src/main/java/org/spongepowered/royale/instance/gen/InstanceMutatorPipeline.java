@@ -54,6 +54,8 @@ public final class InstanceMutatorPipeline {
     }
 
     public void mutate(final Instance instance, final boolean tryFastPass) {
+        // TODO: For compiling and running, this has been commented out
+        /*
         final ServerWorld world = instance.getWorld()
                 .orElseThrow(() -> new RuntimeException(String.format("Attempting to mutate instance '%s' but it's world is not loaded!"
                         , instance.getWorldKey())));
@@ -73,8 +75,8 @@ public final class InstanceMutatorPipeline {
                 Royale.instance.getPlugin().getLogger().info("Mutating instance [{}}] with mutator [{}]...", instance.getWorldKey(), mutator.getKey());
             }
 
-            for (Map.Entry<Vector3i, BlockState> entry : instance.getPositionCache().entrySet()) {
-                for (InstanceMutator mutator : this.mutators) {
+            for (final Map.Entry<Vector3i, BlockState> entry : instance.getPositionCache().entrySet()) {
+                for (final InstanceMutator mutator : this.mutators) {
                     mutator.visitBlock(instance, area, area.getBlock(entry.getKey()), entry.getKey().getX(), entry.getKey().getY(),
                             entry.getKey().getZ());
                 }
@@ -86,18 +88,19 @@ public final class InstanceMutatorPipeline {
             Royale.instance.getPlugin().getLogger().info("Mutating instance [{}}] with mutator [{}]...", instance.getWorldKey(), mutator.getKey());
         }
 
-        Vector3i size = instance.getType().getBlockSize();
+        final Vector3i size = instance.getType().getBlockSize();
         Royale.instance.getPlugin().getLogger().error("[Mutator] Performing slow pass for instance {} - {} blocks total.", instance.getWorldKey(), size.getX() *
                 size.getY() * size.getZ());
 
         area.getBlockWorker().iterate((v, x, y, z) -> {
-            for (InstanceMutator mutator : this.mutators) {
-                BlockState expectedState = mutator.visitBlock(instance, area, v.getBlock(x, y, z), x, y, z);
+            for (final InstanceMutator mutator : this.mutators) {
+                final BlockState expectedState = mutator.visitBlock(instance, area, v.getBlock(x, y, z), x, y, z);
                 if (expectedState != null) {
                     instance.getPositionCache().put(new Vector3i(x, y, z), expectedState);
                 }
             }
         });
+         */
     }
 
     private boolean canPerformFastPass(final Instance instance, final BoundedWorldView<?> extent) {
@@ -108,7 +111,7 @@ public final class InstanceMutatorPipeline {
             return false;
         }
 
-        for (Map.Entry<Vector3i, BlockState> entry : instance.getPositionCache().entrySet()) {
+        for (final Map.Entry<Vector3i, BlockState> entry : instance.getPositionCache().entrySet()) {
             try {
                 if (!extent.getBlock(entry.getKey()).equals(entry.getValue())) {
                     Royale.instance.getPlugin().getLogger().error("[Mutator] Mutator mismatch! At position {}, expected {} but found {}. Falling back to slow "

@@ -24,6 +24,7 @@
  */
 package org.spongepowered.royale.instance.scoreboard;
 
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -66,19 +67,19 @@ public final class InstanceScoreboard {
     public InstanceScoreboard(final Instance instance) {
         this.scoreboard = Scoreboard.builder().build();
         this.objective =
-                Objective.builder().name("main").displayName(TextComponent.of(instance.getWorldKey().toString(), NamedTextColor.GREEN))
+                Objective.builder().name("main").displayName(Component.text(instance.getWorldKey().toString(), NamedTextColor.GREEN))
                         .criterion(Criteria.DUMMY).build();
 
         // Instance type
-        this.instanceTypeScore = this.objective.getOrCreateScore(TextComponent.of(instance.getType().getKey().toString(), NamedTextColor.RED));
+        this.instanceTypeScore = this.objective.getOrCreateScore(Component.text(instance.getType().getKey().toString(), NamedTextColor.RED));
         this.instanceTypeScore.setScore(0);
 
         // Dashes
-        this.dashesScore = this.objective.getOrCreateScore(TextComponent.of("----------------"));
+        this.dashesScore = this.objective.getOrCreateScore(Component.text("----------------"));
         this.dashesScore.setScore(0);
 
         // Empty line
-        this.emptyLineScore = this.objective.getOrCreateScore(TextComponent.empty());
+        this.emptyLineScore = this.objective.getOrCreateScore(Component.empty());
         this.emptyLineScore.setScore(0);
 
         this.scoreboard.addObjective(this.objective);
@@ -92,10 +93,10 @@ public final class InstanceScoreboard {
     }
 
     public void addPlayer(final ServerPlayer player) {
-        final Score score = this.objective.getOrCreateScore(TextComponent.of(player.getName()));
+        final Score score = this.objective.getOrCreateScore(Component.text(player.getName()));
         score.setScore(0);
 
-        Team team = Team.builder().name(player.getName()).build();
+        final Team team = Team.builder().name(player.getName()).build();
         team.addMember(player.getTeamRepresentation());
         this.scoreboard.registerTeam(team);
 
@@ -105,12 +106,12 @@ public final class InstanceScoreboard {
         this.sortScoreboard();
     }
 
-    public void killPlayer(Player player) {
+    public void killPlayer(final Player player) {
         if (!this.playerData.containsKey(player.getUniqueId())) {
             throw new IllegalArgumentException(String.format("Player %s is not on this scoreboard!", player.getName()));
         }
-        PlayerData data = this.playerData.get(player.getUniqueId());
-        data.team.setPrefix(TextComponent.of("", null, TextDecoration.STRIKETHROUGH));
+        final PlayerData data = this.playerData.get(player.getUniqueId());
+        data.team.setPrefix(Component.text("", null, TextDecoration.STRIKETHROUGH));
         data.dead = true;
 
         this.sortScoreboard();
@@ -129,7 +130,7 @@ public final class InstanceScoreboard {
         }
 
         // Inverse alphabetical order
-        Comparator<PlayerData> comparator = (p1, p2) -> -p1.name.compareTo(p2.name);
+        final Comparator<PlayerData> comparator = (p1, p2) -> -p1.name.compareTo(p2.name);
 
         dead.sort(comparator);
         alive.sort(comparator);

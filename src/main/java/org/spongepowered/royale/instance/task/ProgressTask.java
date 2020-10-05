@@ -25,23 +25,21 @@
 package org.spongepowered.royale.instance.task;
 
 import net.kyori.adventure.bossbar.BossBar;
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.Component;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.instance.Instance;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public final class ProgressTask extends InstanceTask {
 
-    private final BossBar bossBar = BossBar.of(
-            TextComponent.of("Time remaining"),
+    private final BossBar bossBar = BossBar.bossBar(
+            Component.text("Time remaining"),
             0.0f,
             BossBar.Color.GREEN,
             BossBar.Overlay.PROGRESS);
@@ -68,7 +66,7 @@ public final class ProgressTask extends InstanceTask {
     }
 
     @Override
-    public void accept(ScheduledTask task) {
+    public void accept(final ScheduledTask task) {
         this.handle = task;
 
         final ServerWorld world = this.getInstance().getWorld().orElse(null);
@@ -90,12 +88,12 @@ public final class ProgressTask extends InstanceTask {
                 this.bossBar.color(BossBar.Color.GREEN);
             }
 
-            int seconds = (int) this.roundLengthRemaining % 60;
+            final int seconds = (int) this.roundLengthRemaining % 60;
             if (this.roundLengthRemaining > 60) {
-                int minutes = (int) this.roundLengthRemaining / 60;
-                this.bossBar.name(TextComponent.of(String.format("Time remaining: %02d:%02d", minutes, seconds)));
+                final int minutes = (int) this.roundLengthRemaining / 60;
+                this.bossBar.name(Component.text(String.format("Time remaining: %02d:%02d", minutes, seconds)));
             } else {
-                this.bossBar.name(TextComponent.of(String.format("Time remaining: %02d", seconds)));
+                this.bossBar.name(Component.text(String.format("Time remaining: %02d", seconds)));
             }
 
             for (final ServerPlayer player : world.getPlayers()) {

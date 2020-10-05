@@ -27,9 +27,9 @@ package org.spongepowered.royale.instance.configuration.category;
 import ninja.leaping.configurate.objectmapping.Setting;
 import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.text.TextTemplate;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.configuration.AbstractConfigurationCategory;
+import org.spongepowered.royale.template.ComponentTemplate;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ public final class GeneralCategory extends AbstractConfigurationCategory {
     public String name = null;
 
     @Setting(value = "name-template", comment = "Template used to display the name to the user.")
-    public TextTemplate nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
+    public ComponentTemplate nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
 
     @Setting(value = "center-x", comment = "The center of the map on the x-axis. 'min-x' and 'max-x' are relative to this coordinate.")
     public int centerX = Constants.Map.DEFAULT_CENTER_X;

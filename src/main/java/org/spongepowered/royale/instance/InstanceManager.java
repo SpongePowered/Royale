@@ -102,7 +102,7 @@ public final class InstanceManager {
             throw new InstanceAlreadyExistsException(key.toString());
         }
 
-        Instance instance;
+        final Instance instance;
         ServerWorld world = this.server.getWorldManager().getWorld(key).orElse(null);
 
         if (world == null) {
@@ -173,7 +173,7 @@ public final class InstanceManager {
                 .orElseThrow(() -> new RuntimeException("Lobby world was not found!"));
 
         // Move everyone out
-        for (ServerPlayer player : world.getPlayers()) {
+        for (final ServerPlayer player : world.getPlayers()) {
             if (instance.isPlayerRegistered(player.getUniqueId())) {
                 if (player.isRemoved()) {
                     this.forceRespawning.add(player.getUniqueId());
@@ -381,10 +381,10 @@ public final class InstanceManager {
     public void onChangeSign(final ChangeSignEvent event, @Root final ServerPlayer player) {
         if (this.isTpSign(event.getText().get())) {
             if (player.hasPermission(Constants.Permissions.ADMIN)) {
-                player.sendMessage(TextComponent.of("Successfully created world teleportation sign!", NamedTextColor.GREEN));
+                player.sendMessage(Component.text("Successfully created world teleportation sign!", NamedTextColor.GREEN));
                 event.getText().set(0, event.getText().get(0).colorIfAbsent(NamedTextColor.AQUA));
             } else {
-                player.sendMessage(TextComponent.of("You do not have permission to create a world teleportation sign!", NamedTextColor.RED));
+                player.sendMessage(Component.text("You do not have permission to create a world teleportation sign!", NamedTextColor.RED));
                 event.setCancelled(true);
             }
         }
@@ -405,22 +405,22 @@ public final class InstanceManager {
 
             block.getLocation().flatMap(Location::getBlockEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
                 if (this.isTpSign(lines)) {
-                    String name = PlainComponentSerializer.plain().serialize(lines.get(1));
-                    Optional<Instance> optInstance = this.getInstance(ResourceKey.resolve(name));
+                    final String name = PlainComponentSerializer.plain().serialize(lines.get(1));
+                    final Optional<Instance> optInstance = this.getInstance(ResourceKey.resolve(name));
                     if (optInstance.isPresent()) {
                         if (!optInstance.get().canRegisterMorePlayers()) {
-                            player.sendMessage(TextComponent.of("World is full!", NamedTextColor.RED));
+                            player.sendMessage(Component.text("World is full!", NamedTextColor.RED));
                             return;
                         }
-                        player.sendMessage(TextComponent.of("Joining world " + name, NamedTextColor.GREEN));
+                        player.sendMessage(Component.text("Joining world " + name, NamedTextColor.GREEN));
                         optInstance.get().registerPlayer(player);
                         optInstance.get().spawnPlayer(player);
                     } else {
                         if (name.equals("")) {
-                            Collection<Instance> instances = this.getAll();
+                            final Collection<Instance> instances = this.getAll();
                             if (instances.size() != 1) {
                                 player.sendMessage(
-                                        TextComponent.of(String.format("Unable to automatically join select - there are %s to choose from.",
+                                        Component.text(String.format("Unable to automatically join select - there are %s to choose from.",
                                                                                         instances.size()), NamedTextColor.RED));
                                 return;
 
@@ -431,7 +431,7 @@ public final class InstanceManager {
                                 realInstance.spawnPlayer(player);
                             }
                         }
-                        player.sendMessage(TextComponent.of(String.format("World %s isn't up yet!", name), NamedTextColor.RED));
+                        player.sendMessage(Component.text(String.format("World %s isn't up yet!", name), NamedTextColor.RED));
                     }
                 }
             });
@@ -450,10 +450,10 @@ public final class InstanceManager {
         final Set<ResourceKey> uniqueWorlds = event.getTransactions().stream()
                 .map(x -> x.getOriginal().getWorld())
                 .collect(Collectors.toSet());
-        for (ResourceKey name : uniqueWorlds) {
+        for (final ResourceKey name : uniqueWorlds) {
             if (!this.getInstance(name).isPresent() && this.canUseFastPass.contains(name)) {
                 this.setWorldModified(name, true);
-                player.sendMessage(TextComponent.of(String.format(
+                player.sendMessage(Component.text(String.format(
                         "You have modified the world '%s' - mutators will take longer to run the next time an instance of this map is started.\n" +
                                 "If you make any modifications outside of the game, make sure to run '/worldmodified %s' so that your changes are "
                                 + "detected.",

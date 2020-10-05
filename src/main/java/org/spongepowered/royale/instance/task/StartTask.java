@@ -24,7 +24,7 @@
  */
 package org.spongepowered.royale.instance.task;
 
-import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.spongepowered.api.scheduler.ScheduledTask;
@@ -32,6 +32,7 @@ import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.instance.Instance;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -52,12 +53,14 @@ public final class StartTask extends InstanceTask {
 
         for (long i = instance.getType().getRoundStartLength(); i > 0; i--) {
 
-            this.startTitles.add(Title.of(TextComponent.of(i, NamedTextColor.DARK_RED), TextComponent.empty(), times));
+            this.startTitles.add(Title.title(Component.text(i, NamedTextColor.DARK_RED), Component.empty(), times));
 
             if (i == 3) {
-                this.startTitles.add(Title.of(TextComponent.of("2", NamedTextColor.RED), TextComponent.empty(), times));
-                this.startTitles.add(Title.of(TextComponent.of("1", NamedTextColor.GOLD), TextComponent.empty(), times));
-                this.startTitles.add(Title.of(instance.getType().getRoundStartTemplate().apply().build(), TextComponent.empty(), times));
+                this.startTitles.add(Title.title(Component.text("2", NamedTextColor.RED), Component.empty(), times));
+                this.startTitles.add(Title.title(Component.text("1", NamedTextColor.GOLD), Component.empty(), times));
+                this.startTitles.add(Title.title(instance.getType().getRoundStartTemplate().parse(null, Collections.emptyMap()),
+                        Component.empty(),
+                        times));
                 break;
             }
         }

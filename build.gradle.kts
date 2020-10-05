@@ -15,6 +15,7 @@ repositories {
 
 dependencies {
     implementation("org.spongepowered:spongeapi:8.+")
+    implementation("net.kyori:adventure-text-minimessage:4.0.0-SNAPSHOT")
     implementation("commons-io:commons-io:2.5")
 }
 

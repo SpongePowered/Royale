@@ -25,6 +25,7 @@
 package org.spongepowered.royale.instance.task;
 
 import com.google.common.collect.Lists;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
@@ -61,9 +62,9 @@ import java.util.Random;
 
 public final class CleanupTask extends InstanceTask {
 
-    private final Title title = Title.of(
-            TextComponent.of("Survive!", NamedTextColor.RED),
-            TextComponent.empty(), // TODO is this the right way to do it?
+    private final Title title = Title.title(
+            Component.text("Survive!", NamedTextColor.RED),
+            Component.empty(), // TODO is this the right way to do it?
             Title.Times.of(Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(2)));
     private ScheduledTask handle;
     private long duration = 0;
@@ -82,7 +83,7 @@ public final class CleanupTask extends InstanceTask {
 
         if (world != null && world.isLoaded()) {
             if (this.duration < 10) {
-                for (ServerPlayer player : world.getPlayers()) {
+                for (final ServerPlayer player : world.getPlayers()) {
                     if (!this.getInstance().isPlayerRegistered(player.getUniqueId())) {
                         continue;
                     }
@@ -92,7 +93,7 @@ public final class CleanupTask extends InstanceTask {
                     }
 
                     final Vector3d location = player.getLocation().getPosition();
-                    final Human human = (Human) world.createEntity(EntityTypes.HUMAN.get(), location);
+                    final Human human = world.createEntity(EntityTypes.HUMAN.get(), location);
 
                     ServerLocation spawnLocation = null;
 
@@ -121,7 +122,7 @@ public final class CleanupTask extends InstanceTask {
                         final GoalExecutor<Agent> normalGoal = human.getGoal(GoalExecutorTypes.NORMAL.get()).orElse(null);
                         normalGoal.addGoal(0, SwimGoal.builder().swimChance(0.8f).build(human));
 
-                        float rangerChance = random.nextFloat();
+                        final float rangerChance = random.nextFloat();
 
                         boolean ranger = false;
 
@@ -130,7 +131,7 @@ public final class CleanupTask extends InstanceTask {
                                     RangedAttackAgainstAgentGoal.builder().moveSpeed(0.4D).attackRadius(20f).delayBetweenAttacks(10).build(
                                             human));
                             human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.BOW, 1));
-                            ItemStack tipped = ItemStack.of(ItemTypes.TIPPED_ARROW, 1);
+                            final ItemStack tipped = ItemStack.of(ItemTypes.TIPPED_ARROW, 1);
                             tipped.offer(Keys.POTION_EFFECTS, Lists.newArrayList(
                                     PotionEffect.of(PotionEffectTypes.GLOWING.get(), 1, 60),
                                     PotionEffect.of(PotionEffectTypes.SLOWNESS.get(), 1, 60)));
@@ -146,7 +147,7 @@ public final class CleanupTask extends InstanceTask {
                         normalGoal.addGoal(3, LookAtGoal.builder().maxDistance(8f).watch(ServerPlayer.class).build(human));
                         normalGoal.addGoal(3, LookRandomlyGoal.builder().build(human));
 
-                        human.offer(Keys.DISPLAY_NAME, TextComponent.of(ranger ? "Ranger" : "Swordsman",
+                        human.offer(Keys.DISPLAY_NAME, Component.text(ranger ? "Ranger" : "Swordsman",
                                 ranger ? NamedTextColor.GREEN : NamedTextColor.BLUE));
 
                         world.spawnEntity(human);
@@ -154,7 +155,7 @@ public final class CleanupTask extends InstanceTask {
                 }
             } else {
                 // Blow this place to pieces
-                for (ServerPlayer player : world.getPlayers()) {
+                for (final ServerPlayer player : world.getPlayers()) {
                     if (player.isRemoved() || player.gameMode().get() == GameModes.SPECTATOR.get()) {
                         continue;
                     }

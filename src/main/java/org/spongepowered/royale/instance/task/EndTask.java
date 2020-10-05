@@ -51,7 +51,7 @@ public final class EndTask extends InstanceTask {
     private Title winnerTitle;
     private long endLengthRemaining;
 
-    public EndTask(Instance instance, List<UUID> winners) {
+    public EndTask(final Instance instance, final List<UUID> winners) {
         super(instance);
         this.winners = winners;
         this.endLengthTotal = instance.getType().getRoundEndLength();
@@ -59,7 +59,7 @@ public final class EndTask extends InstanceTask {
     }
 
     @Override
-    public void accept(ScheduledTask task) {
+    public void accept(final ScheduledTask task) {
 
         this.handle = task;
 
@@ -79,22 +79,22 @@ public final class EndTask extends InstanceTask {
 
             final Component content =
                     winner.map(p -> LinearComponents.linear(NamedTextColor.GREEN, p.displayName().get(),
-                            NamedTextColor.WHITE, TextComponent.of(" is the winner!")))
-                            .orElseGet(() -> TextComponent.of("Draw", NamedTextColor.YELLOW));
+                            NamedTextColor.WHITE, Component.text(" is the winner!")))
+                            .orElseGet(() -> Component.text("Draw", NamedTextColor.YELLOW));
 
             final Component winnerContent = winner.isPresent() ?
-                    TextComponent.of("You are the winner!", NamedTextColor.GREEN) :
-                    TextComponent.of("Draw", NamedTextColor.YELLOW);
+                    Component.text("You are the winner!", NamedTextColor.GREEN) :
+                    Component.text("Draw", NamedTextColor.YELLOW);
 
-            this.title = Title.of(content, TextComponent.empty(),
+            this.title = Title.title(content, Component.empty(),
                     Title.Times.of(Duration.ZERO, Duration.ofSeconds(this.endLengthTotal - 1), Duration.ofSeconds(1)));
 
-            this.winnerTitle = Title.of(winnerContent, TextComponent.empty(),
+            this.winnerTitle = Title.title(winnerContent, Component.empty(),
                     Title.Times.of(Duration.ZERO, Duration.ofSeconds(this.endLengthTotal - 1), Duration.ofSeconds(1)));
 
             if (winner.isPresent()) {
                 winner.get().spawnParticles(ParticleEffect.builder()
-                                .type(ParticleTypes.FIREWORKS_SPARK)
+                                .type(ParticleTypes.FIREWORK)
                                 .quantity(30)
                                 .build(),
                         winner.get().getLocation().getPosition());
@@ -113,7 +113,7 @@ public final class EndTask extends InstanceTask {
 
                 this.getInstance().getServer().getBroadcastAudience()
                         .sendMessage(LinearComponents.linear(NamedTextColor.GREEN, winner.get().displayName().get(),
-                                NamedTextColor.WHITE, TextComponent.of(" has won the game!")));
+                                NamedTextColor.WHITE, Component.text(" has won the game!")));
                 Royale.instance.getPlugin().getLogger().info("Round finished!");
             }
         }
