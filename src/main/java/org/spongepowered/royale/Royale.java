@@ -27,6 +27,7 @@ package org.spongepowered.royale;
 import com.google.inject.Inject;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import org.spongepowered.api.Game;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
@@ -66,12 +67,12 @@ public final class Royale {
     private final Random random;
 
     @Inject
-    public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final EventManager eventManager) {
+    public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final Game game) {
         Royale.instance = this;
         this.plugin = plugin;
         this.configFile = configFile;
-        this.eventManager = eventManager;
-        this.instanceManager = new InstanceManager();
+        this.eventManager = game.getEventManager();
+        this.instanceManager = new InstanceManager(game);
         this.random = new Random();
     }
 
