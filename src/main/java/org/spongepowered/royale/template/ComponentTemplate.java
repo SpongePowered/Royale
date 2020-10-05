@@ -58,7 +58,7 @@ public final class ComponentTemplate {
     // Determines the placeholders available in the
     private static Map<String, ParserContextPair> determinePlaceholders(final String templatedString) {
         final ImmutableMap.Builder<String, ParserContextPair> mapBuilder = ImmutableMap.builder();
-        // scan the string for the token `<pl_.+_.+(_.+)?>`
+        // scan the string for the token `<pl_.+:.+(_.+)?>`
         final Matcher matcher = ComponentTemplate.PLACEHOLDER_TAG.matcher(templatedString);
         while (matcher.find()) {
             final String entry = matcher.group("token"); // entire thing needed for template matching
