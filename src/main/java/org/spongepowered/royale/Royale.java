@@ -25,6 +25,7 @@
 package org.spongepowered.royale;
 
 import com.google.inject.Inject;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import org.spongepowered.api.Game;
@@ -135,6 +136,6 @@ public final class Royale {
     @Listener
     public void onGameChat(final PlayerChatEvent event, @Root final Player player) {
         event.setCancelled(true);
-        player.sendMessage(Component.text("Chat has been disabled."));
+        player.sendMessage(Identity.nil(), Component.text("Chat has been disabled."));
     }
 }

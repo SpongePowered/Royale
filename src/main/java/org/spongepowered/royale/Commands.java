@@ -26,6 +26,7 @@ package org.spongepowered.royale;
 
 import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.LinearComponents;
 import net.kyori.adventure.text.TextComponent;
@@ -130,7 +131,7 @@ final class Commands {
                                         Constants.Map.MAXIMUM_WORLD_NAME_LENGTH)));
                     }
 
-                    context.sendMessage(
+                    context.sendMessage(Identity.nil(),
                             Component.text().content("Creating an instance from [")
                                     .append(Commands.format(NamedTextColor.GREEN, targetProperties.getKey().asString()))
                                     .append(Component.text("] using instance type "))
@@ -145,7 +146,7 @@ final class Commands {
                         throw new CommandException(Component.text(e.toString()), e);
                     }
 
-                    context.sendMessage(
+                    context.sendMessage(Identity.nil(),
                             Component.text().content("Created instance for [")
                                     .append(Commands.format(NamedTextColor.GREEN, targetProperties.getKey().asString()))
                                     .append(Component.text("]"))
@@ -154,8 +155,7 @@ final class Commands {
 
                     for (final ServerPlayer player : Sponge.getServer().getOnlinePlayers()) {
                         if (player.getWorld().getKey().equals(Constants.Map.Lobby.DEFAULT_LOBBY_KEY)) {
-
-                            player.sendMessage(Component.text().clickEvent(SpongeComponents.executeCallback(commandCause -> {
+                            player.sendMessage(Identity.nil(), Component.text().clickEvent(SpongeComponents.executeCallback(commandCause -> {
                                 final Optional<Instance> inst = instanceManager.getInstance(targetProperties.getKey());
                                 if (inst.isPresent()) {
                                     final ServerPlayer serverPlayer = (ServerPlayer) commandCause.root();
@@ -224,7 +224,7 @@ final class Commands {
                     final Optional<Instance> optInstance = instanceManager.getInstance(world.getKey());
                     if (!optInstance.isPresent() || optInstance.get().getState().equals(Instance.State.IDLE)) {
                         try {
-                            context.sendMessage(
+                            context.sendMessage(Identity.nil(),
                                     Component.text().content("Starting round countdown in [")
                                         .append(Commands.format(NamedTextColor.GREEN, world.getKey().toString()))
                                         .append(Component.text("]."))
@@ -238,7 +238,7 @@ final class Commands {
                             );
                         }
                     } else {
-                        context.sendMessage(Component.text("Round already in progress."));
+                        context.sendMessage(Identity.nil(), Component.text("Round already in progress."));
                     }
 
                     return CommandResult.success();
@@ -261,7 +261,7 @@ final class Commands {
                     if (optWorldProperties.isPresent()) {
                         final Optional<ServerWorld> opt = optWorldProperties.get().getWorld();
                         if (!opt.isPresent() && instanceManager.getInstance(optWorldProperties.get().getKey()).isPresent()) {
-                            context.sendMessage(
+                            context.sendMessage(Identity.nil(),
                                     Component.text(String.format("World %s was unloaded, but the instance still exists! Ending instance.",
                                             optWorldProperties.get().getKey()),
                                             NamedTextColor.YELLOW));
@@ -284,7 +284,7 @@ final class Commands {
                     final boolean force = context.requireOne(Commands.FORCE_PARAMETER);
 
                     try {
-                        context.sendMessage(Component.text()
+                        context.sendMessage(Identity.nil(), Component.text()
                                 .content(force ? "Forcibly e" : "E")
                                 .append(Component.text("nding round in ["))
                                 .append(Commands.format(NamedTextColor.GREEN, world.getKey().asString()))
@@ -327,7 +327,7 @@ final class Commands {
                                     .build());
                     }
 
-                    player.sendMessage(Component.text().content("Joining [")
+                    player.sendMessage(Identity.nil(), Component.text().content("Joining [")
                             .append(Commands.format(NamedTextColor.GREEN, world.getKey().asString()))
                             .append(Component.text("]."))
                             .build());
@@ -366,7 +366,7 @@ final class Commands {
 
                     instanceType.injectFromConfig(adapter.getConfig());
 
-                    context.sendMessage(Component.text().content("Reloaded configuration for instance type [")
+                    context.sendMessage(Identity.nil(), Component.text().content("Reloaded configuration for instance type [")
                             .append(Commands.format(NamedTextColor.LIGHT_PURPLE, instanceType.getKey().asString()))
                             .append(Component.text("]."))
                             .build());
@@ -390,7 +390,7 @@ final class Commands {
                     final SerializationBehavior serializationBehavior = context.requireOne(Commands.SERIALIZATION_BEHAVIOR_PARAMETER);
 
                     world.getProperties().setSerializationBehavior(serializationBehavior);
-                    context.sendMessage(Component.text().content("World [")
+                    context.sendMessage(Identity.nil(), Component.text().content("World [")
                             .append(Commands.format(NamedTextColor.GREEN, world.getKey().asString()))
                             .append(Component.text("] set to serialization behavior ["))
                             .append(Commands.format(NamedTextColor.YELLOW, serializationBehavior.getKey().asString()))
@@ -444,7 +444,7 @@ final class Commands {
                     final boolean modified = context.requireOne(Commands.MODIFIED_PARAMETER);
                     instanceManager.setWorldModified(properties.getKey(), modified);
 
-                    context.sendMessage(
+                    context.sendMessage(Identity.nil(),
                             Commands.format(NamedTextColor.GREEN, String.format("Set modified state of world %s to %s!", properties.getKey(), modified)));
                     return CommandResult.success();
                 })
@@ -462,13 +462,16 @@ final class Commands {
                         throw new CommandException(Commands.format(NamedTextColor.YELLOW, String.format("World %s is already loaded!", properties.getKey())));
                     }
 
-                    context.sendMessage(Commands.format(NamedTextColor.GREEN, String.format("Loading world %s...", properties.getKey())));
+                    context.sendMessage(Identity.nil(),
+                            Commands.format(NamedTextColor.GREEN, String.format("Loading world %s...", properties.getKey())));
                     final CompletableFuture<ServerWorld> future = Sponge.getServer().getWorldManager().loadWorld(properties);
                     future.whenComplete((world, throwable) -> {
                         if (throwable != null) {
-                            context.sendMessage(Commands.format(NamedTextColor.RED, String.format("Unable to load world %s", properties.getKey())));
+                            context.sendMessage(Identity.nil(),
+                                    Commands.format(NamedTextColor.RED, String.format("Unable to load world %s", properties.getKey())));
                         } else {
-                            context.sendMessage(Commands.format(NamedTextColor.GREEN, String.format("Successfully loaded world %s", properties.getKey())));
+                            context.sendMessage(Identity.nil(),
+                                    Commands.format(NamedTextColor.GREEN, String.format("Successfully loaded world %s", properties.getKey())));
                         }
                     });
 
@@ -495,13 +498,16 @@ final class Commands {
                                         properties.getKey())));
                     }
 
-                    context.sendMessage(Commands.format(NamedTextColor.GREEN, String.format("Unloading world %s...", properties.getKey())));
+                    context.sendMessage(Identity.nil(),
+                            Commands.format(NamedTextColor.GREEN, String.format("Unloading world %s...", properties.getKey())));
                     final CompletableFuture<Boolean> unloadFuture = Sponge.getServer().getWorldManager().unloadWorld(properties.getKey());
                     unloadFuture.whenComplete((result, throwable) -> {
                         if (throwable != null || !result) {
-                            context.sendMessage(Commands.format(NamedTextColor.RED, String.format("Unable to unload world %s", properties.getKey())));
+                            context.sendMessage(Identity.nil(),
+                                    Commands.format(NamedTextColor.RED, String.format("Unable to unload world %s", properties.getKey())));
                         } else {
-                            context.sendMessage(Commands.format(NamedTextColor.GREEN, String.format("Successfully unloaded world %s", properties.getKey())));
+                            context.sendMessage(Identity.nil(),
+                                    Commands.format(NamedTextColor.GREEN, String.format("Successfully unloaded world %s", properties.getKey())));
                         }
                     });
                     return CommandResult.success();
@@ -515,7 +521,7 @@ final class Commands {
                 .setShortDescription(Component.text("Displays available commands"))
                 .setExtendedDescription(Component.text("Displays available commands")) // TODO Do this better
                 .setExecutor(context -> {
-                    context.sendMessage(Component.text("Some help should go here..."));
+                    context.sendMessage(Identity.nil(), Component.text("Some help should go here..."));
                     return CommandResult.success();
                 })
                 .child(Commands.createCommand(random, instanceManager), "create", "c")

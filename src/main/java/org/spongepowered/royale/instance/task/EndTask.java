@@ -24,6 +24,7 @@
  */
 package org.spongepowered.royale.instance.task;
 
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.LinearComponents;
 import net.kyori.adventure.text.TextComponent;
@@ -112,7 +113,7 @@ public final class EndTask extends InstanceTask {
                 });
 
                 this.getInstance().getServer().getBroadcastAudience()
-                        .sendMessage(LinearComponents.linear(NamedTextColor.GREEN, winner.get().displayName().get(),
+                        .sendMessage(Identity.nil(), LinearComponents.linear(NamedTextColor.GREEN, winner.get().displayName().get(),
                                 NamedTextColor.WHITE, Component.text(" has won the game!")));
                 Royale.instance.getPlugin().getLogger().info("Round finished!");
             }

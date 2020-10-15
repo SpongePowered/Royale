@@ -16,7 +16,9 @@ repositories {
 
 dependencies {
     implementation("org.spongepowered:spongeapi:8.+")
-    implementation("net.kyori:adventure-text-minimessage:4.0.0-SNAPSHOT")
+    implementation("net.kyori:adventure-text-minimessage:4.0.0-SNAPSHOT") {
+        exclude(group = "net.kyori", module = "adventure-api")
+    }
     implementation("commons-io:commons-io:2.5")
 }
 
