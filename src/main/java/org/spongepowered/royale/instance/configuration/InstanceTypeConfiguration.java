@@ -24,8 +24,8 @@
  */
 package org.spongepowered.royale.instance.configuration;
 
-import ninja.leaping.configurate.objectmapping.Setting;
-import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Setting;
 import org.spongepowered.royale.configuration.AbstractConfiguration;
 import org.spongepowered.royale.instance.configuration.category.GeneralCategory;
 import org.spongepowered.royale.instance.configuration.category.RoundCategory;
@@ -33,7 +33,9 @@ import org.spongepowered.royale.instance.configuration.category.RoundCategory;
 @ConfigSerializable
 public final class InstanceTypeConfiguration extends AbstractConfiguration {
 
-    @Setting public final GeneralCategory general = new GeneralCategory();
+    @Setting
+    public GeneralCategory general;
 
-    @Setting public final RoundCategory round = new RoundCategory();
+    @Setting
+    public RoundCategory round;
 }

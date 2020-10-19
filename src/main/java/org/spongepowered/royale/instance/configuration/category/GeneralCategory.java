@@ -24,9 +24,10 @@
  */
 package org.spongepowered.royale.instance.configuration.category;
 
-import ninja.leaping.configurate.objectmapping.Setting;
-import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.ResourceKey;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Comment;
+import org.spongepowered.configurate.objectmapping.meta.Setting;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.configuration.AbstractConfigurationCategory;
 import org.spongepowered.royale.template.ComponentTemplate;
@@ -36,53 +37,63 @@ import java.util.List;
 @ConfigSerializable
 public final class GeneralCategory extends AbstractConfigurationCategory {
 
-    @Setting(comment = "Name of this type. Shown on the in-game scoreboard, etc.")
-    public String name = null;
+    @Setting
+    @Comment("Name of this type. Shown on the in-game scoreboard, etc.")
+    public String name;
 
-    @Setting(value = "name-template", comment = "Template used to display the name to the user.")
+    @Setting
+    @Comment("Template used to display the name to the user.")
     public ComponentTemplate nameTemplate = Constants.Map.DEFAULT_TEXT_TEMPLATE_NAME;
 
-    @Setting(value = "center-x", comment = "The center of the map on the x-axis. 'min-x' and 'max-x' are relative to this coordinate.")
+    @Setting
+    @Comment("The center of the map on the x-axis. 'min-x' and 'max-x' are relative to this coordinate.")
     public int centerX = Constants.Map.DEFAULT_CENTER_X;
 
-    @Setting(value = "center-z", comment = "The center of the map on the z-axis. 'min-z' and 'max-z' are relative to this coordinate.")
+    @Setting
+    @Comment("The center of the map on the z-axis. 'min-z' and 'max-z' are relative to this coordinate.")
     public int centerZ = Constants.Map.DEFAULT_CENTER_Z;
 
-    @Setting(value = "min-x",
-            comment = "The minimum x-coordinate of the map, relative to center-x. This is inclusive, so 'center-x + min-x' will be the actual "
-                    + "minimum coordinate.")
+    @Setting
+    @Comment("The minimum x-coordinate of the map, relative to center-x. This is inclusive, so 'center-x + min-x' will be the actual "
+                     + "minimum coordinate.")
     public int minX = -Constants.Map.DEFAULT_MAP_WIDTH;
 
-    @Setting(value = "max-x",
-            comment = "The maximum x-coordinate of the map, relative to center-x. This is exclusive, so 'center-x + max-x' will be one greater than"
-                    + " the actual maximum coordinate.")
+    @Setting
+    @Comment("The maximum x-coordinate of the map, relative to center-x. This is exclusive, so 'center-x + max-x' will be one greater than"
+                     + " the actual maximum coordinate.")
     public int maxX = Constants.Map.DEFAULT_MAP_WIDTH;
 
-    @Setting(value = "min-y", comment = "The minimum y-coordinate of the map.")
+    @Setting
+    @Comment("The minimum y-coordinate of the map.")
     public int minY = Constants.Map.DEFAULT_MAP_MIN_Y;
 
-    @Setting(value = "max-y", comment = "The maximum y-coordinate of the map.")
+    @Setting
+    @Comment("The maximum y-coordinate of the map.")
     public int maxY = Constants.Map.DEFAULT_MAP_MAX_Y;
 
-    @Setting(value = "min-z",
-            comment = "The minimum z-coordinate of the map, relative to center-z. This is inclusive, so 'center-z + min-z' will be the actual "
-                    + "minimum coordinate")
+    @Setting
+    @Comment("The minimum z-coordinate of the map, relative to center-z. This is inclusive, so 'center-z + min-z' will be the actual "
+                     + "minimum coordinate")
     public int minZ = -Constants.Map.DEFAULT_MAP_LENGTH;
 
-    @Setting(value = "max-z",
-            comment = "The maximum z-coordinate of the map, relative to center-z. This is exclusive, so 'center-z + max-z' will be one greater than"
-                    + " the actual maximum coordinate.")
+    @Setting
+    @Comment("The maximum z-coordinate of the map, relative to center-z. This is exclusive, so 'center-z + max-z' will be one greater than"
+                     + " the actual maximum coordinate.")
     public int maxZ = Constants.Map.DEFAULT_MAP_LENGTH;
 
-    @Setting(value = "world-border-center-x", comment = "The center of the world border on the x-axis")
+    @Setting
+    @Comment("The center of the world border on the x-axis")
     public int worldBorderCenterX = Constants.Map.DEFAULT_WORLD_BORDER_CENTER_X;
 
-    @Setting(value = "world-border-center-z", comment = "The center of the world border on the z-axis")
+    @Setting
+    @Comment("The center of the world border on the z-axis")
     public int worldBorderCenterZ = Constants.Map.DEFAULT_WORLD_BORDER_CENTER_Z;
 
-    @Setting(value = "world-border-radius", comment = "The radius of the world border")
+    @Setting
+    @Comment("The radius of the world border")
     public int worldBorderRadius = Constants.Map.DEFAULT_WORLD_BORDER_RADIUS;
 
-    @Setting(value = "map-mutators", comment = "Map Mutators to apply after the instance is loaded.")
+    @Setting
+    @Comment("Map Mutators to apply after the instance is loaded.")
     public List<ResourceKey> mapMutators = Constants.Map.DEFAULT_MAP_MUTATOR_IDS;
 }
