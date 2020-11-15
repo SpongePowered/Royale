@@ -183,12 +183,12 @@ public final class Loot {
         Loot.midRanged.add(     item(   ItemTypes.ARROW.get(),            range(5, 12)),  10);
         Loot.midRanged.add(     item(   ItemTypes.TRIDENT.get(),          fixed(1)),      2);
         Loot.midRanged.add(item(ItemTypes.LEATHER_CHESTPLATE.get(), fixed(1), false,
-                TextComponent.of("Tough", NamedTextColor.RED),
+                Component.text("Tough", NamedTextColor.RED),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.PROTECTION.get(), fixed(1));
                 }}), 1);
         Loot.midRanged.add(item(ItemTypes.LEATHER_LEGGINGS.get(), fixed(1), false,
-                TextComponent.of("Tough", NamedTextColor.RED),
+                Component.text("Tough", NamedTextColor.RED),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.PROTECTION.get(), fixed(1));
                 }}), 1);
@@ -203,18 +203,18 @@ public final class Loot {
 
         // rare_items
         Loot.rareItems.add(item(ItemTypes.DIAMOND_SWORD.get(), fixed(1), false,
-                TextComponent.of("Searing ", NamedTextColor.RED).append(TextComponent.of("Sponge", NamedTextColor.YELLOW)),
+                Component.text("Searing ", NamedTextColor.RED).append(Component.text("Sponge", NamedTextColor.YELLOW)),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.FIRE_ASPECT.get(), range(1, 2));
                     put(EnchantmentTypes.KNOCKBACK.get(), range(1, 2));
                 }}), 0.0018);
         Loot.rareItems.add(item(ItemTypes.SHIELD.get(), fixed(1), true,
-                TextComponent.of("Valiant ", NamedTextColor.GRAY).append(TextComponent.of("Sponge", NamedTextColor.YELLOW)),
+                Component.text("Valiant ", NamedTextColor.GRAY).append(Component.text("Sponge", NamedTextColor.YELLOW)),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.UNBREAKING.get(), range(1, 3));
                 }}), 0.0015);
         Loot.rareItems.add(item(ItemTypes.TRIDENT.get(), fixed(1), true,
-                TextComponent.of("Surfing ", NamedTextColor.CYAN).append(TextComponent.of("Sponge", NamedTextColor.YELLOW)),
+                Component.text("Surfing ", NamedTextColor.CYAN).append(Component.text("Sponge", NamedTextColor.YELLOW)),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.RIPTIDE.get(), fixed(1));
                 }}), 0.0018);    
@@ -266,7 +266,7 @@ public final class Loot {
     }
 
     public static LootTable<ItemArchetype> getTable(final String id) {
-        LootTable<ItemArchetype> table = Loot.lootTables.get(id);
+        final LootTable<ItemArchetype> table = Loot.lootTables.get(id);
         if (table == null) {
             throw new IllegalArgumentException(String.format("Loot table: %s not found!", id));
         }
