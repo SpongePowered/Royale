@@ -160,6 +160,7 @@ public final class Loot {
         Loot.basicRanged.add(   item(   ItemTypes.LEATHER_CHESTPLATE.get(),   fixed(1)),      1);
         Loot.basicRanged.add(   item(   ItemTypes.LEATHER_LEGGINGS.get(),     fixed(1)),      2);
         Loot.basicRanged.add(   item(   ItemTypes.LEATHER_BOOTS.get(),        fixed(1)),      3);
+        Loot.basicRanged.add(   item(   ItemTypes.TRIDENT.get(),              fixed(1)),      0.5);
         
         // mid_combat
         Loot.midCombat.add(     item(   ItemTypes.GOLDEN_AXE.get(),           fixed(1)),      12);
@@ -179,8 +180,8 @@ public final class Loot {
 
         // mid_ranged
         Loot.midRanged.add(     item(   ItemTypes.BOW.get(),              fixed(1)),      5);
-        Loot.midRanged.add(     item(   ItemTypes.ARROW.get(),            range(2, 6)),   10);
-        Loot.basicRanged.add(   item(   ItemTypes.TRIDENT.get(),          fixed(1)),      0.5);
+        Loot.midRanged.add(     item(   ItemTypes.ARROW.get(),            range(5, 12)),  10);
+        Loot.midRanged.add(     item(   ItemTypes.TRIDENT.get(),          fixed(1)),      2);
         Loot.midRanged.add(item(ItemTypes.LEATHER_CHESTPLATE.get(), fixed(1), false,
                 TextComponent.of("Tough", NamedTextColor.RED),
                 new HashMap<EnchantmentType, VariableAmount>() {{
@@ -199,22 +200,21 @@ public final class Loot {
         Loot.highCombat.add(    item(   ItemTypes.DIAMOND_CHESTPLATE.get(),   fixed(1)),      0.0016);
         Loot.highCombat.add(    item(   ItemTypes.DIAMOND_LEGGINGS.get(),     fixed(1)),      0.002);
         Loot.highCombat.add(    item(   ItemTypes.DIAMOND_BOOTS.get(),        fixed(1)),      0.0024);
-        Loot.basicRanged.add(   item(   ItemTypes.TRIDENT.get(),              fixed(1)),      0.004);
 
         // rare_items
         Loot.rareItems.add(item(ItemTypes.DIAMOND_SWORD.get(), fixed(1), false,
-                TextComponent.of("Flailing ", NamedTextColor.RED).append(TextComponent.of("Sponge", NamedTextColor.YELLOW)),
+                TextComponent.of("Searing ", NamedTextColor.RED).append(TextComponent.of("Sponge", NamedTextColor.YELLOW)),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.FIRE_ASPECT.get(), range(1, 2));
                     put(EnchantmentTypes.KNOCKBACK.get(), range(1, 2));
                 }}), 0.0018);
         Loot.rareItems.add(item(ItemTypes.SHIELD.get(), fixed(1), true,
-                TextComponent.of("Unbreaking ", NamedTextColor.GRAY).append(TextComponent.of("Sponge", NamedTextColor.YELLOW)),
+                TextComponent.of("Valiant ", NamedTextColor.GRAY).append(TextComponent.of("Sponge", NamedTextColor.YELLOW)),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.UNBREAKING.get(), range(1, 3));
                 }}), 0.0015);
         Loot.rareItems.add(item(ItemTypes.TRIDENT.get(), fixed(1), true,
-                TextComponent.of("Surfing ", NamedTextColor.CYAN).append(TextComponent.of("Spongie", NamedTextColor.YELLOW)),
+                TextComponent.of("Surfing ", NamedTextColor.CYAN).append(TextComponent.of("Sponge", NamedTextColor.YELLOW)),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.RIPTIDE.get(), fixed(1));
                 }}), 0.0018);    
