@@ -24,18 +24,19 @@
  */
 package org.spongepowered.royale.template;
 
-import com.google.common.reflect.TypeToken;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import ninja.leaping.configurate.objectmapping.serialize.TypeSerializer;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.serialize.TypeSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.lang.reflect.Type;
 
 public final class ComponentTemplateTypeSerializer implements TypeSerializer<ComponentTemplate> {
 
     @Override
-    public @Nullable ComponentTemplate deserialize(@NonNull final TypeToken<?> type, @NonNull final ConfigurationNode value)
-            throws ObjectMappingException {
+    public @Nullable ComponentTemplate deserialize(@NonNull final Type type, @NonNull final ConfigurationNode value)
+            throws SerializationException {
         final String string = value.getString();
         if (string == null) {
             return null;
@@ -44,12 +45,12 @@ public final class ComponentTemplateTypeSerializer implements TypeSerializer<Com
     }
 
     @Override
-    public void serialize(@NonNull final TypeToken<?> type, @Nullable final ComponentTemplate obj, @NonNull final ConfigurationNode value)
-            throws ObjectMappingException {
+    public void serialize(@NonNull final Type type, @Nullable final ComponentTemplate obj, @NonNull final ConfigurationNode value)
+            throws SerializationException {
         if (obj != null) {
-            value.setValue(obj.getTemplatedString());
+            value.raw(obj.getTemplatedString());
         } else {
-            value.setValue(null);
+            value.raw(null);
         }
     }
 

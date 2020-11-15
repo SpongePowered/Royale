@@ -27,7 +27,6 @@ package org.spongepowered.royale;
 import com.google.inject.Inject;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
@@ -39,13 +38,14 @@ import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.lifecycle.ConstructPluginEvent;
-import org.spongepowered.api.event.lifecycle.LoadedGameEvent;
 import org.spongepowered.api.event.lifecycle.RegisterBuilderEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCatalogEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCatalogRegistryEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
 import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
 import org.spongepowered.api.event.message.PlayerChatEvent;
+import org.spongepowered.configurate.ConfigurationOptions;
+import org.spongepowered.configurate.serialize.TypeSerializerCollection;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.jvm.Plugin;
 import org.spongepowered.royale.instance.InstanceManager;
@@ -53,6 +53,8 @@ import org.spongepowered.royale.instance.InstanceType;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.instance.gen.mutator.ChestMutator;
 import org.spongepowered.royale.instance.gen.mutator.PlayerSpawnMutator;
+import org.spongepowered.royale.template.ComponentTemplate;
+import org.spongepowered.royale.template.ComponentTemplateTypeSerializer;
 
 import java.nio.file.Path;
 import java.util.Random;
@@ -67,15 +69,21 @@ public final class Royale {
     private final EventManager eventManager;
     private final InstanceManager instanceManager;
     private final Random random;
+    private final ConfigurationOptions options;
 
     @Inject
-    public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final Game game) {
+    public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final Game game,
+            final TypeSerializerCollection serializers) {
         Royale.instance = this;
         this.plugin = plugin;
         this.configFile = configFile;
         this.eventManager = game.getEventManager();
         this.instanceManager = new InstanceManager(game);
         this.random = new Random();
+        this.options = ConfigurationOptions.defaults()
+                .serializers(serializers.childBuilder()
+                            .register(ComponentTemplate.class, new ComponentTemplateTypeSerializer())
+                                     .build());
     }
 
     public PluginContainer getPlugin() {
@@ -137,5 +145,9 @@ public final class Royale {
     public void onGameChat(final PlayerChatEvent event, @Root final Player player) {
         event.setCancelled(true);
         player.sendMessage(Identity.nil(), Component.text("Chat has been disabled."));
+    }
+
+    public ConfigurationOptions getConfigurateOptions() {
+        return this.options;
     }
 }

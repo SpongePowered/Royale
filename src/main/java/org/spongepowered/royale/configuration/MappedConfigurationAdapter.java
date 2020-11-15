@@ -24,20 +24,13 @@
  */
 package org.spongepowered.royale.configuration;
 
-import com.google.common.reflect.TypeToken;
-import com.typesafe.config.ConfigRenderOptions;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.ConfigurationOptions;
-import ninja.leaping.configurate.commented.CommentedConfigurationNode;
-import ninja.leaping.configurate.commented.SimpleCommentedConfigurationNode;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
-import ninja.leaping.configurate.objectmapping.ObjectMapper;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
-import ninja.leaping.configurate.objectmapping.serialize.TypeSerializerCollection;
-import org.spongepowered.royale.template.ComponentTemplate;
-import org.spongepowered.royale.template.ComponentTemplateTypeSerializer;
+import org.spongepowered.configurate.ConfigurateException;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.ConfigurationOptions;
+import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
+import org.spongepowered.configurate.objectmapping.ObjectMapper;
+import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -46,7 +39,7 @@ public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
     private final Class<T> configClass;
     private final Path configFile;
     private final HoconConfigurationLoader loader;
-    private final ObjectMapper<T>.BoundInstance mapper;
+    private final ObjectMapper<T> mapper;
 
     private ConfigurationNode root;
     private T config;
@@ -55,26 +48,26 @@ public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
         this.configClass = configClass;
         this.configFile = configFile;
         this.loader = HoconConfigurationLoader.builder()
-                .setRenderOptions(ConfigRenderOptions.defaults().setFormatted(true).setComments(true).setOriginComments(false))
-                .setDefaultOptions(options)
-                .setPath(configFile).build();
+                .defaultOptions(options)
+                .path(configFile)
+                .build();
         try {
-            this.mapper = ObjectMapper.forClass(configClass).bindToNew();
-        } catch (final ObjectMappingException e) {
+            this.mapper = ObjectMapper.factory().get(configClass);
+        } catch (final SerializationException e) {
             throw new RuntimeException("Failed to construct mapper for config class [" + configClass + "]!");
         }
-        this.root = CommentedConfigurationNode.root(options);
+        this.root = this.loader.createNode(options);
         if (Files.notExists(configFile)) {
             try {
                 this.save();
-            } catch (final IOException | ObjectMappingException e) {
+            } catch (final ConfigurateException e) {
                 throw new RuntimeException("Failed to save config for class [" + configClass + "] from [" + configFile + "]!", e);
             }
         }
     }
 
     public Class<T> getConfigClass() {
-        return configClass;
+        return this.configClass;
     }
 
     public Path getConfigFile() {
@@ -85,13 +78,13 @@ public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
         return this.config;
     }
 
-    public void load() throws IOException, ObjectMappingException {
+    public void load() throws ConfigurateException {
         this.root = this.loader.load();
-        this.config = this.mapper.populate(this.root);
+        this.config = this.mapper.load(this.root);
     }
 
-    public void save() throws IOException, ObjectMappingException {
-        this.mapper.serialize(this.root);
+    public void save() throws ConfigurateException {
+        this.mapper.save(this.config, this.root);
         this.loader.save(this.root);
     }
 }

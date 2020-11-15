@@ -33,6 +33,7 @@ import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.util.NamedCatalogBuilder;
 import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Constants;
+import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
@@ -426,7 +427,7 @@ public final class InstanceType implements NamedCatalogType {
 
             final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(this.key.getValue() + ".conf");
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
-                    .class, Constants.Map.CONFIGURATE_OPTIONS, configPath);
+                    .class, Royale.instance.getConfigurateOptions(), configPath);
 
             try {
                 adapter.load();

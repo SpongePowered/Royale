@@ -24,9 +24,10 @@
  */
 package org.spongepowered.royale.instance.configuration.category;
 
-import ninja.leaping.configurate.objectmapping.Setting;
-import ninja.leaping.configurate.objectmapping.serialize.ConfigSerializable;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import org.spongepowered.configurate.objectmapping.meta.Comment;
+import org.spongepowered.configurate.objectmapping.meta.Setting;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.configuration.AbstractConfigurationCategory;
 import org.spongepowered.royale.template.ComponentTemplate;
@@ -36,28 +37,35 @@ import java.util.List;
 @ConfigSerializable
 public final class RoundCategory extends AbstractConfigurationCategory {
 
-    @Setting(value = "default-items", comment = "Default items to give players. Order of items will be inserted into the hotbar, left to right.")
-    public final List<ItemStackSnapshot> defaultItems = Constants.Map.Round.DEFAULT_ITEMS;
+    @Setting
+    @Comment("Default items to give players. Order of items will be inserted into the hotbar, left to right.")
+    public List<ItemStackSnapshot> defaultItems = Constants.Map.Round.DEFAULT_ITEMS;
 
-    @Setting(comment = "Countdown until round starts (in seconds). Specifying -1 means the round will start the moment the instance starts. Default"
+    @Setting
+    @Comment("Countdown until round starts (in seconds). Specifying -1 means the round will start the moment the instance starts. Default"
             + " (" + Constants.Map.Round.DEFAULT_START_LENGTH + ").")
     public long start = Constants.Map.Round.DEFAULT_START_LENGTH;
 
-    @Setting(value = "start-template", comment = "Template used to display the round start.")
+    @Setting
+    @Comment("Template used to display the round start.")
     public ComponentTemplate startTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_START;
 
-    @Setting(comment = "Length of the round (in seconds). Specifying -1 means the instance goes until a winner is found. Default (" + Constants.Map
+    @Setting
+    @Comment("Length of the round (in seconds). Specifying -1 means the instance goes until a winner is found. Default (" + Constants.Map
             .Round.DEFAULT_LENGTH + ").")
     public long length = Constants.Map.Round.DEFAULT_LENGTH;
 
-    @Setting(comment = "Length of the time after round ends until everyone is kicked (in seconds). Specifying -1 means the instance must be "
+    @Setting
+    @Comment("Length of the time after round ends until everyone is kicked (in seconds). Specifying -1 means the instance must be "
             + "manually terminated. Default (" + Constants.Map.Round.DEFAULT_END_LENGTH + ").")
     public long end = Constants.Map.Round.DEFAULT_END_LENGTH;
 
-    @Setting(value = "end-template", comment = "Template used to display the winner.")
+    @Setting
+    @Comment("Template used to display the winner.")
     public ComponentTemplate endTemplate = Constants.Map.Round.DEFAULT_TEXT_TEMPLATE_END;
 
-    @Setting(value = "players-to-start-round-automatically", comment = "If specified, once the instance has this amount of players, it will "
+    @Setting("players-to-start-round-automatically")
+    @Comment("If specified, once the instance has this amount of players, it will "
             + "automatically start. Specifying -1 means the instance must be started manually. Default (" + Constants.Map.Round
             .DEFAULT_AUTOMATIC_START_PLAYER_COUNT + ").")
     public int automaticStartPlayerCount = Constants.Map.Round.DEFAULT_AUTOMATIC_START_PLAYER_COUNT;

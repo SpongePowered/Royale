@@ -25,13 +25,12 @@
 package org.spongepowered.royale;
 
 import com.google.common.collect.Iterables;
-import com.google.common.reflect.TypeToken;
+import io.leangen.geantyref.TypeToken;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.LinearComponents;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import ninja.leaping.configurate.objectmapping.ObjectMappingException;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.adventure.SpongeComponents;
@@ -49,6 +48,8 @@ import org.spongepowered.api.world.SerializationBehavior;
 import org.spongepowered.api.world.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.storage.WorldProperties;
+import org.spongepowered.configurate.ConfigurateException;
+import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.Instance;
 import org.spongepowered.royale.instance.InstanceManager;
@@ -352,11 +353,11 @@ final class Commands {
                     final InstanceType instanceType = context.requireOne(Commands.INSTANCE_TYPE_PARAMETER);
                     final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(instanceType.getKey().getValue() + ".conf");
                     final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
-                            InstanceTypeConfiguration.class, Constants.Map.CONFIGURATE_OPTIONS, configPath);
+                            InstanceTypeConfiguration.class, Royale.instance.getConfigurateOptions(), configPath);
 
                     try {
                         adapter.load();
-                    } catch (final IOException | ObjectMappingException e) {
+                    } catch (final ConfigurateException e) {
                         throw new CommandException(
                                 Component.text().content("Unable to load configuration for instance type [")
                                     .append(Commands.format(NamedTextColor.LIGHT_PURPLE, instanceType.getKey().asString()))
