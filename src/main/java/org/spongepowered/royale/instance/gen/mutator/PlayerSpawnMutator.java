@@ -27,9 +27,13 @@ package org.spongepowered.royale.instance.gen.mutator;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
-import org.spongepowered.api.block.entity.Sign;
-import org.spongepowered.api.world.BoundedWorldView;
+import org.spongepowered.api.block.entity.BlockEntity;
+import org.spongepowered.api.world.BlockChangeFlags;
+import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.api.world.volume.block.PhysicsAwareMutableBlockVolume;
+import org.spongepowered.api.world.volume.stream.VolumeMapper;
 import org.spongepowered.math.vector.Vector3d;
+import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.Instance;
@@ -41,14 +45,20 @@ public final class PlayerSpawnMutator extends SignMutator {
     }
 
     @Override
-    public BlockState visitSign(final Instance instance, final BoundedWorldView<?> area, final BlockState state, final int x, final int y,
-            final int z, final Sign sign) {
-        area.setBlock(x, y, z, BlockTypes.AIR.get().getDefaultState());
+    public VolumeMapper<ServerWorld, BlockEntity> getBlockEntityMapper(
+        final Instance instance
+    ) {
+        return (world, blockEntitySupplier, x, y, z) -> {
+            final BlockState air = BlockTypes.AIR.get().getDefaultState();
+            instance.getPositionCache().put(new Vector3i(x, y, z), air);
+            world.setBlock(x, y, z, air, BlockChangeFlags.NONE);
+            // Always remove the block entity
+            world.removeBlockEntity(x, y, z);
 
-        instance.addPlayerSpawn(new Vector3d(x + 0.5, y + 0.0125, z + 0.5));
-
-        Royale.instance.getPlugin().getLogger().debug("Found player spawn at {}x, {}y, {}z.", x, y, z);
-
-        return state;
+            instance.addPlayerSpawn(new Vector3d(x + 0.5, y + 0.0125, z + 0.5));
+            Royale.instance.getPlugin().getLogger().debug("Found player spawn at {}x, {}y, {}z.", x, y, z);
+            return null;
+        };
     }
+
 }

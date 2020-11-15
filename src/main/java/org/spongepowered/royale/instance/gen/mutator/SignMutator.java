@@ -27,10 +27,10 @@ package org.spongepowered.royale.instance.gen.mutator;
 import com.google.common.base.MoreObjects;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.block.entity.Sign;
-import org.spongepowered.api.world.BoundedWorldView;
+import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.api.world.volume.stream.VolumePredicate;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.Instance;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
@@ -44,27 +44,25 @@ abstract class SignMutator extends InstanceMutator {
         this.signId = signId;
     }
 
-    public abstract BlockState visitSign(final Instance instance, final BoundedWorldView<?> area, final BlockState state, final int x, final int y,
-            final int z, final Sign sign);
-
     @Override
-    public BlockState visitBlock(final Instance instance, final BoundedWorldView<?> area, final BlockState state, final int x, final int y,
-            final int z) {
-        final BlockEntity blockEntity = area.getBlockEntity(x, y, z).orElse(null);
-        if (!(blockEntity instanceof Sign)) {
-            return null;
-        }
-
-        final Sign sign = (Sign) blockEntity;
-        if (!PlainComponentSerializer.plain().serialize(sign.lines().get(0)).equalsIgnoreCase(this.signId)) {
-            if (PlainComponentSerializer.plain().serialize(sign.lines().get(1)).equalsIgnoreCase(this.signId)) {
-                Royale.instance.getPlugin().getLogger().error("Found mismatched sign at {}x {}y {}z!", x, y, z);
-            } else {
-                return null;
+    public VolumePredicate<ServerWorld, BlockEntity> getBlockEntityPredicate(
+        Instance instance
+    ) {
+        return (world, blockEntitySupplier, x, y, z) -> {
+            final BlockEntity blockEntity = blockEntitySupplier.get();
+            if (!(blockEntity instanceof Sign)) {
+                return false;
             }
-        }
-
-        return visitSign(instance, area, state, x, y, z, sign);
+            final Sign sign = (Sign) blockEntity;
+            if (!PlainComponentSerializer.plain().serialize(sign.lines().get(0)).equalsIgnoreCase(this.signId)) {
+                if (PlainComponentSerializer.plain().serialize(sign.lines().get(1)).equalsIgnoreCase(this.signId)) {
+                    Royale.instance.getPlugin().getLogger().error("Found mismatched sign at {}x {}y {}z!", x, y, z);
+                } else {
+                    return false;
+                }
+            }
+            return true;
+        };
     }
 
     @Override

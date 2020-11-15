@@ -27,8 +27,10 @@ package org.spongepowered.royale.instance.gen;
 import com.google.common.base.MoreObjects;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.block.BlockState;
-import org.spongepowered.api.world.BoundedWorldView;
+import org.spongepowered.api.block.entity.BlockEntity;
+import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.api.world.volume.stream.VolumeMapper;
+import org.spongepowered.api.world.volume.stream.VolumePredicate;
 import org.spongepowered.royale.instance.Instance;
 
 import java.util.Objects;
@@ -46,7 +48,9 @@ public abstract class InstanceMutator implements CatalogType {
         return this.key;
     }
 
-    public abstract BlockState visitBlock(final Instance instance, final BoundedWorldView<?> area, final BlockState state, int x, int y, int z);
+    public abstract VolumePredicate<ServerWorld, BlockEntity> getBlockEntityPredicate(final Instance instance);
+
+    public abstract VolumeMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance);
 
     @Override
     public int hashCode() {

@@ -32,8 +32,13 @@ import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.block.entity.carrier.chest.Chest;
 import org.spongepowered.api.data.Keys;
+import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.util.weighted.LootTable;
-import org.spongepowered.api.world.BoundedWorldView;
+import org.spongepowered.api.world.BlockChangeFlags;
+import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.api.world.volume.block.PhysicsAwareMutableBlockVolume;
+import org.spongepowered.api.world.volume.stream.VolumeMapper;
+import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.Instance;
@@ -49,30 +54,35 @@ public final class ChestMutator extends SignMutator {
     }
 
     @Override
-    public BlockState visitSign(final Instance instance, final BoundedWorldView<?> area, final BlockState state, final int x, final int y,
-            final int z, final Sign sign) {
-        final String lootTableId = PlainComponentSerializer.plain().serialize(sign.lines().get(1));
-        final LootTable<ItemArchetype> lootTable = Loot.getTable(lootTableId);
-        final List<ItemArchetype> items = lootTable.get(Royale.instance.getRandom());
+    public VolumeMapper<ServerWorld, BlockEntity> getBlockEntityMapper(
+        final Instance instance
+    ) {
+        return (world, blockentitySupplier, x, y, z) -> {
+            final Sign sign = (Sign) blockentitySupplier.get();
+            final Direction facingDirection = sign.get(Keys.DIRECTION).orElse(null);
+            final String lootTableId = PlainComponentSerializer.plain().serialize(sign.lines().get(1));
+            final LootTable<ItemArchetype> lootTable = Loot.getTable(lootTableId);
+            final List<ItemArchetype> items = lootTable.get(Royale.instance.getRandom());
 
-        Royale.instance.getPlugin().getLogger().debug("Generating loot chest via table '{}' at {}x, {}y, {}z", lootTableId, x, y, z);
-        area.setBlock(x, y, z, BlockTypes.CHEST.get().getDefaultState().with(Keys.DIRECTION, state.get(Keys.DIRECTION).orElse(null)).orElse(null));
+            Royale.instance.getPlugin().getLogger().debug("Generating loot chest via table '{}' at {}x, {}y, {}z", lootTableId, x, y, z);
+            final BlockState defaultChestState = BlockTypes.CHEST.get().getDefaultState();
+            final BlockState newChestState = defaultChestState.with(Keys.DIRECTION, facingDirection)
+                .orElse(defaultChestState);
+            world.setBlock(x, y, z, newChestState, BlockChangeFlags.PHYSICS_OBSERVER);
+            instance.getPositionCache().put(new Vector3i(x, y, z), newChestState);
 
-        final BlockEntity blockEntity = area.getBlockEntity(x, y, z).orElse(null);
-        if (blockEntity == null) {
-            throw new IllegalStateException("Something is quite wrong...we set a Chest down yet found no block entity. This is a serious "
-                    + "issue likely due to server misconfiguration!");
-        } else if (!(blockEntity instanceof Chest)) {
-            throw new IllegalStateException(String.format("Something is quite wrong...we set a Chest down yet found a [%s] instead. This is a "
+            final BlockEntity blockEntity = world.getBlockEntity(x, y, z)
+                .orElseThrow(() -> new IllegalStateException("Something is quite wrong...we set a Chest down yet found no block entity. This is a serious issue likely due to server misconfiguration!"));
+            if (!(blockEntity instanceof Chest)) {
+                throw new IllegalStateException(String.format("Something is quite wrong...we set a Chest down yet found a [%s] instead. This is a "
                     + "serious issue likely due to server misconfiguration!", blockEntity.getClass().getSimpleName()));
-        }
+            }
+            final Chest chest = (Chest) blockEntity;
+            for (final ItemArchetype item : items) {
+                chest.getInventory().offer(item.create(Royale.instance.getRandom()));
+            }
 
-        final Chest chest = (Chest) blockEntity;
-        for (final ItemArchetype item : items) {
-            chest.getInventory().offer(item.create(Royale.instance.getRandom()));
-        }
-
-        return state;
+            return chest;
+        };
     }
-
 }
