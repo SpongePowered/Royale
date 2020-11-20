@@ -39,6 +39,7 @@ import org.spongepowered.api.event.lifecycle.RegisterCatalogEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCatalogRegistryEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
 import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
+import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.configurate.serialize.TypeSerializerCollection;
 import org.spongepowered.plugin.PluginContainer;
@@ -163,11 +164,15 @@ public final class Royale {
 
     @Listener
     public void onStartedServer(final StartedEngineEvent<Server> event) {
-        Sponge.getServer().getWorldManager().createProperties(Constants.Map.Lobby.LOBBY_WORLD_KEY, Constants.Map.Lobby.LOBBY_ARCHETYPE)
-                .thenCompose(props -> Sponge.getServer().getWorldManager().loadWorld(props))
-                .exceptionally(e -> {
-                    this.plugin.getLogger().catching(e);
-                    return null;
-                });
+        final Server server = event.getEngine();
+        final ServerWorld lobbyWorld = server.getWorldManager().getWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY).orElse(null);
+        if (lobbyWorld == null) {
+            server.getWorldManager().createProperties(Constants.Map.Lobby.LOBBY_WORLD_KEY, Constants.Map.Lobby.LOBBY_ARCHETYPE)
+                    .thenCompose(props -> Sponge.getServer().getWorldManager().loadWorld(props))
+                    .exceptionally(e -> {
+                        this.plugin.getLogger().catching(e);
+                        return null;
+                    });
+        }
     }
 }
