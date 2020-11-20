@@ -231,6 +231,7 @@ public final class Instance {
 
     void disqualifyPlayer(final Player player) {
         this.scoreboard.killPlayer(player);
+        this.playerDeaths.add(player.getUniqueId());
         player.getInventory().clear();
     }
 

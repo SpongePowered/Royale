@@ -4,7 +4,7 @@
             "loader": "java_plain",
             "id": "royale",
             "name": "Royale",
-            "version": "2.0.0-r8.0.0",
+            "version": "1.0.0",
             "main-class": "org.spongepowered.royale.Royale",
             "description": "Battle Royale, now on Sponge!",
             "links": {
@@ -12,19 +12,14 @@
                 "source": "https://www.spongepowered.org/source",
                 "issues": "https://www.spongepowered.org/issues"
             },
-            "contributors": [
-                {
+            "contributors": [{
                     "name": "SpongePowered",
                     "description": "Lead Developer"
-                }
-            ],
-            "dependencies": [
-                {
+            }],
+            "dependencies": [{
                     "id": "spongeapi",
                     "version": "8.0.0"
-                }
-            ],
-            "extra": {}
+            }]
         }
     ]
 }

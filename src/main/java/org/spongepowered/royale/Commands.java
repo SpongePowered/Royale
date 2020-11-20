@@ -49,7 +49,6 @@ import org.spongepowered.api.world.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.configurate.ConfigurateException;
-import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.Instance;
 import org.spongepowered.royale.instance.InstanceManager;
@@ -57,7 +56,6 @@ import org.spongepowered.royale.instance.InstanceType;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -81,7 +79,7 @@ final class Commands {
                 if (cause.root() instanceof ServerPlayer) {
                     return Collections.singletonList((ServerPlayer) cause.root());
                 }
-                return null;
+                return Collections.emptyList();
             }).setKey("players").build();
     private static final Parameter.Value<ResourceKey> RESOURCE_KEY_ID_PARAMETER = Parameter.resourceKey().setKey("id").build();
     private static final Parameter.Value<String> NAME_OPTIONAL_PARAMETER = Parameter.string().setKey("name").build();
@@ -155,7 +153,7 @@ final class Commands {
                     );
 
                     for (final ServerPlayer player : Sponge.getServer().getOnlinePlayers()) {
-                        if (player.getWorld().getKey().equals(Constants.Map.Lobby.DEFAULT_LOBBY_KEY)) {
+                        if (player.getWorld().getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                             player.sendMessage(Identity.nil(), Component.text().clickEvent(SpongeComponents.executeCallback(commandCause -> {
                                 final Optional<Instance> inst = instanceManager.getInstance(targetProperties.getKey());
                                 if (inst.isPresent()) {
@@ -353,7 +351,7 @@ final class Commands {
                     final InstanceType instanceType = context.requireOne(Commands.INSTANCE_TYPE_PARAMETER);
                     final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(instanceType.getKey().getValue() + ".conf");
                     final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
-                            InstanceTypeConfiguration.class, Royale.instance.getConfigurateOptions(), configPath);
+                            InstanceTypeConfiguration.class, Royale.instance.getConfigurationOptions(), configPath);
 
                     try {
                         adapter.load();

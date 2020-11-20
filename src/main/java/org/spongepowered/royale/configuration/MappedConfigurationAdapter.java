@@ -54,14 +54,14 @@ public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
         try {
             this.mapper = ObjectMapper.factory().get(configClass);
         } catch (final SerializationException e) {
-            throw new RuntimeException("Failed to construct mapper for config class [" + configClass + "]!");
+            throw new RuntimeException(String.format("Failed to construct mapper for config class '%s'!", this.configClass));
         }
         this.root = this.loader.createNode(options);
         if (Files.notExists(configFile)) {
             try {
                 this.save();
             } catch (final ConfigurateException e) {
-                throw new RuntimeException("Failed to save config for class [" + configClass + "] from [" + configFile + "]!", e);
+                throw new RuntimeException(String.format("Failed to save config for class '%s'' from '%s''!", this.configClass, this.configFile));
             }
         }
     }

@@ -25,37 +25,37 @@
 package org.spongepowered.royale;
 
 import com.google.inject.Inject;
-import net.kyori.adventure.identity.Identity;
-import net.kyori.adventure.text.Component;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.config.ConfigDir;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.lifecycle.ConstructPluginEvent;
 import org.spongepowered.api.event.lifecycle.RegisterBuilderEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCatalogEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCatalogRegistryEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
 import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
-import org.spongepowered.api.event.message.PlayerChatEvent;
 import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.configurate.serialize.TypeSerializerCollection;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.jvm.Plugin;
+import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.InstanceManager;
 import org.spongepowered.royale.instance.InstanceType;
+import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.instance.gen.mutator.ChestMutator;
 import org.spongepowered.royale.instance.gen.mutator.PlayerSpawnMutator;
 import org.spongepowered.royale.template.ComponentTemplate;
 import org.spongepowered.royale.template.ComponentTemplateTypeSerializer;
 
+import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
 
@@ -75,6 +75,7 @@ public final class Royale {
     public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final Game game,
             final TypeSerializerCollection serializers) {
         Royale.instance = this;
+
         this.plugin = plugin;
         this.configFile = configFile;
         this.eventManager = game.getEventManager();
@@ -98,6 +99,10 @@ public final class Royale {
         return this.random;
     }
 
+    public ConfigurationOptions getConfigurationOptions() {
+        return this.options;
+    }
+
     @Listener
     public void onConstructPlugin(final ConstructPluginEvent event) {
         this.eventManager.registerListeners(this.plugin, this.instanceManager);
@@ -117,37 +122,52 @@ public final class Royale {
 
     @Listener
     public void onRegisterInstanceTypes(final RegisterCatalogEvent<InstanceType> event) {
-        // TODO
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(Constants.Map.INSTANCE_TYPES_FOLDER, entry -> entry.getFileName().toString()
+                .endsWith(".conf"))) {
+            for (final Path path : stream) {
+                final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
+                        InstanceTypeConfiguration.class, ConfigurationOptions.defaults(), path);
+
+                try {
+                    adapter.load();
+                } catch (final IOException e) {
+                    this.plugin.getLogger().error("Failed to load configuration for path [{}]!", path, e);
+                    continue;
+                }
+
+                final String instanceId = path.getFileName().toString().split("\\.")[0].toLowerCase();
+                final InstanceType newType = InstanceType.builder()
+                        .from(adapter.getConfig())
+                        .key(ResourceKey.of(this.plugin, instanceId))
+                        .build();
+
+                this.plugin.getLogger().info("Registered instance type '{}'", instanceId);
+                event.register(newType);
+            }
+
+        } catch (final IOException e) {
+            throw new RuntimeException("Failed to iterate over the instance type configuration files!");
+        }
     }
 
     @Listener
-    public void onRegisterBuilder(final RegisterBuilderEvent event) {
+    public void onRegisterInstanceTypeBuilders(final RegisterBuilderEvent event) {
         event.register(InstanceType.Builder.class, InstanceType.Builder::new);
     }
 
     @Listener
     public void onRegisterCommands(final RegisterCommandEvent<Command.Parameterized> event) {
-        event.register(this.plugin, Commands.rootCommand(this.random, this.instanceManager),
-                Constants.Plugin.ID, Constants.Plugin.ID.substring(0, 1));
+        event.register(this.plugin, Commands.rootCommand(this.random, this.instanceManager), Constants.Plugin.ID, Constants.Plugin.ID
+                .substring(0, 1));
     }
 
     @Listener
-    public void onGameStartingServer(final StartedEngineEvent<Server> event) {
-        Sponge.getServer().getWorldManager().createProperties(Constants.Map.Lobby.DEFAULT_LOBBY_KEY, Constants.Map.Lobby.LOBBY_ARCHETYPE)
+    public void onStartedServer(final StartedEngineEvent<Server> event) {
+        Sponge.getServer().getWorldManager().createProperties(Constants.Map.Lobby.LOBBY_WORLD_KEY, Constants.Map.Lobby.LOBBY_ARCHETYPE)
                 .thenCompose(props -> Sponge.getServer().getWorldManager().loadWorld(props))
                 .exceptionally(e -> {
                     this.plugin.getLogger().catching(e);
                     return null;
                 });
-    }
-
-    @Listener
-    public void onGameChat(final PlayerChatEvent event, @Root final Player player) {
-        event.setCancelled(true);
-        player.sendMessage(Identity.nil(), Component.text("Chat has been disabled."));
-    }
-
-    public ConfigurationOptions getConfigurateOptions() {
-        return this.options;
     }
 }

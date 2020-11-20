@@ -80,7 +80,7 @@ public final class StartTask extends InstanceTask {
 
             this.seconds++;
 
-            if (seconds >= startTitles.size()) {
+            if (this.seconds >= startTitles.size()) {
                 this.cancel();
                 this.getInstance().advance();
             }

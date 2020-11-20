@@ -24,8 +24,6 @@
  */
 package org.spongepowered.royale;
 
-import org.spongepowered.configurate.ConfigurationOptions;
-import org.spongepowered.configurate.serialize.TypeSerializerCollection;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
@@ -39,7 +37,6 @@ import org.spongepowered.api.world.difficulty.Difficulties;
 import org.spongepowered.api.world.dimension.DimensionTypes;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.template.ComponentTemplate;
-import org.spongepowered.royale.template.ComponentTemplateTypeSerializer;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -84,13 +81,14 @@ public class Constants {
                 try {
                     Files.createDirectories(INSTANCE_TYPES_FOLDER);
                 } catch (final IOException e) {
-                    throw new RuntimeException("Failed to create maps directory [" + INSTANCE_TYPES_FOLDER + "]!");
+                    throw new RuntimeException(String.format("Failed to create maps directory '%s'!", INSTANCE_TYPES_FOLDER));
                 }
             }
 
             DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.instance.getPlugin().getMetadata().getId(), "player_spawn"));
 
-            DEFAULT_MAP_MUTATORS.add(Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, ResourceKey.resolve("royale:player_spawn")).get());
+            DEFAULT_MAP_MUTATORS.add(Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class,
+                    ResourceKey.of(Plugin.ID, "player_spawn")).get());
         }
 
         private Map() {
@@ -123,15 +121,16 @@ public class Constants {
 
         public static final class Lobby {
 
-            public static final ResourceKey DEFAULT_LOBBY_KEY = ResourceKey.of(Plugin.ID, "lobby");
+            public static final ResourceKey LOBBY_WORLD_KEY = ResourceKey.of(Plugin.ID, "lobby");
             public static final String SIGN_HEADER = "Join Game";
 
             static final WorldArchetype LOBBY_ARCHETYPE = WorldArchetype.builder().from(WorldArchetypes.THE_END.get())
+                    .key(Lobby.LOBBY_WORLD_KEY)
                     .gameMode(GameModes.SURVIVAL)
                     .loadOnStartup(true)
                     .difficulty(Difficulties.EASY)
                     .generateSpawnOnLoad(true)
-                    .dimensionType(DimensionTypes.OVERWORLD.get())
+                    .dimensionType(DimensionTypes.OVERWORLD)
                     .pvpEnabled(false)
                     .keepSpawnLoaded(true)
                     .serializationBehavior(SerializationBehaviors.NONE)

@@ -168,7 +168,7 @@ public final class InstanceManager {
             return;
         }
 
-        final ServerWorld lobby = this.game.getServer().getWorldManager().getWorld(Constants.Map.Lobby.DEFAULT_LOBBY_KEY)
+        final ServerWorld lobby = this.game.getServer().getWorldManager().getWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY)
                 .orElseThrow(() -> new RuntimeException("Lobby world was not found!"));
 
         // Move everyone out
@@ -243,7 +243,7 @@ public final class InstanceManager {
                     }
                 }
             }
-        } else if (world.getKey().equals(Constants.Map.Lobby.DEFAULT_LOBBY_KEY)) {
+        } else if (world.getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
             this.convertToLobbyPlayer(player);
         }
     }
@@ -280,7 +280,7 @@ public final class InstanceManager {
         final Instance toInstance = this.getInstance(toWorld.getKey()).orElse(null);
 
         // We don't care about non-instances from and to.
-        if (fromInstance == null && toInstance == null && !toWorld.getKey().equals(Constants.Map.Lobby.DEFAULT_LOBBY_KEY)) {
+        if (fromInstance == null && toInstance == null && !toWorld.getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
             return;
         }
 
@@ -304,7 +304,7 @@ public final class InstanceManager {
                         player.setScoreboard(toInstance.getScoreboard().getHandle());
                     }
 
-                } else if (toWorld.getKey().equals(Constants.Map.Lobby.DEFAULT_LOBBY_KEY)) {
+                } else if (toWorld.getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                     // Going from a non-instance world to lobby
                     this.convertToLobbyPlayer(player);
                 }
@@ -371,7 +371,7 @@ public final class InstanceManager {
     @Listener
     public void onDamagePlayer(final DamageEntityEvent event, @Root final DamageSource source, @Getter("getEntity") final ServerPlayer player) {
         if (!(source.getType().equals(DamageTypes.FALL) || source.getType().equals(DamageTypes.VOID)) && player.getWorld().getKey()
-                .equals(Constants.Map.Lobby.DEFAULT_LOBBY_KEY)) {
+                .equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
             event.setCancelled(true);
         }
     }
@@ -391,7 +391,6 @@ public final class InstanceManager {
 
     @Listener
     public void onInteractByPlayer(final InteractEvent event, @Root final ServerPlayer player) {
-
         final ServerWorld world = player.getWorld();
         final Instance instance = getInstance(world.getKey()).orElse(null);
 
@@ -441,7 +440,7 @@ public final class InstanceManager {
     public void onChangeBlock(final ChangeBlockEvent event, @First final ServerPlayer player) {
         for (final Transaction<BlockSnapshot> transaction : event.getTransactions()) {
             final BlockSnapshot snapshot = transaction.getFinal();
-            if (snapshot.getWorld().equals(Constants.Map.Lobby.DEFAULT_LOBBY_KEY)) {
+            if (snapshot.getWorld().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                 transaction.setValid(false);
             }
         }

@@ -84,7 +84,7 @@ public final class InstanceType implements NamedCatalogType {
         this.min = new Vector3i(builder.centerX + builder.minX, builder.minY, builder.centerZ + builder.minZ);
         this.max = new Vector3i(builder.centerX + builder.maxX, builder.maxY, builder.centerZ + builder.maxZ).sub(1, 1, 1);
         this.worldBorderX = builder.worldBorderX;
-        this.worldBorderX = builder.worldBorderZ;
+        this.worldBorderZ = builder.worldBorderZ;
         this.worldBorderRadius = builder.worldBorderRadius;
     }
 
@@ -427,7 +427,7 @@ public final class InstanceType implements NamedCatalogType {
 
             final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(this.key.getValue() + ".conf");
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
-                    .class, Royale.instance.getConfigurateOptions(), configPath);
+                    .class, Royale.instance.getConfigurationOptions(), configPath);
 
             try {
                 adapter.load();

@@ -43,6 +43,7 @@ public final class ProgressTask extends InstanceTask {
             0.0f,
             BossBar.Color.GREEN,
             BossBar.Overlay.PROGRESS);
+
     private final Set<UUID> bossBarViewers = new HashSet<>();
 
     private final long roundLengthTotal;

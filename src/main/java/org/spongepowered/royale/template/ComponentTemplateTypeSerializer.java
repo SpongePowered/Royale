@@ -25,7 +25,6 @@
 package org.spongepowered.royale.template;
 
 import org.spongepowered.configurate.ConfigurationNode;
-import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -35,8 +34,7 @@ import java.lang.reflect.Type;
 public final class ComponentTemplateTypeSerializer implements TypeSerializer<ComponentTemplate> {
 
     @Override
-    public @Nullable ComponentTemplate deserialize(@NonNull final Type type, @NonNull final ConfigurationNode value)
-            throws SerializationException {
+    public @Nullable ComponentTemplate deserialize(@NonNull final Type type, @NonNull final ConfigurationNode value) {
         final String string = value.getString();
         if (string == null) {
             return null;
@@ -45,8 +43,7 @@ public final class ComponentTemplateTypeSerializer implements TypeSerializer<Com
     }
 
     @Override
-    public void serialize(@NonNull final Type type, @Nullable final ComponentTemplate obj, @NonNull final ConfigurationNode value)
-            throws SerializationException {
+    public void serialize(@NonNull final Type type, @Nullable final ComponentTemplate obj, @NonNull final ConfigurationNode value) {
         if (obj != null) {
             value.raw(obj.getTemplatedString());
         } else {

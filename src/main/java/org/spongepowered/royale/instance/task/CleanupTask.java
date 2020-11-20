@@ -64,8 +64,9 @@ public final class CleanupTask extends InstanceTask {
 
     private final Title title = Title.title(
             Component.text("Survive!", NamedTextColor.RED),
-            Component.empty(), // TODO is this the right way to do it?
+            Component.empty(),
             Title.Times.of(Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(2)));
+
     private ScheduledTask handle;
     private long duration = 0;
 
@@ -147,7 +148,7 @@ public final class CleanupTask extends InstanceTask {
                         normalGoal.addGoal(3, LookAtGoal.builder().maxDistance(8f).watch(ServerPlayer.class).build(human));
                         normalGoal.addGoal(3, LookRandomlyGoal.builder().build(human));
 
-                        human.offer(Keys.DISPLAY_NAME, Component.text(ranger ? "Ranger" : "Swordsman",
+                        human.offer(Keys.CUSTOM_NAME, Component.text(ranger ? "Ranger" : "Swordsman",
                                 ranger ? NamedTextColor.GREEN : NamedTextColor.BLUE));
 
                         world.spawnEntity(human);
