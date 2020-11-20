@@ -73,7 +73,7 @@ final class Commands {
     private static final Parameter.Value<Boolean> FORCE_PARAMETER = Parameter.bool().setKey("force").orDefault(false).build();
     private static final Parameter.Value<Boolean> MODIFIED_PARAMETER = Parameter.bool().setKey("modified").orDefault(true).build();
     private static final Parameter.Value<SerializationBehavior> SERIALIZATION_BEHAVIOR_PARAMETER =
-            Parameter.catalogedElement(SerializationBehavior.class).setKey("behavior").build();
+            Parameter.enumValue(SerializationBehavior.class).setKey("behavior").build();
     private static final Parameter.Value<List<ServerPlayer>> MANY_PLAYERS =
             Parameter.builder(new TypeToken<List<ServerPlayer>>() {}).parser(CatalogedValueParameters.MANY_PLAYERS).orDefault((CommandCause cause) -> {
                 if (cause.root() instanceof ServerPlayer) {
@@ -392,7 +392,7 @@ final class Commands {
                     context.sendMessage(Identity.nil(), Component.text().content("World [")
                             .append(Commands.format(NamedTextColor.GREEN, world.getKey().asString()))
                             .append(Component.text("] set to serialization behavior ["))
-                            .append(Commands.format(NamedTextColor.YELLOW, serializationBehavior.getKey().asString()))
+                            .append(Commands.format(NamedTextColor.YELLOW, serializationBehavior.name().toLowerCase()))
                             .append(Component.text("]."))
                             .build());
 

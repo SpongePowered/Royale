@@ -56,7 +56,7 @@ import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.SerializationBehaviors;
+import org.spongepowered.api.world.SerializationBehavior;
 import org.spongepowered.api.world.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.Constants;
@@ -112,7 +112,7 @@ public final class InstanceManager {
         }
 
         world.getProperties().setKeepSpawnLoaded(true);
-        world.getProperties().setSerializationBehavior(SerializationBehaviors.NONE);
+        world.getProperties().setSerializationBehavior(SerializationBehavior.NONE);
 
         instance = new Instance(this.game.getServer(), this, key, type);
 

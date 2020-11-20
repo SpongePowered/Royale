@@ -30,7 +30,7 @@ import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
-import org.spongepowered.api.world.SerializationBehaviors;
+import org.spongepowered.api.world.SerializationBehavior;
 import org.spongepowered.api.world.WorldArchetype;
 import org.spongepowered.api.world.WorldArchetypes;
 import org.spongepowered.api.world.difficulty.Difficulties;
@@ -47,7 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-public class Constants {
+public final class Constants {
 
     private Constants() {
     }
@@ -133,7 +133,7 @@ public class Constants {
                     .dimensionType(DimensionTypes.OVERWORLD)
                     .pvpEnabled(false)
                     .keepSpawnLoaded(true)
-                    .serializationBehavior(SerializationBehaviors.NONE)
+                    .serializationBehavior(SerializationBehavior.NONE)
                     .build();
 
             private Lobby() {
