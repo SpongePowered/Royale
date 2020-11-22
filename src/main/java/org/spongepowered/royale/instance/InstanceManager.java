@@ -329,28 +329,43 @@ public final class InstanceManager {
     }
 
     @Listener(order = Order.LAST)
-    public void onRespawnPlayer(final RespawnPlayerEvent event, @Getter("getPlayer") final ServerPlayer player) {
+    public void onRespawnPlayerSelectWorld(final RespawnPlayerEvent.SelectWorld event, @Getter("getEntity") final ServerPlayer player,
+            @Getter("getOriginalWorld") final ServerWorld fromWorld, @Getter("getDestinationWorld") final ServerWorld toWorld) {
+
         if (this.forceRespawning.contains(player.getUniqueId())) {
             return;
         }
 
-        final ServerWorld fromWorld = event.getFromLocation().getWorld();
-        ServerWorld toWorld = event.getToLocation().getWorld();
         final Instance fromInstance = getInstance(fromWorld.getKey()).orElse(null);
         Instance toInstance = this.getInstance(toWorld.getKey()).orElse(null);
 
         if (fromInstance != null && toInstance == null && fromInstance.isPlayerRegistered(player.getUniqueId()) && fromWorld.isLoaded()) {
-            event.setToLocation(event.getFromLocation());
-            event.setToRotation(event.getFromRotation());
+            event.setDestinationWorld(fromWorld);
+        }
+    }
+
+    @Listener(order = Order.LAST)
+    public void onRespawnPlayer(final RespawnPlayerEvent.Recreate event, @Getter("getRecreatedPlayer") final ServerPlayer player,
+            @Getter("getOriginalWorld") final ServerWorld fromWorld, @Getter("getDestinationWorld") final ServerWorld toWorld) {
+
+        if (this.forceRespawning.contains(player.getUniqueId())) {
+            return;
         }
 
-        toWorld = event.getToLocation().getWorld();
+        final Instance fromInstance = this.getInstance(fromWorld.getKey()).orElse(null);
+        Instance toInstance = this.getInstance(toWorld.getKey()).orElse(null);
+
+        if (fromInstance != null && toInstance == null && fromInstance.isPlayerRegistered(player.getUniqueId()) && fromWorld.isLoaded()) {
+            event.setDestinationPosition(event.getOriginalPosition());
+        }
+
         toInstance = this.getInstance(toWorld.getKey()).orElse(null);
 
         if (fromInstance != null) {
             if (fromInstance.equals(toInstance)) {
                 fromInstance.spectate(player);
-                this.game.getServer().getScheduler().submit(Task.builder().execute(task -> fromInstance.spectate(player)).plugin(Royale.instance.getPlugin()).build());
+                this.game.getServer().getScheduler().submit(Task.builder().execute(task -> fromInstance.spectate(player)).plugin(Royale.instance
+                        .getPlugin()).build());
             } else if (toInstance != null) {
                 player.setScoreboard(toInstance.getScoreboard().getHandle());
             } else {

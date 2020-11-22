@@ -8,6 +8,7 @@ group = project.group
 version = "${project.properties["minecraftVersion"]}-r${project.properties["apiVersion"].toString().split("-")[0]}"
 
 repositories {
+    mavenLocal()
     maven {
         name = "sponge v2"
         setUrl("https://repo-new.spongepowered.org/repository/maven-public/")
