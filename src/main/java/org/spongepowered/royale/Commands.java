@@ -351,7 +351,7 @@ final class Commands {
                     final InstanceType instanceType = context.requireOne(Commands.INSTANCE_TYPE_PARAMETER);
                     final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(instanceType.getKey().getValue() + ".conf");
                     final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
-                            InstanceTypeConfiguration.class, Royale.instance.getConfigurationOptions(), configPath);
+                            InstanceTypeConfiguration.class, Royale.instance.getConfigurationOptions(), configPath, false);
 
                     try {
                         adapter.load();

@@ -31,6 +31,7 @@ import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.api.config.ConfigManager;
 import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.lifecycle.ConstructPluginEvent;
@@ -73,8 +74,7 @@ public final class Royale {
     private final ConfigurationOptions options;
 
     @Inject
-    public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final Game game,
-            final TypeSerializerCollection serializers) {
+    public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final Game game, final ConfigManager configManager) {
         Royale.instance = this;
 
         this.plugin = plugin;
@@ -83,7 +83,7 @@ public final class Royale {
         this.instanceManager = new InstanceManager(game);
         this.random = new Random();
         this.options = ConfigurationOptions.defaults()
-                .serializers(serializers.childBuilder()
+                .serializers(configManager.getSerializers().childBuilder()
                             .register(ComponentTemplate.class, new ComponentTemplateTypeSerializer())
                                      .build());
     }
@@ -123,11 +123,16 @@ public final class Royale {
 
     @Listener
     public void onRegisterInstanceTypes(final RegisterCatalogEvent<InstanceType> event) {
+        InstanceType.builder()
+                .key(ResourceKey.of(this.plugin, "last_man_standing"))
+                .name("Last Man Standing")
+                .build();
+
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Constants.Map.INSTANCE_TYPES_FOLDER, entry -> entry.getFileName().toString()
                 .endsWith(".conf"))) {
             for (final Path path : stream) {
                 final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
-                        InstanceTypeConfiguration.class, ConfigurationOptions.defaults(), path);
+                        InstanceTypeConfiguration.class, this.options, path, false);
 
                 try {
                     adapter.load();

@@ -189,6 +189,10 @@ public final class InstanceType implements NamedCatalogType {
         this.roundStartLength = value.round.start;
         this.roundLength = value.round.length;
         this.roundEndLength = value.round.end;
+        this.automaticStartPlayerCount = value.round.automaticStartPlayerCount;
+        this.worldBorderX = value.general.worldBorderCenterX;
+        this.worldBorderZ = value.general.worldBorderCenterZ;
+        this.worldBorderRadius = value.general.worldBorderRadius;
         this.size = new Vector3i(this.maxX - this.minX, this.maxY - this.minY, this.maxZ - this.minZ);
         this.min = new Vector3i(this.centerX + this.minX, this.minY, this.centerZ + this.minZ);
         this.max = new Vector3i(this.centerX + this.maxX, this.maxY, this.centerZ + this.maxZ).sub(1, 1, 1);
@@ -427,12 +431,12 @@ public final class InstanceType implements NamedCatalogType {
 
             final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(this.key.getValue() + ".conf");
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
-                    .class, Royale.instance.getConfigurationOptions(), configPath);
+                    .class, Royale.instance.getConfigurationOptions(), configPath, false);
 
             try {
                 adapter.load();
                 final InstanceTypeConfiguration config = adapter.getConfig();
-                config.general.name = "Last Man Standing";
+                config.general.name = this.name;
                 config.general.nameTemplate = this.nameTemplate;
                 config.general.centerX = this.centerX;
                 config.general.centerZ = this.centerZ;
