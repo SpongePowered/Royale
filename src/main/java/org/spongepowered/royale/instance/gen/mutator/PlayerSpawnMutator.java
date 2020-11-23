@@ -30,7 +30,6 @@ import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.world.BlockChangeFlags;
 import org.spongepowered.api.world.server.ServerWorld;
-import org.spongepowered.api.world.volume.block.PhysicsAwareMutableBlockVolume;
 import org.spongepowered.api.world.volume.stream.VolumeMapper;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.math.vector.Vector3i;
@@ -45,9 +44,14 @@ public final class PlayerSpawnMutator extends SignMutator {
     }
 
     @Override
-    public VolumeMapper<ServerWorld, BlockEntity> getBlockEntityMapper(
-        final Instance instance
-    ) {
+    public void prepare(final Instance instance) {
+        // TEST CODE
+        instance.addPlayerSpawn(new Vector3d(-11, 64, 56));
+        instance.addPlayerSpawn(new Vector3d(-5, 64, 56));
+    }
+
+    @Override
+    public VolumeMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance) {
         return (world, blockEntitySupplier, x, y, z) -> {
             final BlockState air = BlockTypes.AIR.get().getDefaultState();
             instance.getPositionCache().put(new Vector3i(x, y, z), air);

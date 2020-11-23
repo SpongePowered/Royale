@@ -45,6 +45,7 @@ import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Constants;
+import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 import org.spongepowered.royale.instance.scoreboard.InstanceScoreboard;
 import org.spongepowered.royale.instance.task.CleanupTask;
@@ -277,6 +278,7 @@ public final class Instance {
         switch (next) {
             case PRE_START:
                 this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
+                        .plugin(Royale.instance.getPlugin())
                         .execute(new StartTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Start Countdown - " + this.worldKey)
@@ -285,6 +287,7 @@ public final class Instance {
                 break;
             case POST_START:
                 this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
+                        .plugin(Royale.instance.getPlugin())
                         .execute(new ProgressTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Progress Countdown - " + this.worldKey)
@@ -296,6 +299,7 @@ public final class Instance {
                 break;
             case CLEANUP:
                 this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
+                        .plugin(Royale.instance.getPlugin())
                         .execute(new CleanupTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Cleanup - " + this.worldKey)
@@ -306,6 +310,7 @@ public final class Instance {
                 final List<UUID> winners = new ArrayList<>(this.playerSpawns.keySet());
                 winners.removeAll(this.playerDeaths);
                 this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
+                        .plugin(Royale.instance.getPlugin())
                         .execute(new EndTask(this, winners))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - End Countdown - " + this.worldKey)

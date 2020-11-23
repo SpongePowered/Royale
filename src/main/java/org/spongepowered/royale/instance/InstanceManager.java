@@ -32,6 +32,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.ResourceKey;
+import org.spongepowered.api.Server;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.Transaction;
@@ -79,17 +80,16 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Singleton
 public final class InstanceManager {
 
-    private final Game game;
+    private final Server server;
     private final Map<ResourceKey, Instance> instances;
     private final Map<InstanceType, List<Instance>> instancesByTypes;
     private final Set<ResourceKey> canUseFastPass;
     private final Set<UUID> forceRespawning;
 
-    public InstanceManager(final Game game) {
-        this.game = game;
+    public InstanceManager(final Server server) {
+        this.server = server;
         this.instances = new HashMap<>();
         this.instancesByTypes = new HashMap<>();
         this.canUseFastPass = new HashSet<>();
@@ -102,10 +102,10 @@ public final class InstanceManager {
         }
 
         final Instance instance;
-        ServerWorld world = this.game.getServer().getWorldManager().getWorld(key).orElse(null);
+        ServerWorld world = this.server.getWorldManager().getWorld(key).orElse(null);
 
         if (world == null) {
-            world = this.game.getServer().getWorldManager().loadWorld(key).get();
+            world = this.server.getWorldManager().loadWorld(key).get();
             if (world == null) {
                 throw new IOException(String.format("Failed to load instance '%s''!", key));
             }
@@ -114,7 +114,7 @@ public final class InstanceManager {
         world.getProperties().setKeepSpawnLoaded(true);
         world.getProperties().setSerializationBehavior(SerializationBehavior.NONE);
 
-        instance = new Instance(this.game.getServer(), this, key, type);
+        instance = new Instance(this.server, this, key, type);
 
         this.instances.put(world.getKey(), instance);
         this.instancesByTypes.computeIfAbsent(type, k -> new LinkedList<>()).add(instance);
@@ -161,14 +161,14 @@ public final class InstanceManager {
             return;
         }
 
-        final ServerWorld world = this.game.getServer().getWorldManager().getWorld(instance.getWorldKey()).orElse(null);
+        final ServerWorld world = this.server.getWorldManager().getWorld(instance.getWorldKey()).orElse(null);
 
         if (world == null) {
             this.instances.remove(instance.getWorldKey());
             return;
         }
 
-        final ServerWorld lobby = this.game.getServer().getWorldManager().getWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY)
+        final ServerWorld lobby = this.server.getWorldManager().getWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY)
                 .orElseThrow(() -> new RuntimeException("Lobby world was not found!"));
 
         // Move everyone out
@@ -196,7 +196,7 @@ public final class InstanceManager {
             }
         }
 
-        if (!this.game.getServer().getWorldManager().unloadWorld(world).get()) {
+        if (!this.server.getWorldManager().unloadWorld(world).get()) {
             throw new RuntimeException(String.format("Failed to unload world for instance '%s'!", key));
         }
 
@@ -364,12 +364,12 @@ public final class InstanceManager {
         if (fromInstance != null) {
             if (fromInstance.equals(toInstance)) {
                 fromInstance.spectate(player);
-                this.game.getServer().getScheduler().submit(Task.builder().execute(task -> fromInstance.spectate(player)).plugin(Royale.instance
+                this.server.getScheduler().submit(Task.builder().execute(task -> fromInstance.spectate(player)).plugin(Royale.instance
                         .getPlugin()).build());
             } else if (toInstance != null) {
                 player.setScoreboard(toInstance.getScoreboard().getHandle());
             } else {
-                player.setScoreboard(this.game.getServer().getServerScoreboard().orElse(null));
+                player.setScoreboard(this.server.getServerScoreboard().orElse(null));
             }
         }
     }
@@ -418,33 +418,37 @@ public final class InstanceManager {
 
             block.getLocation().flatMap(Location::getBlockEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
                 if (this.isTpSign(lines)) {
-                    final String name = PlainComponentSerializer.plain().serialize(lines.get(1));
-                    final Optional<Instance> optInstance = this.getInstance(ResourceKey.resolve(name));
-                    if (optInstance.isPresent()) {
-                        if (!optInstance.get().canRegisterMorePlayers()) {
-                            player.sendMessage(Identity.nil(), Component.text("World is full!", NamedTextColor.RED));
-                            return;
-                        }
-                        player.sendMessage(Identity.nil(), Component.text("Joining world " + name, NamedTextColor.GREEN));
-                        optInstance.get().registerPlayer(player);
-                        optInstance.get().spawnPlayer(player);
-                    } else {
-                        if (name.equals("")) {
-                            final Collection<Instance> instances = this.getAll();
-                            if (instances.size() != 1) {
-                                player.sendMessage(Identity.nil(),
-                                        Component.text(String.format("Unable to automatically join select - there are %s to choose from.", instances.size()),
-                                                NamedTextColor.RED));
-                                return;
+                    final String namespace = PlainComponentSerializer.plain().serialize(lines.get(0));
+                    final String value = PlainComponentSerializer.plain().serialize(lines.get(1));
 
-                            }
-                            final Instance realInstance = Iterables.getFirst(instances, null);
-                            if (realInstance != null) {
-                                realInstance.registerPlayer(player);
-                                realInstance.spawnPlayer(player);
-                            }
+                    if (namespace.isEmpty() || value.isEmpty()) {
+                        final Collection<Instance> instances = this.getAll();
+                        if (instances.size() != 1) {
+                            player.sendMessage(Identity.nil(),
+                                    Component.text(String.format("Unable to automatically join select - there are %s to choose from.", instances.size()),
+                                            NamedTextColor.RED));
+                            return;
+
                         }
-                        player.sendMessage(Identity.nil(), Component.text(String.format("World %s isn't up yet!", name), NamedTextColor.RED));
+                        final Instance realInstance = Iterables.getFirst(instances, null);
+                        if (realInstance != null) {
+                            realInstance.registerPlayer(player);
+                            realInstance.spawnPlayer(player);
+                        }
+                    } else {
+                        final ResourceKey key = ResourceKey.of(namespace, value);
+                        final Optional<Instance> optInstance = this.getInstance(key);
+                        if (optInstance.isPresent()) {
+                            if (!optInstance.get().canRegisterMorePlayers()) {
+                                player.sendMessage(Identity.nil(), Component.text("World is full!", NamedTextColor.RED));
+                                return;
+                            }
+                            player.sendMessage(Identity.nil(), Component.text(String.format("Joining world '%s'", key), NamedTextColor.GREEN));
+                            optInstance.get().registerPlayer(player);
+                            optInstance.get().spawnPlayer(player);
+                        } else {
+                            player.sendMessage(Identity.nil(), Component.text(String.format("World '%s' isn't up yet!", key), NamedTextColor.RED));
+                        }
                     }
                 }
             });
@@ -455,7 +459,8 @@ public final class InstanceManager {
     public void onChangeBlock(final ChangeBlockEvent event, @First final ServerPlayer player) {
         for (final Transaction<BlockSnapshot> transaction : event.getTransactions()) {
             final BlockSnapshot snapshot = transaction.getFinal();
-            if (snapshot.getWorld().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
+            if (!player.hasPermission(Royale.instance.getPlugin().getMetadata().getId() + "admin.lobby.edit") && snapshot.getWorld()
+                    .equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                 transaction.setValid(false);
             }
         }
@@ -476,7 +481,7 @@ public final class InstanceManager {
     }
 
     private void convertToLobbyPlayer(final ServerPlayer player) {
-        player.setScoreboard(this.game.getServer().getServerScoreboard().orElse(null));
+        player.setScoreboard(this.server.getServerScoreboard().orElse(null));
         Utils.resetPlayer(player);
     }
 

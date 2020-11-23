@@ -53,15 +53,12 @@ public final class InstanceMutatorPipeline {
 
     public void mutate(final Instance instance, final boolean tryFastPass) {
 
-        // TODO: For compiling and running, this has been commented out
-
         final ServerWorld world = instance.getWorld()
                 .orElseThrow(() -> new RuntimeException(String.format("Attempting to mutate instance '%s' but it's world is not loaded!"
                         , instance.getWorldKey())));
 
         final Vector3i min = instance.getType().getBlockMin();
         final Vector3i max = instance.getType().getBlockMax();
-
 
         for (final InstanceMutator mutator : this.mutators) {
             Royale.instance.getPlugin().getLogger().info("Mutating instance [{}}] with mutator [{}]...", instance.getWorldKey(), mutator.getKey());
@@ -71,12 +68,12 @@ public final class InstanceMutatorPipeline {
         Royale.instance.getPlugin().getLogger().error("[Mutator] Performing slow pass for instance {} - {} blocks total.", instance.getWorldKey(), size.getX() *
                 size.getY() * size.getZ());
 
-        this.mutators.forEach(mutator -> {
-            world.getBlockEntityStream(min, max, StreamOptions.forceLoadedAndCopied())
-                .filter(mutator.getBlockEntityPredicate(instance))
-                .map(mutator.getBlockEntityMapper(instance))
-                .apply(VolumeCollectors.applyBlockEntityToWorld(world));
-        });
+        this.mutators.forEach(mutator -> mutator.prepare(instance));
+
+//        this.mutators.forEach(mutator -> world.getBlockEntityStream(min, max, StreamOptions.forceLoadedAndCopied())
+//            .filter(mutator.getBlockEntityPredicate(instance))
+//            .map(mutator.getBlockEntityMapper(instance))
+//            .apply(VolumeCollectors.applyBlockEntityToWorld(world)));
 
     }
 

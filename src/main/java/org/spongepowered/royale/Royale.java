@@ -40,6 +40,7 @@ import org.spongepowered.api.event.lifecycle.RegisterCatalogEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCatalogRegistryEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
 import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
+import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.configurate.serialize.TypeSerializerCollection;
@@ -69,9 +70,10 @@ public final class Royale {
     private final PluginContainer plugin;
     private final Path configFile;
     private final EventManager eventManager;
-    private final InstanceManager instanceManager;
     private final Random random;
     private final ConfigurationOptions options;
+
+    private InstanceManager instanceManager;
 
     @Inject
     public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final Game game, final ConfigManager configManager) {
@@ -80,7 +82,6 @@ public final class Royale {
         this.plugin = plugin;
         this.configFile = configFile;
         this.eventManager = game.getEventManager();
-        this.instanceManager = new InstanceManager(game);
         this.random = new Random();
         this.options = ConfigurationOptions.defaults()
                 .serializers(configManager.getSerializers().childBuilder()
@@ -102,11 +103,6 @@ public final class Royale {
 
     public ConfigurationOptions getConfigurationOptions() {
         return this.options;
-    }
-
-    @Listener
-    public void onConstructPlugin(final ConstructPluginEvent event) {
-        this.eventManager.registerListeners(this.plugin, this.instanceManager);
     }
 
     @Listener
@@ -163,12 +159,15 @@ public final class Royale {
 
     @Listener
     public void onRegisterCommands(final RegisterCommandEvent<Command.Parameterized> event) {
-        event.register(this.plugin, Commands.rootCommand(this.random, this.instanceManager), Constants.Plugin.ID, Constants.Plugin.ID
+        event.register(this.plugin, Commands.rootCommand(this.random), Constants.Plugin.ID, Constants.Plugin.ID
                 .substring(0, 1));
     }
 
     @Listener
     public void onStartedServer(final StartedEngineEvent<Server> event) {
+        this.instanceManager = new InstanceManager(event.getEngine());
+        this.eventManager.registerListeners(this.plugin, this.instanceManager);
+
         final Server server = event.getEngine();
         final ServerWorld lobbyWorld = server.getWorldManager().getWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY).orElse(null);
         if (lobbyWorld == null) {
@@ -179,5 +178,15 @@ public final class Royale {
                         return null;
                     });
         }
+    }
+
+    @Listener
+    public void onStoppingServer(final StoppingEngineEvent<Server> event) {
+        this.eventManager.unregisterListeners(this.instanceManager);
+        this.instanceManager = null;
+    }
+
+    public InstanceManager getInstanceManager() {
+        return this.instanceManager;
     }
 }

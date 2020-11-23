@@ -31,7 +31,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.LinearComponents;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.adventure.SpongeComponents;
 import org.spongepowered.api.command.Command;
@@ -51,7 +50,6 @@ import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.Instance;
-import org.spongepowered.royale.instance.InstanceManager;
 import org.spongepowered.royale.instance.InstanceType;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
@@ -81,8 +79,6 @@ final class Commands {
                 }
                 return Collections.emptyList();
             }).setKey("players").build();
-    private static final Parameter.Value<ResourceKey> RESOURCE_KEY_ID_PARAMETER = Parameter.resourceKey().setKey("id").build();
-    private static final Parameter.Value<String> NAME_OPTIONAL_PARAMETER = Parameter.string().setKey("name").build();
 
     private static ServerWorld getWorld(final CommandContext context) throws CommandException {
         final Optional<WorldProperties> optWorldProperties = context.getOne(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL);
@@ -97,7 +93,7 @@ final class Commands {
         }
     }
 
-    private static Command.Parameterized createCommand(final Random random, final InstanceManager instanceManager) {
+    private static Command.Parameterized createCommand(final Random random) {
         return Command.builder()
                 .setPermission(Constants.Plugin.ID + ".command.create")
                 .setShortDescription(Component.text("Creates an instance."))
@@ -124,12 +120,6 @@ final class Commands {
                                         instanceType.getKey())));
                     }
 
-                    if (targetProperties.getKey().asString().length() > Constants.Map.MAXIMUM_WORLD_NAME_LENGTH) {
-                        throw new CommandException(Component.text(String
-                                .format("World name %s is too long! It must be at most %s characters!", targetProperties.getKey(),
-                                        Constants.Map.MAXIMUM_WORLD_NAME_LENGTH)));
-                    }
-
                     context.sendMessage(Identity.nil(),
                             Component.text().content("Creating an instance from [")
                                     .append(Commands.format(NamedTextColor.GREEN, targetProperties.getKey().asString()))
@@ -140,7 +130,7 @@ final class Commands {
                     );
 
                     try {
-                        instanceManager.createInstance(targetProperties.getKey(), instanceType);
+                        Royale.instance.getInstanceManager().createInstance(targetProperties.getKey(), instanceType);
                     } catch (final Exception e) {
                         throw new CommandException(Component.text(e.toString()), e);
                     }
@@ -155,7 +145,7 @@ final class Commands {
                     for (final ServerPlayer player : Sponge.getServer().getOnlinePlayers()) {
                         if (player.getWorld().getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                             player.sendMessage(Identity.nil(), Component.text().clickEvent(SpongeComponents.executeCallback(commandCause -> {
-                                final Optional<Instance> inst = instanceManager.getInstance(targetProperties.getKey());
+                                final Optional<Instance> inst = Royale.instance.getInstanceManager().getInstance(targetProperties.getKey());
                                 if (inst.isPresent()) {
                                     final ServerPlayer serverPlayer = (ServerPlayer) commandCause.root();
                                     inst.get().registerPlayer(serverPlayer);
@@ -171,44 +161,7 @@ final class Commands {
                 .build();
     }
 
-    /* TODO: Dynamic Registration?
-    private static Command.Parameterized registerCommand() {
-        return Command.builder()
-                .setPermission(Constants.Plugin.ID + ".command.register")
-                .setShortDescription(Component.text("Registers an ")
-                        .append(format(NamedTextColor.LIGHT_PURPLE, "instance type"))
-                        .append(Component.text(".")))
-                .setExtendedDescription(Component.text("Registers an ")
-                        .append(format(NamedTextColor.LIGHT_PURPLE, "instance type"))
-                        .append(Component.text(" using a specified ID and/or name.")))
-                .parameter(Commands.RESOURCE_KEY_ID_PARAMETER)
-                .parameter(Parameter.string().setKey("name").optional().build())
-                .setExecutor(context -> {
-                    final ResourceKey id = context.requireOne(Commands.RESOURCE_KEY_ID_PARAMETER);
-                    if (Sponge.getRegistry().getCatalogRegistry().get(InstanceType.class, id).isPresent()) {
-                        throw new CommandException(
-                                Component.text().content("Unable to register [")
-                                    .append(Commands.format(NamedTextColor.LIGHT_PURPLE, id.asString()))
-                                    .append(Component.text("] as an instance with this name is already registered."))
-                                    .build());
-                    }
-
-                    final String name = context.getOne(Commands.NAME_OPTIONAL_PARAMETER).orElse(null);
-
-                    try {
-                        InstanceTypeRegistryModule.getInstance().registerAdditionalCatalog(InstanceType.builder().build(id, name));
-                        context.sendMessage(Component.text("Registered instance type [", format(NamedTextColor.LIGHT_PURPLE, id), "]."));
-                    } catch (IOException | ObjectMappingException e) {
-                        throw new CommandException(
-                                Component.text("Failed to register instance [", format(NamedTextColor.LIGHT_PURPLE, id), "].", e));
-                    }
-                    return CommandResult.success();
-                })
-                .build();
-    }
-*/
-
-    private static Command.Parameterized startCommand(final InstanceManager instanceManager) {
+    private static Command.Parameterized startCommand() {
         return Command.builder()
                 .setPermission(Constants.Plugin.ID + ".command.start")
                 .setShortDescription(Component.text("Starts an ")
@@ -220,7 +173,7 @@ final class Commands {
                 .parameter(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL)
                 .setExecutor(context -> {
                     final ServerWorld world = Commands.getWorld(context);
-                    final Optional<Instance> optInstance = instanceManager.getInstance(world.getKey());
+                    final Optional<Instance> optInstance = Royale.instance.getInstanceManager().getInstance(world.getKey());
                     if (!optInstance.isPresent() || optInstance.get().getState().equals(Instance.State.IDLE)) {
                         try {
                             context.sendMessage(Identity.nil(),
@@ -228,7 +181,7 @@ final class Commands {
                                         .append(Commands.format(NamedTextColor.GREEN, world.getKey().toString()))
                                         .append(Component.text("]."))
                                         .build());
-                            instanceManager.startInstance(world.getKey());
+                            Royale.instance.getInstanceManager().startInstance(world.getKey());
                         } catch (final UnknownInstanceException e) {
                             throw new CommandException(Component.text().content("Unable to start round in [")
                                         .append(Commands.format(NamedTextColor.GREEN, world.getKey().toString()))
@@ -245,7 +198,7 @@ final class Commands {
                 .build();
     }
 
-    private static Command.Parameterized endCommand(final InstanceManager instanceManager) {
+    private static Command.Parameterized endCommand() {
         return Command.builder()
                 .setPermission(Constants.Plugin.ID + ".command.end")
                 .setShortDescription(Component.text().content("Ends an ")
@@ -259,13 +212,13 @@ final class Commands {
                     final ServerWorld world;
                     if (optWorldProperties.isPresent()) {
                         final Optional<ServerWorld> opt = optWorldProperties.get().getWorld();
-                        if (!opt.isPresent() && instanceManager.getInstance(optWorldProperties.get().getKey()).isPresent()) {
+                        if (!opt.isPresent() && Royale.instance.getInstanceManager().getInstance(optWorldProperties.get().getKey()).isPresent()) {
                             context.sendMessage(Identity.nil(),
                                     Component.text(String.format("World %s was unloaded, but the instance still exists! Ending instance.",
                                             optWorldProperties.get().getKey()),
                                             NamedTextColor.YELLOW));
                             try {
-                                instanceManager.endInstance(optWorldProperties.get().getKey(), true);
+                                Royale.instance.getInstanceManager().endInstance(optWorldProperties.get().getKey(), true);
                             } catch (final UnknownInstanceException e) {
                                 e.printStackTrace();
                             }
@@ -289,7 +242,7 @@ final class Commands {
                                 .append(Commands.format(NamedTextColor.GREEN, world.getKey().asString()))
                                 .append(Component.text("]."))
                                 .build());
-                        instanceManager.endInstance(world.getKey(), force);
+                        Royale.instance.getInstanceManager().endInstance(world.getKey(), force);
                     } catch (final UnknownInstanceException e) {
                         throw new CommandException(
                                 Component.text().content("Unable to end round in [")
@@ -303,7 +256,7 @@ final class Commands {
                 .build();
     }
 
-    private static Command.Parameterized joinCommand(final InstanceManager instanceManager) {
+    private static Command.Parameterized joinCommand() {
         return Command.builder()
                 .setPermission(Constants.Plugin.ID + ".command.join")
                 .setShortDescription(Component.text()
@@ -317,7 +270,7 @@ final class Commands {
                     final ServerWorld world = Commands.getWorld(context);
 
                     final ServerPlayer player = context.requireOne(CommonParameters.PLAYER_OR_SOURCE);
-                    final Optional<Instance> instance = instanceManager.getInstance(world.getKey());
+                    final Optional<Instance> instance = Royale.instance.getInstanceManager().getInstance(world.getKey());
                     if (!instance.isPresent()) {
                         throw new CommandException(
                                 Component.text().content("Instance [")
@@ -431,7 +384,7 @@ final class Commands {
                 .build();
     }
 
-    private static Command.Parameterized worldModifiedCommand(final InstanceManager instanceManager) {
+    private static Command.Parameterized worldModifiedCommand() {
         return Command.builder()
                 .setShortDescription(Component.text("Sets whether a world has been modified"))
                 .setExtendedDescription(Component.text("This controls whether or not a fast mutator pass can be used"))
@@ -441,7 +394,7 @@ final class Commands {
                 .setExecutor(context -> {
                     final WorldProperties properties = context.requireOne(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY);
                     final boolean modified = context.requireOne(Commands.MODIFIED_PARAMETER);
-                    instanceManager.setWorldModified(properties.getKey(), modified);
+                    Royale.instance.getInstanceManager().setWorldModified(properties.getKey(), modified);
 
                     context.sendMessage(Identity.nil(),
                             Commands.format(NamedTextColor.GREEN, String.format("Set modified state of world %s to %s!", properties.getKey(), modified)));
@@ -479,7 +432,7 @@ final class Commands {
                 .build();
     }
 
-    private static Command.Parameterized unloadWorldCommand(final InstanceManager instanceManager) {
+    private static Command.Parameterized unloadWorldCommand() {
         return Command.builder()
                 .setShortDescription(Component.text("Manually unloads a world"))
                 .parameter(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY)
@@ -491,7 +444,7 @@ final class Commands {
                         throw new CommandException(Component.text(String.format("World %s is not loaded!", properties.getKey())));
                     }
 
-                    if (instanceManager.getInstance(properties.getKey()).isPresent()) {
+                    if (Royale.instance.getInstanceManager().getInstance(properties.getKey()).isPresent()) {
                         throw new CommandException(Commands.format(NamedTextColor.RED,
                                 String.format("Instance %s is currently running! Use '/s end %s' to end it!", properties.getKey(),
                                         properties.getKey())));
@@ -514,7 +467,7 @@ final class Commands {
                 .build();
     }
 
-    static Command.Parameterized rootCommand(final Random random, final InstanceManager instanceManager) {
+    static Command.Parameterized rootCommand(final Random random) {
         return Command.builder()
                 .setPermission(Constants.Plugin.ID + ".command.help")
                 .setShortDescription(Component.text("Displays available commands"))
@@ -523,17 +476,17 @@ final class Commands {
                     context.sendMessage(Identity.nil(), Component.text("Some help should go here..."));
                     return CommandResult.success();
                 })
-                .child(Commands.createCommand(random, instanceManager), "create", "c")
+                .child(Commands.createCommand(random), "create", "c")
                 // .child(Commands.registerCommand(), "register", "reg")
-                .child(Commands.startCommand(instanceManager), "start")
-                .child(Commands.endCommand(instanceManager), "end", "e")
-                .child(Commands.joinCommand(instanceManager), "join", "j")
+                .child(Commands.startCommand(), "start")
+                .child(Commands.endCommand(), "end", "e")
+                .child(Commands.joinCommand(), "join", "j")
                 .child(Commands.reloadCommand(), "reload", "rel")
                 .child(Commands.setCommand(), "set")
                 .child(Commands.tpWorldCommand(), "tpworld", "tpw")
-                .child(Commands.worldModifiedCommand(instanceManager), "worldmodified", "modified", "wm")
+                .child(Commands.worldModifiedCommand(), "worldmodified", "modified", "wm")
                 .child(Commands.loadWorldCommand(), "loadworld", "load", "lw")
-                .child(Commands.unloadWorldCommand(instanceManager), "unloadworld", "unload", "uw")
+                .child(Commands.unloadWorldCommand(), "unloadworld", "unload", "uw")
                 .build();
     }
 

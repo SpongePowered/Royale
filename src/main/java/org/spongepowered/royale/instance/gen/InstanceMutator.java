@@ -48,6 +48,10 @@ public abstract class InstanceMutator implements CatalogType {
         return this.key;
     }
 
+    public void prepare(final Instance instance) {
+
+    }
+
     public abstract VolumePredicate<ServerWorld, BlockEntity> getBlockEntityPredicate(final Instance instance);
 
     public abstract VolumeMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance);

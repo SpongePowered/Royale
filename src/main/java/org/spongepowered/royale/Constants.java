@@ -71,7 +71,6 @@ public final class Constants {
         public static final int DEFAULT_MAP_MIN_Y = 0;
         public static final int DEFAULT_MAP_MAX_Y = 256;
         public static final ComponentTemplate DEFAULT_TEXT_TEMPLATE_NAME = new ComponentTemplate("<red><pl_sponge:name></red>");
-        static final int MAXIMUM_WORLD_NAME_LENGTH = 15;
         public static final int DEFAULT_WORLD_BORDER_CENTER_X = 0;
         public static final int DEFAULT_WORLD_BORDER_CENTER_Z = 0;
         public static final int DEFAULT_WORLD_BORDER_RADIUS = 250;

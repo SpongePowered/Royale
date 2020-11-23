@@ -218,7 +218,7 @@ public final class InstanceType implements NamedCatalogType {
     @Override
     public String toString() {
         return "InstanceType{" +
-                "id='" + this.key + '\'' +
+                "key='" + this.key + '\'' +
                 ", name='" + this.name + '\'' +
                 ", nameTemplate=" + this.nameTemplate +
                 ", roundStartTemplate=" + this.roundStartTemplate +
