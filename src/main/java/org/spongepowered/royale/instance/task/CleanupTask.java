@@ -178,7 +178,7 @@ public final class CleanupTask extends InstanceTask {
     }
 
     @Override
-    public void cancel() {
-        this.handle.cancel();
+    public boolean cancel() {
+        return this.handle.cancel();
     }
 }

@@ -41,5 +41,5 @@ public abstract class InstanceTask implements Consumer<ScheduledTask> {
         return this.instance;
     }
 
-    public abstract void cancel();
+    public abstract boolean cancel();
 }

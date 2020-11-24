@@ -143,7 +143,7 @@ public final class Instance {
     }
 
     public void advance() {
-        this.server.getWorldManager().getWorld(worldKey)
+        this.server.getWorldManager().getWorld(this.worldKey)
                 .orElseThrow(() -> new RuntimeException("Attempted to advance an instance for an offline "
                         + "world!"));
 

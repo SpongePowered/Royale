@@ -59,11 +59,11 @@ public final class ProgressTask extends InstanceTask {
     }
 
     @Override
-    public void cancel() {
+    public boolean cancel() {
         for (final UUID profile : this.bossBarViewers) {
             Sponge.getServer().getPlayer(profile).ifPresent(p -> p.hideBossBar(this.bossBar));
         }
-        this.handle.cancel();
+        return this.handle.cancel();
     }
 
     @Override

@@ -75,20 +75,22 @@ public final class StartTask extends InstanceTask {
         // Make sure the world is still around and loaded
         if (world != null && world.isLoaded()) {
 
+            if (this.seconds >= this.startTitles.size()) {
+                if (this.cancel()) {
+                    this.getInstance().advance();
+                }
+                return;
+            }
+
             // Make sure a player ref isn't still here
             world.getPlayers().forEach(player -> player.showTitle(this.startTitles.get(this.seconds)));
 
             this.seconds++;
-
-            if (this.seconds >= startTitles.size()) {
-                this.cancel();
-                this.getInstance().advance();
-            }
         }
     }
 
     @Override
-    public void cancel() {
-        this.handle.cancel();
+    public boolean cancel() {
+        return this.handle.cancel();
     }
 }
