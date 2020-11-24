@@ -70,10 +70,10 @@ public final class InstanceMutatorPipeline {
 
         this.mutators.forEach(mutator -> mutator.prepare(instance));
 
-//        this.mutators.forEach(mutator -> world.getBlockEntityStream(min, max, StreamOptions.forceLoadedAndCopied())
-//            .filter(mutator.getBlockEntityPredicate(instance))
-//            .map(mutator.getBlockEntityMapper(instance))
-//            .apply(VolumeCollectors.applyBlockEntityToWorld(world)));
+        this.mutators.forEach(mutator -> world.getBlockEntityStream(min, max, StreamOptions.forceLoadedAndCopied())
+            .filter(mutator.getBlockEntityPredicate(instance))
+            .map(mutator.getBlockEntityMapper(instance))
+            .apply(VolumeCollectors.applyBlockEntityToWorld(world)));
 
     }
 

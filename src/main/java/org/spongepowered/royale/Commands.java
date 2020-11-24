@@ -103,13 +103,13 @@ final class Commands {
                         .append(format(NamedTextColor.LIGHT_PURPLE, "type"))
                         .append(Component.text(".")))
                 .parameter(Commands.INSTANCE_TYPE_PARAMETER_OPTIONAL)
-                .parameter(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL)
+                .parameter(CommonParameters.ALL_WORLD_PROPERTIES)
                 .setExecutor(context -> {
                     final InstanceType instanceType = context.getOne(Commands.INSTANCE_TYPE_PARAMETER_OPTIONAL).orElseGet(() -> {
                         final Collection<InstanceType> types = Sponge.getRegistry().getCatalogRegistry().getAllOf(InstanceType.class);
                         return Iterables.get(types, random.nextInt(types.size()));
                     });
-                    final WorldProperties targetProperties = context.getOne(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY).orElseGet(() -> {
+                    final WorldProperties targetProperties = context.getOne(CommonParameters.ALL_WORLD_PROPERTIES).orElseGet(() -> {
                         final Optional<WorldProperties> properties = Sponge.getServer().getWorldManager().getProperties(instanceType.getKey());
                         return properties.orElse(null);
                     });
@@ -148,8 +148,9 @@ final class Commands {
                                 final Optional<Instance> inst = Royale.instance.getInstanceManager().getInstance(targetProperties.getKey());
                                 if (inst.isPresent()) {
                                     final ServerPlayer serverPlayer = (ServerPlayer) commandCause.root();
-                                    inst.get().registerPlayer(serverPlayer);
-                                    inst.get().spawnPlayer(serverPlayer);
+                                    if (inst.get().registerPlayer(serverPlayer)) {
+                                        inst.get().spawnPlayer(serverPlayer);
+                                    }
                                 }
                             })).append(LinearComponents
                                     .linear(Component.text("["), format(NamedTextColor.RED, targetProperties.getKey().toString()),
@@ -283,8 +284,9 @@ final class Commands {
                             .append(Commands.format(NamedTextColor.GREEN, world.getKey().asString()))
                             .append(Component.text("]."))
                             .build());
-                    instance.get().registerPlayer(player);
-                    instance.get().spawnPlayer(player);
+                    if (instance.get().registerPlayer(player)) {
+                        instance.get().spawnPlayer(player);
+                    }
 
                     return CommandResult.success();
                 })

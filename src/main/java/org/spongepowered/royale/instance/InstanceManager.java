@@ -112,7 +112,7 @@ public final class InstanceManager {
         }
 
         world.getProperties().setKeepSpawnLoaded(true);
-        world.getProperties().setSerializationBehavior(SerializationBehavior.NONE);
+        //world.getProperties().setSerializationBehavior(SerializationBehavior.NONE);
 
         instance = new Instance(this.server, this, key, type);
 
@@ -432,8 +432,9 @@ public final class InstanceManager {
                         }
                         final Instance realInstance = Iterables.getFirst(instances, null);
                         if (realInstance != null) {
-                            realInstance.registerPlayer(player);
-                            realInstance.spawnPlayer(player);
+                            if (realInstance.registerPlayer(player)) {
+                                realInstance.spawnPlayer(player);
+                            }
                         }
                     } else {
                         final ResourceKey key = ResourceKey.of(namespace, value);
@@ -444,8 +445,9 @@ public final class InstanceManager {
                                 return;
                             }
                             player.sendMessage(Identity.nil(), Component.text(String.format("Joining world '%s'", key), NamedTextColor.GREEN));
-                            optInstance.get().registerPlayer(player);
-                            optInstance.get().spawnPlayer(player);
+                            if (optInstance.get().registerPlayer(player)) {
+                                optInstance.get().spawnPlayer(player);
+                            }
                         } else {
                             player.sendMessage(Identity.nil(), Component.text(String.format("World '%s' isn't up yet!", key), NamedTextColor.RED));
                         }

@@ -28,6 +28,10 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
+import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
@@ -152,7 +156,7 @@ public final class Instance {
     }
 
     void advanceTo(State state) {
-        final Optional<ServerWorld> world = this.server.getWorldManager().getWorld(worldKey);
+        final Optional<ServerWorld> world = this.server.getWorldManager().getWorld(this.worldKey);
         if (!world.isPresent()) {
             if (state == State.FORCE_STOP) {
                 try {
@@ -183,11 +187,14 @@ public final class Instance {
         return this.unusedSpawns.size() != 0;
     }
 
-    public void registerPlayer(final Player player) {
+    public boolean registerPlayer(final Player player) {
         if (this.unusedSpawns.isEmpty()) {
-            throw new IllegalStateException("This instance cannot register any more players!");
+            player.sendMessage(Identity.nil(), Component.text("This instance cannot support any additional players!", NamedTextColor.RED));
+            return false;
         }
+
         this.registeredPlayers.add(player.getUniqueId());
+        return true;
     }
 
     public void addPlayerSpawn(final Vector3d spawn) {

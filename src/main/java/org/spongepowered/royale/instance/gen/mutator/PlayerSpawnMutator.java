@@ -45,9 +45,9 @@ public final class PlayerSpawnMutator extends SignMutator {
 
     @Override
     public void prepare(final Instance instance) {
-        // TEST CODE
-        instance.addPlayerSpawn(new Vector3d(-11, 64, 56));
-        instance.addPlayerSpawn(new Vector3d(-5, 64, 56));
+//        // TEST CODE
+//        instance.addPlayerSpawn(new Vector3d(-11, 64, 56));
+//        instance.addPlayerSpawn(new Vector3d(-5, 64, 56));
     }
 
     @Override
