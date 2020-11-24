@@ -34,7 +34,6 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.adventure.SpongeComponents;
 import org.spongepowered.api.command.Command;
-import org.spongepowered.api.command.CommandCause;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.exception.CommandException;
 import org.spongepowered.api.command.parameter.CommandContext;
@@ -68,17 +67,13 @@ final class Commands {
             Parameter.catalogedElement(InstanceType.class).optional().setKey("instanceType").build();
     private static final Parameter.Value<InstanceType> INSTANCE_TYPE_PARAMETER =
             Parameter.catalogedElement(InstanceType.class).setKey("instanceType").build();
-    private static final Parameter.Value<Boolean> FORCE_PARAMETER = Parameter.bool().setKey("force").orDefault(false).build();
-    private static final Parameter.Value<Boolean> MODIFIED_PARAMETER = Parameter.bool().setKey("modified").orDefault(true).build();
+    private static final Parameter.Value<Boolean> FORCE_PARAMETER = Parameter.bool().setKey("force").optional().build();
+    private static final Parameter.Value<Boolean> MODIFIED_PARAMETER = Parameter.bool().setKey("modified").optional().build();
     private static final Parameter.Value<SerializationBehavior> SERIALIZATION_BEHAVIOR_PARAMETER =
             Parameter.enumValue(SerializationBehavior.class).setKey("behavior").build();
     private static final Parameter.Value<List<ServerPlayer>> MANY_PLAYERS =
-            Parameter.builder(new TypeToken<List<ServerPlayer>>() {}).parser(CatalogedValueParameters.MANY_PLAYERS).orDefault((CommandCause cause) -> {
-                if (cause.root() instanceof ServerPlayer) {
-                    return Collections.singletonList((ServerPlayer) cause.root());
-                }
-                return Collections.emptyList();
-            }).setKey("players").build();
+            Parameter.builder(new TypeToken<List<ServerPlayer>>() {}).parser(CatalogedValueParameters.MANY_PLAYERS).optional()
+                    .setKey("players").build();
 
     private static ServerWorld getWorld(final CommandContext context) throws CommandException {
         final Optional<WorldProperties> optWorldProperties = context.getOne(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL);
@@ -234,7 +229,7 @@ final class Commands {
                                 new CommandException(Component.text("World was not provided!")));
                     }
 
-                    final boolean force = context.requireOne(Commands.FORCE_PARAMETER);
+                    final boolean force = context.getOne(Commands.FORCE_PARAMETER).orElse(false);
 
                     try {
                         context.sendMessage(Identity.nil(), Component.text()
@@ -265,12 +260,25 @@ final class Commands {
                         .append(Commands.format(NamedTextColor.LIGHT_PURPLE, "instance"))
                         .append(Component.text("."))
                         .build())
-                .parameter(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL)
-                .parameter(CommonParameters.PLAYER_OR_SOURCE)
+                .parameter(Parameter.firstOfBuilder(Parameter.seq(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY, CommonParameters.PLAYER_OPTIONAL))
+                        .or(CommonParameters.PLAYER_OPTIONAL).optional().build())
                 .setExecutor(context -> {
                     final ServerWorld world = Commands.getWorld(context);
 
-                    final ServerPlayer player = context.requireOne(CommonParameters.PLAYER_OR_SOURCE);
+                    final Optional<ServerPlayer> playerReturn = context.getOne(CommonParameters.PLAYER_OPTIONAL);
+                    final ServerPlayer player;
+                    if (playerReturn.isPresent()) {
+                        player = playerReturn.get();
+                    } else {
+                        if (context.getCause().root() instanceof ServerPlayer) {
+                            player = (ServerPlayer) context.getCause().root();
+                        } else {
+                            context.sendMessage(Identity.nil(),
+                                    Component.text("A player needs to be provided if you are not a player!", NamedTextColor.RED));
+                            return CommandResult.empty();
+                        }
+                    }
+
                     final Optional<Instance> instance = Royale.instance.getInstanceManager().getInstance(world.getKey());
                     if (!instance.isPresent()) {
                         throw new CommandException(
@@ -378,7 +386,20 @@ final class Commands {
                 .setPermission(Constants.Plugin.ID + ".command.tpworld")
                 .setExecutor(context -> {
                     final ServerWorld world = Commands.getWorld(context);
-                    for (final ServerPlayer target : context.requireOne(Commands.MANY_PLAYERS)) {
+                    final Optional<List<ServerPlayer>> playerReturn = context.getOne(Commands.MANY_PLAYERS);
+                    final Collection<ServerPlayer> players;
+                    if (playerReturn.isPresent()) {
+                        players = playerReturn.get();
+                    } else {
+                        if (context.getCause().root() instanceof ServerPlayer) {
+                            players = Collections.singletonList((ServerPlayer) context.getCause().root());
+                        } else {
+                            context.sendMessage(Identity.nil(),
+                                    Component.text("Players need to be provided if you are not a player!", NamedTextColor.RED));
+                            return CommandResult.empty();
+                        }
+                    }
+                    for (final ServerPlayer target : players) {
                         target.setLocation(ServerLocation.of(world, world.getProperties().getSpawnPosition()));
                     }
                     return CommandResult.success();
@@ -395,7 +416,7 @@ final class Commands {
                 .setPermission(Constants.Permissions.WORLD_MODIFIED_COMMAND)
                 .setExecutor(context -> {
                     final WorldProperties properties = context.requireOne(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY);
-                    final boolean modified = context.requireOne(Commands.MODIFIED_PARAMETER);
+                    final boolean modified = context.getOne(Commands.MODIFIED_PARAMETER).orElse(true);
                     Royale.instance.getInstanceManager().setWorldModified(properties.getKey(), modified);
 
                     context.sendMessage(Identity.nil(),
