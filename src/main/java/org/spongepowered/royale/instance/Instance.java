@@ -280,6 +280,8 @@ public final class Instance {
                     }
                 }
             }
+
+            this.tasks.clear();
         }
 
         switch (next) {
@@ -289,8 +291,8 @@ public final class Instance {
                         .execute(new StartTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Start Countdown - " + this.worldKey)
-                        .build())
-                        .getUniqueId());
+                        .build()
+                ).getUniqueId());
                 break;
             case POST_START:
                 this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
@@ -298,8 +300,8 @@ public final class Instance {
                         .execute(new ProgressTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Progress Countdown - " + this.worldKey)
-                        .build())
-                        .getUniqueId());
+                        .build()
+                ).getUniqueId());
                 break;
             case RUNNING:
                 // TODO This activates before any additional code is called in the round task. Useless state for now, could be handy later
@@ -310,8 +312,8 @@ public final class Instance {
                         .execute(new CleanupTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Cleanup - " + this.worldKey)
-                        .build())
-                        .getUniqueId());
+                        .build()
+                ).getUniqueId());
                 break;
             case PRE_END:
                 final List<UUID> winners = new ArrayList<>(this.playerSpawns.keySet());
@@ -321,8 +323,8 @@ public final class Instance {
                         .execute(new EndTask(this, winners))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - End Countdown - " + this.worldKey)
-                        .build())
-                        .getUniqueId());
+                        .build()
+                ).getUniqueId());
                 break;
             case POST_END:
             case FORCE_STOP:
