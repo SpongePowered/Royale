@@ -56,6 +56,7 @@ import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.util.Ticks;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.SerializationBehavior;
 import org.spongepowered.api.world.ServerLocation;
@@ -320,10 +321,16 @@ public final class InstanceManager {
         if (instance != null) {
             if (instance.isPlayerRegistered(player.getUniqueId())) {
                 instance.disqualifyPlayer(player);
-                player.respawnPlayer();
                 if (instance.isRoundOver()) {
                     instance.advanceTo(Instance.State.PRE_END);
                 }
+
+                this.server.getScheduler().submit(Task.builder().plugin(Royale.instance.getPlugin()).delay(Ticks.of(0)).execute(() -> {
+                    if (player.isOnline()) {
+                        player.respawnPlayer();
+                    }
+                }).build());
+                player.respawnPlayer();
             }
         }
     }

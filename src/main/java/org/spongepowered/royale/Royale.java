@@ -159,7 +159,8 @@ public final class Royale {
             this.plugin.getLogger().info("Registered instance type '{}'", defaultType.getKey());
 
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
-                    InstanceTypeConfiguration.class, this.options, Constants.Map.INSTANCE_TYPES_FOLDER.resolve(defaultType.getKey().getValue()));
+                    InstanceTypeConfiguration.class, this.options, Constants.Map.INSTANCE_TYPES_FOLDER.resolve(defaultType.getKey().getValue() +
+                ".conf"));
             defaultType.injectIntoConfig(adapter.getConfig());
             try {
                 adapter.save();

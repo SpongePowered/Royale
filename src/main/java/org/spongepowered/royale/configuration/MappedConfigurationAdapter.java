@@ -31,7 +31,6 @@ import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.objectmapping.ObjectMapper;
 import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
@@ -57,6 +56,11 @@ public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
             throw new RuntimeException(String.format("Failed to construct mapper for config class '%s'!", this.configClass));
         }
         this.root = this.loader.createNode(options);
+        try {
+            this.config = this.mapper.load(this.root);
+        } catch (final SerializationException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Class<T> getConfigClass() {
