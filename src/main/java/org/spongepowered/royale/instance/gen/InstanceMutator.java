@@ -29,7 +29,7 @@ import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.world.server.ServerWorld;
-import org.spongepowered.api.world.volume.stream.VolumeMapper;
+import org.spongepowered.api.world.volume.stream.VolumeFlatMapper;
 import org.spongepowered.api.world.volume.stream.VolumePredicate;
 import org.spongepowered.royale.instance.Instance;
 
@@ -54,7 +54,7 @@ public abstract class InstanceMutator implements CatalogType {
 
     public abstract VolumePredicate<ServerWorld, BlockEntity> getBlockEntityPredicate(final Instance instance);
 
-    public abstract VolumeMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance);
+    public abstract VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance);
 
     @Override
     public int hashCode() {

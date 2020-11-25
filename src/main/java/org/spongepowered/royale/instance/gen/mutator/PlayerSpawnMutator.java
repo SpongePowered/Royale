@@ -30,12 +30,14 @@ import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.world.BlockChangeFlags;
 import org.spongepowered.api.world.server.ServerWorld;
-import org.spongepowered.api.world.volume.stream.VolumeMapper;
+import org.spongepowered.api.world.volume.stream.VolumeFlatMapper;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.Instance;
+
+import java.util.Optional;
 
 public final class PlayerSpawnMutator extends SignMutator {
 
@@ -48,7 +50,7 @@ public final class PlayerSpawnMutator extends SignMutator {
     }
 
     @Override
-    public VolumeMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance) {
+    public VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance) {
         return (world, blockEntitySupplier, x, y, z) -> {
             final BlockState air = BlockTypes.AIR.get().getDefaultState();
             instance.getPositionCache().put(new Vector3i(x, y, z), air);
@@ -58,7 +60,7 @@ public final class PlayerSpawnMutator extends SignMutator {
 
             instance.addPlayerSpawn(new Vector3d(x + 0.5, y + 0.0125, z + 0.5));
             Royale.instance.getPlugin().getLogger().info("Found player spawn at {}x, {}y, {}z.", x, y, z);
-            return null;
+            return Optional.empty();
         };
     }
 

@@ -36,8 +36,7 @@ import org.spongepowered.api.util.Direction;
 import org.spongepowered.api.util.weighted.LootTable;
 import org.spongepowered.api.world.BlockChangeFlags;
 import org.spongepowered.api.world.server.ServerWorld;
-import org.spongepowered.api.world.volume.block.PhysicsAwareMutableBlockVolume;
-import org.spongepowered.api.world.volume.stream.VolumeMapper;
+import org.spongepowered.api.world.volume.stream.VolumeFlatMapper;
 import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
@@ -46,6 +45,7 @@ import org.spongepowered.royale.instance.gen.loot.ItemArchetype;
 import org.spongepowered.royale.instance.gen.loot.Loot;
 
 import java.util.List;
+import java.util.Optional;
 
 public final class ChestMutator extends SignMutator {
 
@@ -54,7 +54,7 @@ public final class ChestMutator extends SignMutator {
     }
 
     @Override
-    public VolumeMapper<ServerWorld, BlockEntity> getBlockEntityMapper(
+    public VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(
         final Instance instance
     ) {
         return (world, blockentitySupplier, x, y, z) -> {
@@ -82,7 +82,7 @@ public final class ChestMutator extends SignMutator {
                 chest.getInventory().offer(item.create(Royale.instance.getRandom()));
             }
 
-            return chest;
+            return Optional.of(chest);
         };
     }
 }
