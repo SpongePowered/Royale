@@ -83,14 +83,14 @@ public final class CleanupTask extends InstanceTask {
         final Random random = Royale.instance.getRandom();
 
         if (world != null && world.isLoaded()) {
-            if (this.duration < 10) {
+            if (this.duration < 50) {
                 for (final ServerPlayer player : world.getPlayers()) {
                     if (!this.getInstance().isPlayerRegistered(player.getUniqueId())) {
                         continue;
                     }
 
                     if (this.duration == 0) {
-                        player.showTitle(title);
+                        player.showTitle(this.title);
                     }
 
                     final Vector3d location = player.getLocation().getPosition();
@@ -99,7 +99,7 @@ public final class CleanupTask extends InstanceTask {
                     ServerLocation spawnLocation = null;
 
                     // 5 tries to spawn
-                    int tries = 5;
+                    int tries = 6;
 
                     while (tries > 0) {
                         spawnLocation = this.getInstance().getServer().getTeleportHelper().getSafeLocation(human.getServerLocation()
@@ -108,7 +108,8 @@ public final class CleanupTask extends InstanceTask {
                         if (spawnLocation != null) {
                             human.setLocation(spawnLocation);
                             if (world.getEntities(human.getBoundingBox().get()).isEmpty()) {
-                                break;
+                                tries--;
+                                continue;
                             }
                         }
 
@@ -129,7 +130,7 @@ public final class CleanupTask extends InstanceTask {
 
                         if (rangerChance < 0.3f) {
                             normalGoal.addGoal(1,
-                                    RangedAttackAgainstAgentGoal.builder().moveSpeed(0.5D).attackRadius(20f).delayBetweenAttacks(10).build(
+                                    RangedAttackAgainstAgentGoal.builder().moveSpeed(5.5).attackRadius(20f).delayBetweenAttacks(8).build(
                                             human));
                             human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.BOW, 1));
                             final ItemStack tipped = ItemStack.of(ItemTypes.TIPPED_ARROW, 1);
@@ -140,11 +141,11 @@ public final class CleanupTask extends InstanceTask {
                             human.setItemInHand(HandTypes.OFF_HAND, tipped);
                             ranger = true;
                         } else {
-                            normalGoal.addGoal(1, AttackLivingGoal.builder().longMemory().speed(0.8D).build(human));
+                            normalGoal.addGoal(1, AttackLivingGoal.builder().longMemory().speed(6.5).build(human));
                             human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.DIAMOND_SWORD, 1));
                         }
 
-                        normalGoal.addGoal(2, RandomWalkingGoal.builder().speed(0.3D).build(human));
+                        normalGoal.addGoal(2, RandomWalkingGoal.builder().speed(5).build(human));
                         normalGoal.addGoal(3, LookAtGoal.builder().maxDistance(8f).watch(ServerPlayer.class).build(human));
                         normalGoal.addGoal(3, LookRandomlyGoal.builder().build(human));
 
@@ -167,7 +168,7 @@ public final class CleanupTask extends InstanceTask {
                             .canCauseFire(true)
                             .shouldBreakBlocks(true)
                             .shouldPlaySmoke(true)
-                            .radius(5)
+                            .radius(6)
                             .location(explosionLocation)
                             .build());
                 }

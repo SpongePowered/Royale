@@ -112,7 +112,7 @@ public final class InstanceManager {
         }
 
         world.getProperties().setKeepSpawnLoaded(true);
-        //world.getProperties().setSerializationBehavior(SerializationBehavior.NONE);
+        world.getProperties().setSerializationBehavior(SerializationBehavior.AUTOMATIC_METADATA_ONLY);
 
         instance = new Instance(this.server, this, key, type);
 

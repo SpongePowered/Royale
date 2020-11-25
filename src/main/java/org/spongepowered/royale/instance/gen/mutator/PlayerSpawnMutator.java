@@ -46,10 +46,6 @@ public final class PlayerSpawnMutator extends SignMutator {
     }
 
     @Override
-    public void prepare(final Instance instance) {
-    }
-
-    @Override
     public VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance) {
         return (world, blockEntitySupplier, x, y, z) -> {
             final BlockState air = BlockTypes.AIR.get().getDefaultState();
@@ -63,5 +59,4 @@ public final class PlayerSpawnMutator extends SignMutator {
             return Optional.empty();
         };
     }
-
 }

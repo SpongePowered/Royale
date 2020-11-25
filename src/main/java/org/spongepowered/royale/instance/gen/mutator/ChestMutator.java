@@ -54,9 +54,7 @@ public final class ChestMutator extends SignMutator {
     }
 
     @Override
-    public VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(
-        final Instance instance
-    ) {
+    public VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance) {
         return (world, blockentitySupplier, x, y, z) -> {
             final Sign sign = (Sign) blockentitySupplier.get();
             final Direction facingDirection = sign.get(Keys.DIRECTION).orElse(null);
