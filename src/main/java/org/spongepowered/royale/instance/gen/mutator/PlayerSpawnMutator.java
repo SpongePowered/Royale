@@ -45,9 +45,6 @@ public final class PlayerSpawnMutator extends SignMutator {
 
     @Override
     public void prepare(final Instance instance) {
-        // TEST CODE
-        instance.addPlayerSpawn(new Vector3d(51, 63, 145));
-        instance.addPlayerSpawn(new Vector3d(45, 63, 145));
     }
 
     @Override
@@ -60,7 +57,7 @@ public final class PlayerSpawnMutator extends SignMutator {
             world.removeBlockEntity(x, y, z);
 
             instance.addPlayerSpawn(new Vector3d(x + 0.5, y + 0.0125, z + 0.5));
-            Royale.instance.getPlugin().getLogger().debug("Found player spawn at {}x, {}y, {}z.", x, y, z);
+            Royale.instance.getPlugin().getLogger().info("Found player spawn at {}x, {}y, {}z.", x, y, z);
             return null;
         };
     }

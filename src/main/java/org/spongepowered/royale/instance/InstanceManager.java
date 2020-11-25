@@ -96,7 +96,7 @@ public final class InstanceManager {
         this.forceRespawning = new HashSet<>();
     }
 
-    public void createInstance(final ResourceKey key, final InstanceType type) throws Exception {
+    public void createInstance(final ResourceKey key, final InstanceType type) throws IOException {
         if (this.instances.containsKey(key)) {
             throw new InstanceAlreadyExistsException(key.toString());
         }
@@ -105,7 +105,7 @@ public final class InstanceManager {
         ServerWorld world = this.server.getWorldManager().getWorld(key).orElse(null);
 
         if (world == null) {
-            world = this.server.getWorldManager().loadWorld(key).get();
+            world = this.server.getWorldManager().loadWorld(key).getNow(null);
             if (world == null) {
                 throw new IOException(String.format("Failed to load instance '%s''!", key));
             }

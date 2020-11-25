@@ -53,6 +53,7 @@ import org.spongepowered.royale.instance.InstanceType;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
@@ -124,10 +125,16 @@ final class Commands {
                                     .build()
                     );
 
+                    final Instance currentInstance = Royale.instance.getInstanceManager().getInstance(targetProperties.getKey()).orElse(null);
+                    if (currentInstance != null) {
+                        throw new CommandException(Component.text().append(Component.text("World "), Component.text(currentInstance.getWorldKey().getFormatted(),
+                                NamedTextColor.DARK_PURPLE), Component.text(" is already an instance!")).build());
+                    }
+
                     try {
                         Royale.instance.getInstanceManager().createInstance(targetProperties.getKey(), instanceType);
-                    } catch (final Exception e) {
-                        throw new CommandException(Component.text(e.toString()), e);
+                    } catch (final IOException e) {
+                        throw new RuntimeException(e);
                     }
 
                     context.sendMessage(Identity.nil(),
@@ -314,7 +321,7 @@ final class Commands {
                     final InstanceType instanceType = context.requireOne(Commands.INSTANCE_TYPE_PARAMETER);
                     final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(instanceType.getKey().getValue() + ".conf");
                     final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
-                            InstanceTypeConfiguration.class, Royale.instance.getConfigurationOptions(), configPath, false);
+                            InstanceTypeConfiguration.class, Royale.instance.getConfigurationOptions(), configPath);
 
                     try {
                         adapter.load();

@@ -44,7 +44,7 @@ public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
     private ConfigurationNode root;
     private T config;
 
-    public MappedConfigurationAdapter(final Class<T> configClass, final ConfigurationOptions options, final Path configFile, final boolean save) {
+    public MappedConfigurationAdapter(final Class<T> configClass, final ConfigurationOptions options, final Path configFile) {
         this.configClass = configClass;
         this.configFile = configFile;
         this.loader = HoconConfigurationLoader.builder()
@@ -57,13 +57,6 @@ public final class MappedConfigurationAdapter<T extends AbstractConfiguration> {
             throw new RuntimeException(String.format("Failed to construct mapper for config class '%s'!", this.configClass));
         }
         this.root = this.loader.createNode(options);
-        if (save) {
-            try {
-                this.save();
-            } catch (final ConfigurateException e) {
-                throw new RuntimeException(String.format("Failed to save config for class '%s'' from '%s''!", this.configClass, this.configFile), e);
-            }
-        }
     }
 
     public Class<T> getConfigClass() {

@@ -24,7 +24,7 @@
  */
 package org.spongepowered.royale.instance.exception;
 
-public final class InstanceAlreadyExistsException extends Exception {
+public final class InstanceAlreadyExistsException extends RuntimeException {
 
     public InstanceAlreadyExistsException(final String instance) {
         super(String.format("Attempt to create instance '%s' but it already exists!", instance));

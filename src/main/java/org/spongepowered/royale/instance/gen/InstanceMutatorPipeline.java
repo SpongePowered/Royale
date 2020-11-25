@@ -61,7 +61,7 @@ public final class InstanceMutatorPipeline {
         final Vector3i max = instance.getType().getBlockMax();
 
         for (final InstanceMutator mutator : this.mutators) {
-            Royale.instance.getPlugin().getLogger().info("Mutating instance [{}}] with mutator [{}]...", instance.getWorldKey(), mutator.getKey());
+            Royale.instance.getPlugin().getLogger().info("Mutating instance [{}] with mutator [{}]...", instance.getWorldKey(), mutator.getKey());
         }
 
         final Vector3i size = instance.getType().getBlockSize();

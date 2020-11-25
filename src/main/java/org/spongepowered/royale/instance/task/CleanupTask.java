@@ -129,7 +129,7 @@ public final class CleanupTask extends InstanceTask {
 
                         if (rangerChance < 0.3f) {
                             normalGoal.addGoal(1,
-                                    RangedAttackAgainstAgentGoal.builder().moveSpeed(0.4D).attackRadius(20f).delayBetweenAttacks(10).build(
+                                    RangedAttackAgainstAgentGoal.builder().moveSpeed(0.5D).attackRadius(20f).delayBetweenAttacks(10).build(
                                             human));
                             human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.BOW, 1));
                             final ItemStack tipped = ItemStack.of(ItemTypes.TIPPED_ARROW, 1);
@@ -140,7 +140,7 @@ public final class CleanupTask extends InstanceTask {
                             human.setItemInHand(HandTypes.OFF_HAND, tipped);
                             ranger = true;
                         } else {
-                            normalGoal.addGoal(1, AttackLivingGoal.builder().longMemory().speed(0.4D).build(human));
+                            normalGoal.addGoal(1, AttackLivingGoal.builder().longMemory().speed(0.8D).build(human));
                             human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.DIAMOND_SWORD, 1));
                         }
 

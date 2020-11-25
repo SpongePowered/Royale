@@ -42,6 +42,7 @@ import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
 import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
 import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
 import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.configurate.serialize.TypeSerializerCollection;
 import org.spongepowered.plugin.PluginContainer;
@@ -119,16 +120,13 @@ public final class Royale {
 
     @Listener
     public void onRegisterInstanceTypes(final RegisterCatalogEvent<InstanceType> event) {
-        InstanceType.builder()
-                .key(ResourceKey.of(this.plugin, "last_man_standing"))
-                .name("Last Man Standing")
-                .build();
+        boolean createDefaults = true;
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Constants.Map.INSTANCE_TYPES_FOLDER, entry -> entry.getFileName().toString()
                 .endsWith(".conf"))) {
             for (final Path path : stream) {
                 final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
-                        InstanceTypeConfiguration.class, this.options, path, false);
+                        InstanceTypeConfiguration.class, this.options, path);
 
                 try {
                     adapter.load();
@@ -143,12 +141,31 @@ public final class Royale {
                         .key(ResourceKey.of(this.plugin, instanceId))
                         .build();
 
-                this.plugin.getLogger().info("Registered instance type '{}'", instanceId);
+                this.plugin.getLogger().info("Registered instance type '{}'", newType.getKey());
                 event.register(newType);
+                createDefaults = false;
             }
 
         } catch (final IOException e) {
             throw new RuntimeException("Failed to iterate over the instance type configuration files!");
+        }
+
+        if (createDefaults) {
+            final InstanceType defaultType = InstanceType.builder()
+                    .key(ResourceKey.of(this.plugin, "last_man_standing"))
+                    .name("Last Man Standing")
+                    .build();
+            event.register(defaultType);
+            this.plugin.getLogger().info("Registered instance type '{}'", defaultType.getKey());
+
+            final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
+                    InstanceTypeConfiguration.class, this.options, Constants.Map.INSTANCE_TYPES_FOLDER.resolve(defaultType.getKey().getValue()));
+            defaultType.injectIntoConfig(adapter.getConfig());
+            try {
+                adapter.save();
+            } catch (final ConfigurateException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 

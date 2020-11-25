@@ -198,6 +198,34 @@ public final class InstanceType implements NamedCatalogType {
         this.max = new Vector3i(this.centerX + this.maxX, this.maxY, this.centerZ + this.maxZ).sub(1, 1, 1);
     }
 
+    public void injectIntoConfig(final InstanceTypeConfiguration config) {
+
+        config.general.name = this.name;
+        config.general.nameTemplate = this.nameTemplate;
+        config.general.centerX = this.centerX;
+        config.general.centerZ = this.centerZ;
+        config.general.minX = this.minX;
+        config.general.minY = this.minY;
+        config.general.minZ = this.minZ;
+        config.general.maxX = this.maxX;
+        config.general.maxY = this.maxY;
+        config.general.maxZ = this.maxZ;
+        config.general.worldBorderCenterX = this.worldBorderX;
+        config.general.worldBorderCenterZ = this.worldBorderZ;
+        config.general.worldBorderRadius = this.worldBorderRadius;
+        config.general.mapMutators.clear();
+        config.general.mapMutators.addAll(this.mutatorPipeline.getMutators().stream().map(InstanceMutator::getKey).collect(Collectors.toList()));
+
+        config.round.defaultItems.clear();
+        config.round.defaultItems.addAll(this.defaultItems);
+        config.round.start = this.roundStartLength;
+        config.round.startTemplate = this.roundStartTemplate;
+        config.round.length = this.roundLength;
+        config.round.end = this.roundEndLength;
+        config.round.endTemplate = this.roundEndTemplate;
+        config.round.automaticStartPlayerCount = this.automaticStartPlayerCount;
+    }
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) {
@@ -428,42 +456,6 @@ public final class InstanceType implements NamedCatalogType {
             Objects.requireNonNull(this.nameTemplate);
             Objects.requireNonNull(this.roundStartTemplate);
             Objects.requireNonNull(this.roundEndTemplate);
-
-            final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(this.key.getValue() + ".conf");
-            final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(InstanceTypeConfiguration
-                    .class, Royale.instance.getConfigurationOptions(), configPath, false);
-
-            try {
-                adapter.load();
-                final InstanceTypeConfiguration config = adapter.getConfig();
-                config.general.name = this.name;
-                config.general.nameTemplate = this.nameTemplate;
-                config.general.centerX = this.centerX;
-                config.general.centerZ = this.centerZ;
-                config.general.minX = this.minX;
-                config.general.minY = this.minY;
-                config.general.minZ = this.minZ;
-                config.general.maxX = this.maxX;
-                config.general.maxY = this.maxY;
-                config.general.maxZ = this.maxZ;
-                config.general.worldBorderCenterX = this.worldBorderX;
-                config.general.worldBorderCenterZ = this.worldBorderZ;
-                config.general.worldBorderRadius = this.worldBorderRadius;
-                config.general.mapMutators.clear();
-                config.general.mapMutators.addAll(this.mutators.stream().map(InstanceMutator::getKey).collect(Collectors.toList()));
-
-                config.round.defaultItems.clear();
-                config.round.defaultItems.addAll(this.defaultItems);
-                config.round.start = this.roundStartLength;
-                config.round.startTemplate = this.roundStartTemplate;
-                config.round.length = this.roundLength;
-                config.round.end = this.roundEndLength;
-                config.round.endTemplate = this.roundEndTemplate;
-                config.round.automaticStartPlayerCount = this.automaticStartPlayerCount;
-                adapter.save();
-            } catch (final Exception ex) {
-                throw new RuntimeException(ex);
-            }
 
             return new InstanceType(this);
         }
