@@ -304,7 +304,6 @@ public final class Instance {
                 ).getUniqueId());
                 break;
             case RUNNING:
-                // TODO This activates before any additional code is called in the round task. Useless state for now, could be handy later
                 break;
             case CLEANUP:
                 this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()

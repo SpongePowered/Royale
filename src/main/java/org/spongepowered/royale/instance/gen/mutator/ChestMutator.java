@@ -66,7 +66,7 @@ public final class ChestMutator extends SignMutator {
             final BlockState defaultChestState = BlockTypes.CHEST.get().getDefaultState();
             final BlockState newChestState = defaultChestState.with(Keys.DIRECTION, facingDirection)
                 .orElse(defaultChestState);
-            world.setBlock(x, y, z, newChestState, BlockChangeFlags.PHYSICS_OBSERVER);
+            world.setBlock(x, y, z, newChestState, BlockChangeFlags.ALL);
             instance.getPositionCache().put(new Vector3i(x, y, z), newChestState);
 
             final BlockEntity blockEntity = world.getBlockEntity(x, y, z)

@@ -45,9 +45,7 @@ abstract class SignMutator extends InstanceMutator {
     }
 
     @Override
-    public VolumePredicate<ServerWorld, BlockEntity> getBlockEntityPredicate(
-        Instance instance
-    ) {
+    public VolumePredicate<ServerWorld, BlockEntity> getBlockEntityPredicate(final Instance instance) {
         return (world, blockEntitySupplier, x, y, z) -> {
             final BlockEntity blockEntity = blockEntitySupplier.get();
             if (!(blockEntity instanceof Sign)) {

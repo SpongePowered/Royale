@@ -83,7 +83,7 @@ public final class CleanupTask extends InstanceTask {
         final Random random = Royale.instance.getRandom();
 
         if (world != null && world.isLoaded()) {
-            if (this.duration < 50) {
+            if (this.duration < 150) {
                 for (final ServerPlayer player : world.getPlayers()) {
                     if (!this.getInstance().isPlayerRegistered(player.getUniqueId())) {
                         continue;
@@ -98,8 +98,8 @@ public final class CleanupTask extends InstanceTask {
 
                     ServerLocation spawnLocation = null;
 
-                    // 5 tries to spawn
-                    int tries = 6;
+                    // 4 tries to spawn
+                    int tries = 4;
 
                     while (tries > 0) {
                         spawnLocation = this.getInstance().getServer().getTeleportHelper().getSafeLocation(human.getServerLocation()
@@ -119,7 +119,7 @@ public final class CleanupTask extends InstanceTask {
                     if (spawnLocation != null) {
                         final GoalExecutor<Agent> targetGoal = human.getGoal(GoalExecutorTypes.TARGET.get()).orElse(null);
                         targetGoal.addGoal(0, FindNearestAttackableTargetGoal.builder().chance(1).target(ServerPlayer.class)
-                                .filter(e -> this.getInstance().isPlayerRegistered(e.getUniqueId())).build(human));
+                                .filter(e -> this.getInstance().isPlayerRegistered(e.getUniqueId()) && !this.getInstance().isPlayerDead(e.getUniqueId())).build(human));
 
                         final GoalExecutor<Agent> normalGoal = human.getGoal(GoalExecutorTypes.NORMAL.get()).orElse(null);
                         normalGoal.addGoal(0, SwimGoal.builder().swimChance(0.8f).build(human));
@@ -130,7 +130,7 @@ public final class CleanupTask extends InstanceTask {
 
                         if (rangerChance < 0.3f) {
                             normalGoal.addGoal(1,
-                                    RangedAttackAgainstAgentGoal.builder().moveSpeed(5.5).attackRadius(20f).delayBetweenAttacks(8).build(
+                                    RangedAttackAgainstAgentGoal.builder().moveSpeed(5.5).attackRadius(20f).delayBetweenAttacks(12).build(
                                             human));
                             human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.BOW, 1));
                             final ItemStack tipped = ItemStack.of(ItemTypes.TIPPED_ARROW, 1);
@@ -158,7 +158,7 @@ public final class CleanupTask extends InstanceTask {
             } else {
                 // Blow this place to pieces
                 for (final ServerPlayer player : world.getPlayers()) {
-                    if (player.isRemoved() || player.gameMode().get() == GameModes.SPECTATOR.get()) {
+                    if (this.getInstance().isPlayerDead(player.getUniqueId())) {
                         continue;
                     }
 

@@ -66,11 +66,11 @@ public final class InstanceScoreboard {
     public InstanceScoreboard(final Instance instance) {
         this.scoreboard = Scoreboard.builder().build();
         this.objective =
-                Objective.builder().name("main").displayName(Component.text(instance.getWorldKey().toString(), NamedTextColor.GREEN))
+                Objective.builder().name("main").displayName(Component.text(instance.getWorldKey().getFormatted(), NamedTextColor.GREEN))
                         .criterion(Criteria.DUMMY).build();
 
         // Instance type
-        this.instanceTypeScore = this.objective.getOrCreateScore(Component.text(instance.getType().getKey().toString(), NamedTextColor.RED));
+        this.instanceTypeScore = this.objective.getOrCreateScore(Component.text(instance.getType().getName(), NamedTextColor.RED));
         this.instanceTypeScore.setScore(0);
 
         // Dashes
@@ -107,8 +107,9 @@ public final class InstanceScoreboard {
 
     public void killPlayer(final Player player) {
         if (!this.playerData.containsKey(player.getUniqueId())) {
-            throw new IllegalArgumentException(String.format("Player %s is not on this scoreboard!", player.getName()));
+            return;
         }
+
         final PlayerData data = this.playerData.get(player.getUniqueId());
         data.team.setPrefix(Component.text("", null, TextDecoration.STRIKETHROUGH));
         data.dead = true;

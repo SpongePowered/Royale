@@ -87,14 +87,12 @@ public final class InstanceManager {
     private final Map<ResourceKey, Instance> instances;
     private final Map<InstanceType, List<Instance>> instancesByTypes;
     private final Set<ResourceKey> canUseFastPass;
-    private final Set<UUID> forceRespawning;
 
     public InstanceManager(final Server server) {
         this.server = server;
         this.instances = new HashMap<>();
         this.instancesByTypes = new HashMap<>();
         this.canUseFastPass = new HashSet<>();
-        this.forceRespawning = new HashSet<>();
     }
 
     public void createInstance(final ResourceKey key, final InstanceType type) throws IOException {
@@ -175,12 +173,7 @@ public final class InstanceManager {
         // Move everyone out
         for (final ServerPlayer player : world.getPlayers()) {
             if (instance.isPlayerRegistered(player.getUniqueId())) {
-                if (player.isRemoved()) {
-                    this.forceRespawning.add(player.getUniqueId());
-                    player.respawnPlayer();
-                    this.convertToLobbyPlayer(player);
-                    this.forceRespawning.remove(player.getUniqueId());
-                }
+                this.convertToLobbyPlayer(player);
                 player.getInventory().clear();
             }
 
@@ -286,6 +279,9 @@ public final class InstanceManager {
         }
 
         if (fromInstance != null) {
+
+            player.setScoreboard(this.server.getServerScoreboard().get());
+
             // Switching out of instance means we kill them in the instance they left
             if (fromInstance.isPlayerRegistered(player.getUniqueId())) {
                 fromInstance.disqualifyPlayer(player);
@@ -305,7 +301,8 @@ public final class InstanceManager {
                         player.setScoreboard(toInstance.getScoreboard().getHandle());
                     }
 
-                } else if (toWorld.getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
+                } else {
+
                     // Going from a non-instance world to lobby
                     this.convertToLobbyPlayer(player);
                 }
@@ -324,13 +321,6 @@ public final class InstanceManager {
                 if (instance.isRoundOver()) {
                     instance.advanceTo(Instance.State.PRE_END);
                 }
-
-                this.server.getScheduler().submit(Task.builder().plugin(Royale.instance.getPlugin()).delay(Ticks.of(0)).execute(() -> {
-                    if (player.isOnline()) {
-                        player.respawnPlayer();
-                    }
-                }).build());
-                player.respawnPlayer();
             }
         }
     }
@@ -338,10 +328,6 @@ public final class InstanceManager {
     @Listener(order = Order.LAST)
     public void onRespawnPlayerSelectWorld(final RespawnPlayerEvent.SelectWorld event, @Getter("getEntity") final ServerPlayer player,
             @Getter("getOriginalWorld") final ServerWorld fromWorld, @Getter("getDestinationWorld") final ServerWorld toWorld) {
-
-        if (this.forceRespawning.contains(player.getUniqueId())) {
-            return;
-        }
 
         final Instance fromInstance = getInstance(fromWorld.getKey()).orElse(null);
         Instance toInstance = this.getInstance(toWorld.getKey()).orElse(null);
@@ -355,10 +341,6 @@ public final class InstanceManager {
     public void onRespawnPlayer(final RespawnPlayerEvent.Recreate event, @Getter("getRecreatedPlayer") final ServerPlayer player,
             @Getter("getOriginalWorld") final ServerWorld fromWorld, @Getter("getDestinationWorld") final ServerWorld toWorld) {
 
-        if (this.forceRespawning.contains(player.getUniqueId())) {
-            return;
-        }
-
         final Instance fromInstance = this.getInstance(fromWorld.getKey()).orElse(null);
         Instance toInstance = this.getInstance(toWorld.getKey()).orElse(null);
 
@@ -371,8 +353,6 @@ public final class InstanceManager {
         if (fromInstance != null) {
             if (fromInstance.equals(toInstance)) {
                 fromInstance.spectate(player);
-                this.server.getScheduler().submit(Task.builder().execute(task -> fromInstance.spectate(player)).plugin(Royale.instance
-                        .getPlugin()).build());
             } else if (toInstance != null) {
                 player.setScoreboard(toInstance.getScoreboard().getHandle());
             } else {
