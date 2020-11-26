@@ -202,12 +202,6 @@ public final class InstanceManager {
         return Optional.ofNullable(this.instances.get(key));
     }
 
-    public Collection<Instance> getInstances(final InstanceType type) {
-        Objects.requireNonNull(type);
-        final List<Instance> instances = this.instancesByTypes.get(type);
-        return Collections.unmodifiableCollection(instances == null ? Collections.emptyList() : instances);
-    }
-
     public Collection<Instance> getAll() {
         return Collections.unmodifiableCollection(this.instances.values());
     }

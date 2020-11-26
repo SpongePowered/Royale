@@ -105,15 +105,26 @@ final class Commands {
                         final Collection<InstanceType> types = Sponge.getRegistry().getCatalogRegistry().getAllOf(InstanceType.class);
                         return Iterables.get(types, random.nextInt(types.size()));
                     });
-                    final WorldProperties targetProperties = context.getOne(CommonParameters.ALL_WORLD_PROPERTIES).orElseGet(() -> {
+                    WorldProperties targetProperties = context.getOne(CommonParameters.ALL_WORLD_PROPERTIES).orElseGet(() -> {
                         final Optional<WorldProperties> properties = Sponge.getServer().getWorldManager().getProperties(instanceType.getKey());
                         return properties.orElse(null);
                     });
 
+                    if (targetProperties != null && !targetProperties.getWorld().isPresent()) {
+                        final ServerWorld loadedWorld = Sponge.getServer().getWorldManager().loadWorld(targetProperties).getNow(null);
+
+                        if (loadedWorld == null) {
+                            throw new CommandException(Commands.format(NamedTextColor.RED, String.format("Unable to find a world using instance type"
+                                    + " id of %s. World could not be loaded!", instanceType.getKey())));
+                        }
+
+                        targetProperties = loadedWorld.getProperties();
+                    }
+
                     if (targetProperties == null) {
                         throw new CommandException(
-                                Commands.format(NamedTextColor.RED, String.format("Unable to find a world using instance type id of %s",
-                                        instanceType.getKey())));
+                                Commands.format(NamedTextColor.RED, String.format("Unable to find a world using instance type id of %s", instanceType
+                                        .getKey())));
                     }
 
                     context.sendMessage(Identity.nil(),
@@ -127,8 +138,10 @@ final class Commands {
 
                     final Instance currentInstance = Royale.instance.getInstanceManager().getInstance(targetProperties.getKey()).orElse(null);
                     if (currentInstance != null) {
-                        throw new CommandException(Component.text().append(Component.text("World "), Component.text(currentInstance.getWorldKey().getFormatted(),
-                                NamedTextColor.DARK_PURPLE), Component.text(" is already an instance!")).build());
+                        throw new CommandException(Component.text().append(Component.text("World "), Component.text(currentInstance
+                                        .getWorldKey().getFormatted(), NamedTextColor.DARK_PURPLE), Component.text(" is already an instance!"))
+                                .build()
+                        );
                     }
 
                     try {
@@ -144,10 +157,11 @@ final class Commands {
                                     .build()
                     );
 
+                    final WorldProperties actualProperties = targetProperties;
                     for (final ServerPlayer player : Sponge.getServer().getOnlinePlayers()) {
                         if (player.getWorld().getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                             player.sendMessage(Identity.nil(), Component.text().clickEvent(SpongeComponents.executeCallback(commandCause -> {
-                                final Optional<Instance> inst = Royale.instance.getInstanceManager().getInstance(targetProperties.getKey());
+                                final Optional<Instance> inst = Royale.instance.getInstanceManager().getInstance(actualProperties.getKey());
                                 if (inst.isPresent()) {
                                     final ServerPlayer serverPlayer = (ServerPlayer) commandCause.root();
                                     if (inst.get().registerPlayer(serverPlayer)) {

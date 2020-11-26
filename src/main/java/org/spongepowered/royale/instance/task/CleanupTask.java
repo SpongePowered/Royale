@@ -130,7 +130,7 @@ public final class CleanupTask extends InstanceTask {
 
                         if (rangerChance < 0.3f) {
                             normalGoal.addGoal(1,
-                                    RangedAttackAgainstAgentGoal.builder().moveSpeed(5.5).attackRadius(20f).delayBetweenAttacks(12).build(
+                                    RangedAttackAgainstAgentGoal.builder().moveSpeed(7.75).attackRadius(15f).delayBetweenAttacks(65).build(
                                             human));
                             human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.BOW, 1));
                             final ItemStack tipped = ItemStack.of(ItemTypes.TIPPED_ARROW, 1);
@@ -141,11 +141,11 @@ public final class CleanupTask extends InstanceTask {
                             human.setItemInHand(HandTypes.OFF_HAND, tipped);
                             ranger = true;
                         } else {
-                            normalGoal.addGoal(1, AttackLivingGoal.builder().longMemory().speed(6.5).build(human));
+                            normalGoal.addGoal(1, AttackLivingGoal.builder().longMemory().speed(8.25).build(human));
                             human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.DIAMOND_SWORD, 1));
                         }
 
-                        normalGoal.addGoal(2, RandomWalkingGoal.builder().speed(5).build(human));
+                        normalGoal.addGoal(2, RandomWalkingGoal.builder().speed(6.5).build(human));
                         normalGoal.addGoal(3, LookAtGoal.builder().maxDistance(8f).watch(ServerPlayer.class).build(human));
                         normalGoal.addGoal(3, LookRandomlyGoal.builder().build(human));
 
@@ -168,7 +168,7 @@ public final class CleanupTask extends InstanceTask {
                             .canCauseFire(true)
                             .shouldBreakBlocks(true)
                             .shouldPlaySmoke(true)
-                            .radius(6)
+                            .radius(8)
                             .location(explosionLocation)
                             .build());
                 }

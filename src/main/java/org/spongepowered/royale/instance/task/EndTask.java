@@ -65,6 +65,8 @@ public final class EndTask extends InstanceTask {
         this.handle = task;
 
         if (this.winners.isEmpty()) {
+            this.cancel();
+            this.getInstance().advance();
             return;
         }
 
@@ -106,7 +108,7 @@ public final class EndTask extends InstanceTask {
                             if (player.getUniqueId().equals(winner.get().getUniqueId())) {
                                 player.showTitle(this.winnerTitle);
                             } else {
-                                player.showTitle(title);
+                                player.showTitle(this.title);
                             }
                         }
                     }

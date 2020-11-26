@@ -81,7 +81,6 @@ public final class Instance {
     private final Map<UUID, Vector3d> playerSpawns = new HashMap<>();
     private final Set<UUID> playerDeaths = new HashSet<>();
     private final Set<UUID> tasks = Sets.newLinkedHashSet();
-    private final Map<Vector3i, BlockState> positionCache;
     private final InstanceScoreboard scoreboard;
     private State state = State.IDLE;
 
@@ -91,7 +90,6 @@ public final class Instance {
         this.worldKey = worldKey;
         this.instanceType = instanceType;
         this.scoreboard = new InstanceScoreboard(this);
-        this.positionCache = new HashMap<>();
 
         final ServerWorld world = this.server.getWorldManager().getWorld(worldKey)
                 .orElseThrow(() -> new RuntimeException("Attempted to create an instance for an offline "
@@ -124,10 +122,6 @@ public final class Instance {
 
     public InstanceScoreboard getScoreboard() {
         return this.scoreboard;
-    }
-
-    public Map<Vector3i, BlockState> getPositionCache() {
-        return this.positionCache;
     }
 
     public boolean isPlayerRegistered(final UUID uniqueId) {
@@ -217,13 +211,13 @@ public final class Instance {
         }
 
         checkState(!this.unusedSpawns.isEmpty(), "No spawn available for player!");
-        final Vector3d player_spawn = this.unusedSpawns.pop();
-
-        this.playerSpawns.put(player.getUniqueId(), player_spawn);
+        final Vector3d playerSpawn = this.unusedSpawns.pop();
 
         this.scoreboard.addPlayer(player);
 
-        player.setLocation(ServerLocation.of(world, player_spawn));
+        player.setLocation(ServerLocation.of(world, playerSpawn));
+
+        this.playerSpawns.put(player.getUniqueId(), playerSpawn);
 
         final int playerCount = this.instanceType.getAutomaticStartPlayerCount();
         if (playerCount == this.registeredPlayers.size() && this.state == State.IDLE) {

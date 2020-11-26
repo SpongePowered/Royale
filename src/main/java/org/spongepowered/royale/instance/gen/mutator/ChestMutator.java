@@ -67,7 +67,6 @@ public final class ChestMutator extends SignMutator {
             final BlockState newChestState = defaultChestState.with(Keys.DIRECTION, facingDirection)
                 .orElse(defaultChestState);
             world.setBlock(x, y, z, newChestState, BlockChangeFlags.ALL);
-            instance.getPositionCache().put(new Vector3i(x, y, z), newChestState);
 
             final BlockEntity blockEntity = world.getBlockEntity(x, y, z)
                 .orElseThrow(() -> new IllegalStateException("Something is quite wrong...we set a Chest down yet found no block entity. This is a serious issue likely due to server misconfiguration!"));

@@ -111,8 +111,6 @@ public final class Loot {
 
         // @formatter:off
 
-        // TODO flesh out these tables more
-
         // basic_food
         Loot.basicFood.add(     item(   ItemTypes.APPLE.get(),                range(1, 3)),   5);
         Loot.basicFood.add(     item(   ItemTypes.BAKED_POTATO.get(),         range(1, 3)),   3);
