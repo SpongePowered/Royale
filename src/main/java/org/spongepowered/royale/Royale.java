@@ -39,7 +39,9 @@ import org.spongepowered.api.event.lifecycle.RegisterBuilderEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCatalogEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCatalogRegistryEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
+import org.spongepowered.api.event.lifecycle.RegisterWorldEvent;
 import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
+import org.spongepowered.api.event.lifecycle.StartingEngineEvent;
 import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.configurate.ConfigurateException;
@@ -182,20 +184,13 @@ public final class Royale {
     }
 
     @Listener
-    public void onStartedServer(final StartedEngineEvent<Server> event) {
-        this.instanceManager = new InstanceManager(event.getEngine());
-        this.eventManager.registerListeners(this.plugin, this.instanceManager);
+    public void onRegisterWorld(final RegisterWorldEvent event) {
+        event.register(Constants.Map.Lobby.LOBBY_WORLD_KEY, Constants.Map.Lobby.LOBBY_ARCHETYPE);
+    }
 
-        final Server server = event.getEngine();
-        final ServerWorld lobbyWorld = server.getWorldManager().getWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY).orElse(null);
-        if (lobbyWorld == null) {
-            server.getWorldManager().createProperties(Constants.Map.Lobby.LOBBY_WORLD_KEY, Constants.Map.Lobby.LOBBY_ARCHETYPE)
-                    .thenCompose(props -> Sponge.getServer().getWorldManager().loadWorld(props))
-                    .exceptionally(e -> {
-                        this.plugin.getLogger().catching(e);
-                        return null;
-                    });
-        }
+    @Listener
+    public void onStartingServer(final StartingEngineEvent<Server> event) {
+        this.instanceManager = new InstanceManager(event.getEngine());
     }
 
     @Listener
