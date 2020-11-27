@@ -24,7 +24,6 @@
  */
 package org.spongepowered.royale.instance.gen;
 
-import com.google.common.base.MoreObjects;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.volume.stream.StreamOptions;
 import org.spongepowered.api.world.volume.stream.VolumeCollectors;
@@ -35,6 +34,7 @@ import org.spongepowered.royale.instance.Instance;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringJoiner;
 
 /**
  * Mutates the map templates after loading into the final form.
@@ -79,8 +79,8 @@ public final class InstanceMutatorPipeline {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("mutators", this.mutators)
+        return new StringJoiner(", ", InstanceMutatorPipeline.class.getSimpleName() + "[", "]")
+                .add("mutators=" + this.mutators)
                 .toString();
     }
 }

@@ -24,9 +24,7 @@
  */
 package org.spongepowered.royale.instance.task;
 
-import com.google.common.collect.Lists;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.spongepowered.api.data.Keys;
@@ -45,7 +43,6 @@ import org.spongepowered.api.entity.ai.goal.builtin.creature.RangedAttackAgainst
 import org.spongepowered.api.entity.ai.goal.builtin.creature.target.FindNearestAttackableTargetGoal;
 import org.spongepowered.api.entity.living.Agent;
 import org.spongepowered.api.entity.living.Human;
-import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
@@ -58,6 +55,8 @@ import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.Instance;
 
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 public final class CleanupTask extends InstanceTask {
@@ -134,7 +133,7 @@ public final class CleanupTask extends InstanceTask {
                                             human));
                             human.setItemInHand(HandTypes.MAIN_HAND, ItemStack.of(ItemTypes.BOW, 1));
                             final ItemStack tipped = ItemStack.of(ItemTypes.TIPPED_ARROW, 1);
-                            tipped.offer(Keys.POTION_EFFECTS, Lists.newArrayList(
+                            tipped.offer(Keys.POTION_EFFECTS, Arrays.asList(
                                     PotionEffect.of(PotionEffectTypes.GLOWING.get(), 1, 60),
                                     PotionEffect.of(PotionEffectTypes.SLOWNESS.get(), 1, 60)));
 

@@ -24,7 +24,6 @@
  */
 package org.spongepowered.royale.instance.gen.mutator;
 
-import com.google.common.base.MoreObjects;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.entity.BlockEntity;
@@ -34,6 +33,8 @@ import org.spongepowered.api.world.volume.stream.VolumePredicate;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.Instance;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
+
+import java.util.StringJoiner;
 
 abstract class SignMutator extends InstanceMutator {
 
@@ -65,9 +66,9 @@ abstract class SignMutator extends InstanceMutator {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("key", this.getKey())
-                .add("signId", this.signId)
+        return new StringJoiner(", ", this.getClass().getSimpleName() + "[", "]")
+                .add("key=" + this.getKey())
+                .add("signId=" + this.signId)
                 .toString();
     }
 }

@@ -24,7 +24,6 @@
  */
 package org.spongepowered.royale.instance.gen;
 
-import com.google.common.base.MoreObjects;
 import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.entity.BlockEntity;
@@ -34,6 +33,7 @@ import org.spongepowered.api.world.volume.stream.VolumePredicate;
 import org.spongepowered.royale.instance.Instance;
 
 import java.util.Objects;
+import java.util.StringJoiner;
 
 public abstract class InstanceMutator implements CatalogType {
 
@@ -75,8 +75,8 @@ public abstract class InstanceMutator implements CatalogType {
 
     @Override
     public String toString() {
-        return MoreObjects.toStringHelper(this)
-                .add("key", this.key)
+        return new StringJoiner(", ", InstanceMutator.class.getSimpleName() + "[", "]")
+                .add("key=" + this.key)
                 .toString();
     }
 }

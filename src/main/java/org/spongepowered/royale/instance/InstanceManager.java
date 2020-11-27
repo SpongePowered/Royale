@@ -24,13 +24,10 @@
  */
 package org.spongepowered.royale.instance;
 
-import com.google.common.collect.Iterables;
-import com.google.inject.Singleton;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
-import org.spongepowered.api.Game;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.block.BlockSnapshot;
@@ -55,8 +52,6 @@ import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
-import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.util.Ticks;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.SerializationBehavior;
 import org.spongepowered.api.world.ServerLocation;
@@ -78,8 +73,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 public final class InstanceManager {
 
@@ -193,8 +186,6 @@ public final class InstanceManager {
         if (!this.server.getWorldManager().unloadWorld(world).get()) {
             throw new RuntimeException(String.format("Failed to unload world for instance '%s'!", key));
         }
-
-        this.setWorldModified(instance.getWorldKey(), false);
     }
 
     public Optional<Instance> getInstance(final ResourceKey key) {
@@ -227,7 +218,11 @@ public final class InstanceManager {
                     // Player disconnecting instantly means they forfeit
                     instance.disqualifyPlayer(player);
                     if (instance.isRoundOver()) {
-                        instance.advanceTo(Instance.State.PRE_END);
+                        if (world.getPlayers().isEmpty()) {
+                            instance.advanceTo(Instance.State.FORCE_STOP);
+                        } else {
+                            instance.advanceTo(Instance.State.PRE_END);
+                        }
                     }
                 }
             }
@@ -374,7 +369,7 @@ public final class InstanceManager {
 
     @Listener
     public void onChangeSign(final ChangeSignEvent event, @Root final ServerPlayer player) {
-        if (this.isTpSign(event.getText().get())) {
+        if (this.isTeleportSign(event.getText().get())) {
             if (player.hasPermission(Constants.Permissions.ADMIN)) {
                 player.sendMessage(Identity.nil(), Component.text("Successfully created world teleportation sign!", NamedTextColor.GREEN));
                 event.getText().set(0, event.getText().get(0).colorIfAbsent(NamedTextColor.AQUA));
@@ -398,7 +393,7 @@ public final class InstanceManager {
             final BlockSnapshot block = ((InteractBlockEvent.Secondary) event).getBlock();
 
             block.getLocation().flatMap(Location::getBlockEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
-                if (this.isTpSign(lines)) {
+                if (this.isTeleportSign(lines)) {
                     final String namespace = PlainComponentSerializer.plain().serialize(lines.get(0));
                     final String value = PlainComponentSerializer.plain().serialize(lines.get(1));
 
@@ -411,7 +406,7 @@ public final class InstanceManager {
                             return;
 
                         }
-                        final Instance realInstance = Iterables.getFirst(instances, null);
+                        final Instance realInstance = instances.stream().findAny().get();
                         if (realInstance != null) {
                             if (realInstance.registerPlayer(player)) {
                                 realInstance.spawnPlayer(player);
@@ -447,20 +442,6 @@ public final class InstanceManager {
                 transaction.setValid(false);
             }
         }
-
-        final Set<ResourceKey> uniqueWorlds = event.getTransactions().stream()
-                .map(x -> x.getOriginal().getWorld())
-                .collect(Collectors.toSet());
-        for (final ResourceKey name : uniqueWorlds) {
-            if (!this.getInstance(name).isPresent() && this.canUseFastPass.contains(name)) {
-                this.setWorldModified(name, true);
-                player.sendMessage(Identity.nil(), Component.text(String.format(
-                        "You have modified the world '%s' - mutators will take longer to run the next time an instance of this map is started.\n" +
-                                "If you make any modifications outside of the game, make sure to run '/worldmodified %s' so that your changes are "
-                                + "detected.",
-                        name, name), NamedTextColor.YELLOW));
-            }
-        }
     }
 
     private void convertToLobbyPlayer(final ServerPlayer player) {
@@ -468,7 +449,7 @@ public final class InstanceManager {
         Utils.resetPlayer(player);
     }
 
-    private boolean isTpSign(final List<Component> lines) {
+    private boolean isTeleportSign(final List<Component> lines) {
         return lines.size() != 0 && PlainComponentSerializer.plain().serialize(lines.get(0)).equalsIgnoreCase(Constants.Map.Lobby.SIGN_HEADER);
     }
 }

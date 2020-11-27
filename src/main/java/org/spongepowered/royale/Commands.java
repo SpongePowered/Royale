@@ -24,7 +24,6 @@
  */
 package org.spongepowered.royale;
 
-import com.google.common.collect.Iterables;
 import io.leangen.geantyref.TypeToken;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
@@ -103,7 +102,7 @@ final class Commands {
                 .setExecutor(context -> {
                     final InstanceType instanceType = context.getOne(Commands.INSTANCE_TYPE_PARAMETER_OPTIONAL).orElseGet(() -> {
                         final Collection<InstanceType> types = Sponge.getRegistry().getCatalogRegistry().getAllOf(InstanceType.class);
-                        return Iterables.get(types, random.nextInt(types.size()));
+                        return types.stream().findAny().get();
                     });
                     WorldProperties targetProperties = context.getOne(CommonParameters.ALL_WORLD_PROPERTIES).orElseGet(() -> {
                         final Optional<WorldProperties> properties = Sponge.getServer().getWorldManager().getProperties(instanceType.getKey());
@@ -170,7 +169,7 @@ final class Commands {
                                 }
                             })).append(LinearComponents
                                     .linear(Component.text("["), format(NamedTextColor.RED, targetProperties.getKey().toString()),
-                                            Component.text("] is ready! Right-click this message or the sign to join!"))).build());
+                                            Component.text("] is ready! Click this message or right-click a teleportation sign to join!"))).build());
                         }
                     }
                     return CommandResult.success();
@@ -428,25 +427,6 @@ final class Commands {
                 .build();
     }
 
-    private static Command.Parameterized worldModifiedCommand() {
-        return Command.builder()
-                .setShortDescription(Component.text("Sets whether a world has been modified"))
-                .setExtendedDescription(Component.text("This controls whether or not a fast mutator pass can be used"))
-                .parameter(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY)
-                .parameter(Commands.MODIFIED_PARAMETER)
-                .setPermission(Constants.Permissions.WORLD_MODIFIED_COMMAND)
-                .setExecutor(context -> {
-                    final WorldProperties properties = context.requireOne(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY);
-                    final boolean modified = context.getOne(Commands.MODIFIED_PARAMETER).orElse(true);
-                    Royale.instance.getInstanceManager().setWorldModified(properties.getKey(), modified);
-
-                    context.sendMessage(Identity.nil(),
-                            Commands.format(NamedTextColor.GREEN, String.format("Set modified state of world %s to %s!", properties.getKey(), modified)));
-                    return CommandResult.success();
-                })
-                .build();
-    }
-
     private static Command.Parameterized loadWorldCommand() {
         return Command.builder()
                 .setShortDescription(Component.text("Manually loads a world"))
@@ -515,20 +495,18 @@ final class Commands {
         return Command.builder()
                 .setPermission(Constants.Plugin.ID + ".command.help")
                 .setShortDescription(Component.text("Displays available commands"))
-                .setExtendedDescription(Component.text("Displays available commands")) // TODO Do this better
+                .setExtendedDescription(Component.text("Displays available commands"))
                 .setExecutor(context -> {
                     context.sendMessage(Identity.nil(), Component.text("Some help should go here..."));
                     return CommandResult.success();
                 })
                 .child(Commands.createCommand(random), "create", "c")
-                // .child(Commands.registerCommand(), "register", "reg")
                 .child(Commands.startCommand(), "start")
                 .child(Commands.endCommand(), "end", "e")
                 .child(Commands.joinCommand(), "join", "j")
                 .child(Commands.reloadCommand(), "reload", "rel")
                 .child(Commands.setCommand(), "set")
                 .child(Commands.tpWorldCommand(), "tpworld", "tpw")
-                .child(Commands.worldModifiedCommand(), "worldmodified", "modified", "wm")
                 .child(Commands.loadWorldCommand(), "loadworld", "load", "lw")
                 .child(Commands.unloadWorldCommand(), "unloadworld", "unload", "uw")
                 .build();

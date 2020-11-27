@@ -24,18 +24,12 @@
  */
 package org.spongepowered.royale.instance;
 
-import static com.google.common.base.Preconditions.checkState;
-
-import com.google.common.collect.Queues;
-import com.google.common.collect.Sets;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
@@ -47,7 +41,6 @@ import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.vector.Vector3d;
-import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
@@ -58,10 +51,12 @@ import org.spongepowered.royale.instance.task.InstanceTask;
 import org.spongepowered.royale.instance.task.ProgressTask;
 import org.spongepowered.royale.instance.task.StartTask;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -77,10 +72,10 @@ public final class Instance {
     private final ResourceKey worldKey;
     private final InstanceType instanceType;
     private final Set<UUID> registeredPlayers = new HashSet<>();
-    private final Deque<Vector3d> unusedSpawns = Queues.newArrayDeque();
+    private final Deque<Vector3d> unusedSpawns = new ArrayDeque<>();
     private final Map<UUID, Vector3d> playerSpawns = new HashMap<>();
     private final Set<UUID> playerDeaths = new HashSet<>();
-    private final Set<UUID> tasks = Sets.newLinkedHashSet();
+    private final Set<UUID> tasks = new LinkedHashSet<>();
     private final InstanceScoreboard scoreboard;
     private State state = State.IDLE;
 
@@ -210,7 +205,10 @@ public final class Instance {
             return;
         }
 
-        checkState(!this.unusedSpawns.isEmpty(), "No spawn available for player!");
+        if (this.unusedSpawns.isEmpty()) {
+            throw new IllegalStateException("No spawn available for player!");
+        }
+
         final Vector3d playerSpawn = this.unusedSpawns.pop();
 
         this.scoreboard.addPlayer(player);

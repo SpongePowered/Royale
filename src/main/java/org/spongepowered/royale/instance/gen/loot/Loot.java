@@ -30,9 +30,7 @@ import static org.spongepowered.royale.instance.gen.loot.PotionItemArchetype.Typ
 import static org.spongepowered.royale.instance.gen.loot.PotionItemArchetype.Type.NORMAL;
 import static org.spongepowered.royale.instance.gen.loot.PotionItemArchetype.Type.SPLASH;
 
-import com.google.common.collect.Maps;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.effect.potion.PotionEffectType;
 import org.spongepowered.api.effect.potion.PotionEffectTypes;
@@ -75,7 +73,7 @@ public final class Loot {
     private static final WeightedTable<ItemArchetype> basicPotions = new WeightedTable<>();
     private static final WeightedTable<ItemArchetype> highPotions = new WeightedTable<>();
 
-    private static final Map<String, LootTable<ItemArchetype>> lootTables = Maps.newHashMap();
+    private static final Map<String, LootTable<ItemArchetype>> lootTables = new HashMap<>();
 
     // @formatter:on
 

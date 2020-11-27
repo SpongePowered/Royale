@@ -24,8 +24,6 @@
  */
 package org.spongepowered.royale.instance;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.spongepowered.api.NamedCatalogType;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
@@ -33,19 +31,19 @@ import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.util.NamedCatalogBuilder;
 import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Constants;
-import org.spongepowered.royale.Royale;
-import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.instance.gen.InstanceMutatorPipeline;
 import org.spongepowered.royale.template.ComponentTemplate;
 
-import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 public final class InstanceType implements NamedCatalogType {
@@ -245,30 +243,28 @@ public final class InstanceType implements NamedCatalogType {
 
     @Override
     public String toString() {
-        return "InstanceType{" +
-                "key='" + this.key + '\'' +
-                ", name='" + this.name + '\'' +
-                ", nameTemplate=" + this.nameTemplate +
-                ", roundStartTemplate=" + this.roundStartTemplate +
-                ", roundEndTemplate=" + this.roundEndTemplate +
-                ", defaultItems=" + this.defaultItems +
-                ", roundStartLength=" + this.roundStartLength +
-                ", roundLength=" + this.roundLength +
-                ", roundEndLength=" + this.roundEndLength +
-                ", centerX=" + this.centerX +
-                ", centerZ=" + this.centerZ +
-                ", minX=" + this.minX +
-                ", minY=" + this.minY +
-                ", minZ=" + this.minZ +
-                ", maxX=" + this.maxX +
-                ", maxY=" + this.maxY +
-                ", maxZ=" + this.maxZ +
-                ", automaticStartPlayerCount=" + this.automaticStartPlayerCount +
-                ", min=" + this.min +
-                ", max=" + this.max +
-                ", size=" + this.size +
-                ", mutatorPipeline=" + this.mutatorPipeline +
-                '}';
+        return new StringJoiner(", ", InstanceType.class.getSimpleName() + "[", "]")
+                .add("key=" + this.key)
+                .add("name=" + this.name)
+                .add("nameTemplate=" + this.nameTemplate)
+                .add("roundStartTemplate=" + this.roundStartTemplate)
+                .add("roundEndTemplate=" + this.roundEndTemplate)
+                .add("defaultItems=" + this.defaultItems)
+                .add("roundStartLength=" + this.roundStartLength)
+                .add("roundLength=" + this.roundLength)
+                .add("roundEndLength=" + this.roundEndLength)
+                .add("automaticPlayerStartCount=" + this.automaticStartPlayerCount)
+                .add("mutatorPipeline=" + this.mutatorPipeline)
+                .add("centerX=" + this.centerX)
+                .add("centerZ=" + this.centerZ)
+                .add("minX=" + this.minX)
+                .add("minY=" + this.minY)
+                .add("minZ=" + this.minZ)
+                .add("maxX=" + this.maxX)
+                .add("maxY=" + this.maxY)
+                .add("maxZ=" + this.maxZ)
+                .add("size=" + this.size)
+                .toString();
     }
 
     public static final class Builder implements NamedCatalogBuilder<InstanceType, Builder> {
@@ -313,8 +309,8 @@ public final class InstanceType implements NamedCatalogType {
             this.worldBorderZ = value.worldBorderZ;
             this.worldBorderRadius = value.worldBorderRadius;
 
-            this.mutators = Sets.newHashSet(value.mutatorPipeline.getMutators());
-            this.defaultItems = Lists.newLinkedList(value.defaultItems);
+            this.mutators = new HashSet<>(value.mutatorPipeline.getMutators());
+            this.defaultItems = new LinkedList<>(value.defaultItems);
             this.roundStartTemplate = value.roundStartTemplate;
             this.roundEndTemplate = value.roundEndTemplate;
             this.roundStartLength = value.roundStartLength;
@@ -342,7 +338,7 @@ public final class InstanceType implements NamedCatalogType {
                     .map(x -> Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, x)
                             .orElseThrow(() -> new IllegalArgumentException("Unknown mutator " + x)))
                     .collect(Collectors.toSet());
-            this.defaultItems = Lists.newLinkedList(value.round.defaultItems);
+            this.defaultItems = new LinkedList<>(value.round.defaultItems);
             this.roundStartTemplate = value.round.startTemplate;
             this.roundEndTemplate = value.round.endTemplate;
             this.roundStartLength = value.round.start;

@@ -24,7 +24,6 @@
  */
 package org.spongepowered.royale.instance.gen.loot;
 
-import com.google.common.collect.Lists;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.potion.PotionEffect;
 import org.spongepowered.api.effect.potion.PotionEffectType;
@@ -33,6 +32,7 @@ import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.util.weighted.VariableAmount;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
@@ -54,7 +54,7 @@ class PotionItemArchetype extends BasicItemArchetype {
     @Override
     public ItemStack create(final Random rand) {
         final int amount = this.getQuantity().getFlooredAmount(rand);
-        final List<PotionEffect> itemEffects = Lists.newArrayList();
+        final List<PotionEffect> itemEffects = new ArrayList<>();
         itemEffects.add(PotionEffect.of(this.effect, this.power.getFlooredAmount(rand), this.duration.getFlooredAmount(rand)));
         return ItemStack.builder()
                 .itemType(this.getType())

@@ -27,7 +27,6 @@ package org.spongepowered.royale.instance.task;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.LinearComponents;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.spongepowered.api.effect.particle.ParticleEffect;
