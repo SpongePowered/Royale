@@ -248,7 +248,8 @@ public final class InstanceManager {
         }
 
         // If a Player has already spawned, this means they are playing. See if the instance allows movement
-        if (instance.isPlayerSpawned(player.getUniqueId()) && !instance.getState().canAnyoneMove()) {
+        if (instance.isPlayerSpawned(player.getUniqueId()) && !instance.isPlayerDead(player.getUniqueId()) && !instance.getState().canAnyoneMove()) {
+            player.sendMessage(Component.text("You may not move until the match commences!", NamedTextColor.RED));
             event.setCancelled(true);
         }
     }
