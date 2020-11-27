@@ -227,6 +227,9 @@ public final class Instance {
         }
 
         this.participate(player, true);
+
+        player.sendMessage(Component.text("Welcome to the game. Please stand by while others join. You will not be able to move until the game "
+                + "starts."));
     }
 
     void disqualifyPlayer(final Player player) {
