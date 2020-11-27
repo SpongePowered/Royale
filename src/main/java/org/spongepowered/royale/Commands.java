@@ -420,7 +420,9 @@ final class Commands {
                         }
                     }
                     for (final ServerPlayer target : players) {
-                        target.setLocation(ServerLocation.of(world, world.getProperties().getSpawnPosition()));
+                        target.setLocation(world.getEngine().getTeleportHelper().getSafeLocation(ServerLocation.of(world,
+                                world.getProperties().getSpawnPosition())).orElseGet(() -> ServerLocation.of(world, world.getProperties()
+                                .getSpawnPosition())));
                     }
                     return CommandResult.success();
                 })

@@ -26,7 +26,6 @@ package org.spongepowered.royale;
 
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
@@ -34,7 +33,6 @@ import org.spongepowered.api.world.SerializationBehavior;
 import org.spongepowered.api.world.WorldArchetype;
 import org.spongepowered.api.world.WorldArchetypes;
 import org.spongepowered.api.world.difficulty.Difficulties;
-import org.spongepowered.api.world.dimension.DimensionTypes;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.template.ComponentTemplate;
 
@@ -123,16 +121,14 @@ public final class Constants {
             public static final ResourceKey LOBBY_WORLD_KEY = ResourceKey.of(Plugin.ID, "lobby");
             public static final String SIGN_HEADER = "Join Game";
 
-            static final WorldArchetype LOBBY_ARCHETYPE = WorldArchetype.builder().from(WorldArchetypes.THE_END.get())
+            static final WorldArchetype LOBBY_ARCHETYPE = WorldArchetype.builder().from(WorldArchetypes.OVERWORLD.get())
                     .key(Lobby.LOBBY_WORLD_KEY)
-                    .gameMode(GameModes.SURVIVAL)
                     .loadOnStartup(true)
                     .difficulty(Difficulties.EASY)
                     .generateSpawnOnLoad(true)
-                    .dimensionType(DimensionTypes.OVERWORLD)
                     .pvpEnabled(false)
                     .keepSpawnLoaded(true)
-                    .serializationBehavior(SerializationBehavior.NONE)
+                    .serializationBehavior(SerializationBehavior.AUTOMATIC_METADATA_ONLY)
                     .build();
 
             private Lobby() {

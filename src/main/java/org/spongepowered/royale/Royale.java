@@ -186,6 +186,7 @@ public final class Royale {
     @Listener
     public void onStartingServer(final StartingEngineEvent<Server> event) {
         this.instanceManager = new InstanceManager(event.getEngine());
+        this.eventManager.registerListeners(this.plugin, this.instanceManager);
     }
 
     @Listener
