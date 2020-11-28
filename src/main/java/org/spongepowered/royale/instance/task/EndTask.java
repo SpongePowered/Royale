@@ -33,6 +33,7 @@ import org.spongepowered.api.effect.particle.ParticleEffect;
 import org.spongepowered.api.effect.particle.ParticleTypes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.scheduler.ScheduledTask;
+import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.Instance;
 
@@ -47,8 +48,6 @@ public final class EndTask extends InstanceTask {
     private final long endLengthTotal;
 
     private ScheduledTask handle;
-    private Title title;
-    private Title winnerTitle;
     private long endLengthRemaining;
 
     public EndTask(final Instance instance, final List<UUID> winners) {
@@ -63,8 +62,11 @@ public final class EndTask extends InstanceTask {
 
         this.handle = task;
 
-        if (this.winners.isEmpty()) {
+        final ServerWorld world = this.getInstance().getWorld().orElse(null);
+
+        if (this.winners.isEmpty() || world == null || !world.isLoaded()) {
             this.cancel();
+
             this.getInstance().advance();
             return;
         }
@@ -88,11 +90,11 @@ public final class EndTask extends InstanceTask {
                     Component.text("You are the winner!", NamedTextColor.GREEN) :
                     Component.text("Draw", NamedTextColor.YELLOW);
 
-            this.title = Title.title(content, Component.empty(),
-                    Title.Times.of(Duration.ZERO, Duration.ofSeconds(this.endLengthTotal - 1), Duration.ofSeconds(1)));
+            final Title title = Title.title(content, Component.empty(),
+                    Title.Times.of(Duration.ZERO, Duration.ofSeconds(this.endLengthTotal - 2), Duration.ofSeconds(1)));
 
-            this.winnerTitle = Title.title(winnerContent, Component.empty(),
-                    Title.Times.of(Duration.ZERO, Duration.ofSeconds(this.endLengthTotal - 1), Duration.ofSeconds(1)));
+            final Title winnerTitle = Title.title(winnerContent, Component.empty(),
+                    Title.Times.of(Duration.ZERO, Duration.ofSeconds(this.endLengthTotal - 2), Duration.ofSeconds(1)));
 
             if (winner.isPresent()) {
                 winner.get().spawnParticles(ParticleEffect.builder()
@@ -101,23 +103,20 @@ public final class EndTask extends InstanceTask {
                                 .build(),
                         winner.get().getLocation().getPosition());
 
-                this.getInstance().getWorld().ifPresent((world) -> {
-                    if (world.isLoaded()) {
-                        for (final ServerPlayer player : world.getPlayers()) {
-                            if (player.getUniqueId().equals(winner.get().getUniqueId())) {
-                                player.showTitle(this.winnerTitle);
-                            } else {
-                                player.showTitle(this.title);
-                            }
-                        }
+                for (final ServerPlayer player : world.getPlayers()) {
+                    if (player.getUniqueId().equals(winner.get().getUniqueId())) {
+                        player.showTitle(winnerTitle);
+                    } else {
+                        player.showTitle(title);
                     }
-                });
+                }
 
                 this.getInstance().getServer().getBroadcastAudience()
                         .sendMessage(Identity.nil(), LinearComponents.linear(NamedTextColor.GREEN, winner.get().displayName().get(),
                                 NamedTextColor.WHITE, Component.text(" has won the game!")));
-                Royale.instance.getPlugin().getLogger().info("Round finished!");
             }
+
+            Royale.instance.getPlugin().getLogger().info("Round finished!");
         }
 
         this.endLengthRemaining--;

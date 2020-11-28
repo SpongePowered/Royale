@@ -139,9 +139,6 @@ public final class Constants {
     public static final class Permissions {
 
         public static final String ADMIN = Plugin.ID + ".admin";
-        static final String WORLD_MODIFIED_COMMAND = Plugin.ID + ".command.worldmodified";
-        static final String WORLD_LOAD_COMMAND = Plugin.ID + ".command.worldload";
-        static final String WORLD_UNLOAD_COMMAND = Plugin.ID + ".command.worldunload";
 
         private Permissions() {
         }

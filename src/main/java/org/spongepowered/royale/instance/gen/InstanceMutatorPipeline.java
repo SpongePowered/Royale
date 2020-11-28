@@ -51,7 +51,7 @@ public final class InstanceMutatorPipeline {
         return this.mutators;
     }
 
-    public void mutate(final Instance instance, final boolean tryFastPass) {
+    public void mutate(final Instance instance) {
 
         final ServerWorld world = instance.getWorld()
                 .orElseThrow(() -> new RuntimeException(String.format("Attempting to mutate instance '%s' but it's world is not loaded!"
@@ -65,7 +65,8 @@ public final class InstanceMutatorPipeline {
         }
 
         final Vector3i size = instance.getType().getBlockSize();
-        Royale.instance.getPlugin().getLogger().error("[Mutator] Performing slow pass for instance {} - {} blocks total.", instance.getWorldKey(), size.getX() *
+        Royale.instance.getPlugin().getLogger().error("[Mutator] Performing pass for instance {} - {} blocks total.", instance.getWorldKey(),
+                size.getX() *
                 size.getY() * size.getZ());
 
         this.mutators.forEach(mutator -> mutator.prepare(instance));

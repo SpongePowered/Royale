@@ -78,10 +78,10 @@ public final class Loot {
     // @formatter:on
 
     static {
-        lootTables.put("lowLevel", Loot.lowLevel);
-        lootTables.put("midLevel", Loot.midLevel);
-        lootTables.put("highLevel", Loot.highLevel);
-        lootTables.put("rareLevel", Loot.rareLevel);
+        lootTables.put("lowlevel", Loot.lowLevel);
+        lootTables.put("midlevel", Loot.midLevel);
+        lootTables.put("highlevel", Loot.highLevel);
+        lootTables.put("rarelevel", Loot.rareLevel);
 
         Loot.lowLevel.addTable(Loot.basicFood);
         Loot.lowLevel.addTable(Loot.basicCombat);

@@ -433,7 +433,7 @@ final class Commands {
         return Command.builder()
                 .setShortDescription(Component.text("Manually loads a world"))
                 .parameter(CommonParameters.ALL_WORLD_PROPERTIES)
-                .setPermission(Constants.Permissions.WORLD_LOAD_COMMAND)
+                .setPermission(Constants.Plugin.ID + ".command.worldload")
                 .setExecutor(context -> {
                     final WorldProperties properties = context.requireOne(CommonParameters.ALL_WORLD_PROPERTIES);
                     if (properties.getWorld().isPresent()) {
@@ -462,7 +462,7 @@ final class Commands {
         return Command.builder()
                 .setShortDescription(Component.text("Manually unloads a world"))
                 .parameter(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY)
-                .setPermission(Constants.Permissions.WORLD_UNLOAD_COMMAND)
+                .setPermission(Constants.Plugin.ID + ".command.unloadworld")
                 .setExecutor(context -> {
                     final WorldProperties properties = context.requireOne(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY);
 
@@ -495,7 +495,7 @@ final class Commands {
 
     static Command.Parameterized rootCommand(final Random random) {
         return Command.builder()
-                .setPermission(Constants.Plugin.ID + ".command.help")
+                .setPermission(Constants.Plugin.ID + ".command.root")
                 .setShortDescription(Component.text("Displays available commands"))
                 .setExtendedDescription(Component.text("Displays available commands"))
                 .setExecutor(context -> {

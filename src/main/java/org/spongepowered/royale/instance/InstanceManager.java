@@ -52,6 +52,8 @@ import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
+import org.spongepowered.api.scheduler.Task;
+import org.spongepowered.api.util.Ticks;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.SerializationBehavior;
 import org.spongepowered.api.world.ServerLocation;
@@ -60,32 +62,30 @@ import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.exception.InstanceAlreadyExistsException;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
+import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.instance.gen.InstanceMutatorPipeline;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 public final class InstanceManager {
 
     private final Server server;
     private final Map<ResourceKey, Instance> instances;
     private final Map<InstanceType, List<Instance>> instancesByTypes;
-    private final Set<ResourceKey> canUseFastPass;
 
     public InstanceManager(final Server server) {
         this.server = server;
         this.instances = new HashMap<>();
         this.instancesByTypes = new HashMap<>();
-        this.canUseFastPass = new HashSet<>();
     }
 
     public void createInstance(final ResourceKey key, final InstanceType type) throws IOException {
@@ -112,7 +112,7 @@ public final class InstanceManager {
         this.instancesByTypes.computeIfAbsent(type, k -> new LinkedList<>()).add(instance);
 
         final InstanceMutatorPipeline pipeline = type.getMutatorPipeline();
-        pipeline.mutate(instance, this.canUseFastPass.contains(world.getKey()));
+        pipeline.mutate(instance);
     }
 
     public void startInstance(final ResourceKey key) throws UnknownInstanceException {
@@ -122,16 +122,6 @@ public final class InstanceManager {
         }
 
         instance.advanceTo(Instance.State.PRE_START);
-    }
-
-    public void setWorldModified(final ResourceKey key, final boolean modified) {
-        Royale.instance.getPlugin().getLogger().error("[Mutator] Setting fast pass availability for instance {} to {}.", key, !modified);
-
-        if (modified) {
-            this.canUseFastPass.remove(key);
-        } else {
-            this.canUseFastPass.add(key);
-        }
     }
 
     public void endInstance(final ResourceKey key, final boolean force) throws UnknownInstanceException {
@@ -205,7 +195,7 @@ public final class InstanceManager {
         }
 
         final ServerWorld world = player.getWorld();
-        final Instance instance = getInstance(world.getKey()).orElse(null);
+        final Instance instance = this.getInstance(world.getKey()).orElse(null);
 
         if (instance != null) {
             if (instance.isPlayerRegistered(player.getUniqueId())) {
@@ -226,8 +216,22 @@ public final class InstanceManager {
                     }
                 }
             }
-        } else if (world.getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
-            this.convertToLobbyPlayer(player);
+        } else {
+            if (world.getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
+                this.convertToLobbyPlayer(player);
+            } else if (!player.hasPlayedBefore()) {
+                this.server.getScheduler().submit(Task.builder()
+                        .delay(Ticks.of(0))
+                        .execute(() -> this.server.getWorldManager().getWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY).ifPresent(w -> {
+                            if (player.isOnline()) {
+                                player.setLocation(ServerLocation.of(w, w.getProperties().getSpawnPosition()));
+                                InstanceManager.this.convertToLobbyPlayer(player);
+                            }
+                        }))
+                        .plugin(Royale.instance.getPlugin())
+                        .build()
+                );
+            }
         }
     }
 
@@ -370,7 +374,7 @@ public final class InstanceManager {
     @Listener
     public void onChangeSign(final ChangeSignEvent event, @Root final ServerPlayer player) {
         if (this.isTeleportSign(event.getText().get())) {
-            if (player.hasPermission(Constants.Permissions.ADMIN)) {
+            if (player.hasPermission(Constants.Permissions.ADMIN + ".create.sign")) {
                 player.sendMessage(Identity.nil(), Component.text("Successfully created world teleportation sign!", NamedTextColor.GREEN));
                 event.getText().set(0, event.getText().get(0).colorIfAbsent(NamedTextColor.AQUA));
             } else {
@@ -437,7 +441,7 @@ public final class InstanceManager {
     public void onChangeBlock(final ChangeBlockEvent event, @First final ServerPlayer player) {
         for (final Transaction<BlockSnapshot> transaction : event.getTransactions()) {
             final BlockSnapshot snapshot = transaction.getFinal();
-            if (!player.hasPermission(Royale.instance.getPlugin().getMetadata().getId() + "admin.lobby.edit") && snapshot.getWorld()
+            if (!player.hasPermission(Constants.Permissions.ADMIN + ".lobby.edit") && snapshot.getWorld()
                     .equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                 transaction.setValid(false);
             }

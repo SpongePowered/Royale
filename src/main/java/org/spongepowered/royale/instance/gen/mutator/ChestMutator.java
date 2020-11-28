@@ -58,10 +58,10 @@ public final class ChestMutator extends SignMutator {
             final Sign sign = (Sign) blockentitySupplier.get();
             final Direction facingDirection = sign.get(Keys.DIRECTION).orElse(null);
             final String lootTableId = PlainComponentSerializer.plain().serialize(sign.lines().get(1));
-            final LootTable<ItemArchetype> lootTable = Loot.getTable(lootTableId);
+            final LootTable<ItemArchetype> lootTable = Loot.getTable(lootTableId.toLowerCase());
             final List<ItemArchetype> items = lootTable.get(Royale.instance.getRandom());
 
-            Royale.instance.getPlugin().getLogger().info("Generating loot chest via table '{}' at {}x, {}y, {}z", lootTableId, x, y, z);
+            Royale.instance.getPlugin().getLogger().info("Generating loot chest via table '{}' at {}x, {}y, {}z", lootTableId.toLowerCase(), x, y, z);
             final BlockState defaultChestState = BlockTypes.CHEST.get().getDefaultState();
             final BlockState newChestState = defaultChestState.with(Keys.DIRECTION, facingDirection)
                 .orElse(defaultChestState);

@@ -132,13 +132,15 @@ public final class Instance {
     }
 
     public void advance() {
-        this.server.getWorldManager().getWorld(this.worldKey)
-                .orElseThrow(() -> new RuntimeException("Attempted to advance an instance for an offline "
-                        + "world!"));
-
-        final State next = State.values()[(this.state.ordinal() + 1) % State.values().length];
-        if (next.ordinal() < this.state.ordinal()) {
-            return;
+        final ServerWorld instanceWorld = this.server.getWorldManager().getWorld(this.worldKey).orElse(null);
+        State next;
+        if (instanceWorld == null) {
+            next = State.FORCE_STOP;
+        } else {
+            next = State.values()[(this.state.ordinal() + 1) % State.values().length];
+            if (next.ordinal() < this.state.ordinal()) {
+                return;
+            }
         }
 
         this.advanceTo(next);
@@ -147,15 +149,13 @@ public final class Instance {
     void advanceTo(State state) {
         final Optional<ServerWorld> world = this.server.getWorldManager().getWorld(this.worldKey);
         if (!world.isPresent()) {
-            if (state == State.FORCE_STOP) {
-                try {
-                    this.instanceManager.unloadInstance(this.worldKey);
-                } catch (final Exception e) {
-                    throw new RuntimeException(e);
-                }
-                return;
+            this.state = State.FORCE_STOP;
+            try {
+                this.instanceManager.unloadInstance(this.worldKey);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
             }
-            throw new RuntimeException("Attempt to advance an instance whose world no longer exists!");
+            return;
         }
 
         if (this.state == state) {
