@@ -1,7 +1,7 @@
 plugins {
     java
     id("org.cadixdev.licenser") version "0.5.0"
-    id("com.github.johnrengelman.shadow") version "5.2.0"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
 }
 
 group = project.group
