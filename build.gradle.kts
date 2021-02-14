@@ -1,6 +1,6 @@
 plugins {
     java
-    id("net.minecrell.licenser") version "0.4.1"
+    id("org.cadixdev.licenser") version "0.5.0"
     id("com.github.johnrengelman.shadow") version "5.2.0"
 }
 
