@@ -38,7 +38,7 @@ import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.scheduler.Task;
-import org.spongepowered.api.world.ServerLocation;
+import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.Constants;
@@ -86,7 +86,7 @@ public final class Instance {
         this.instanceType = instanceType;
         this.scoreboard = new InstanceScoreboard(this);
 
-        final ServerWorld world = this.server.getWorldManager().getWorld(worldKey)
+        final ServerWorld world = this.server.getWorldManager().world(worldKey)
                 .orElseThrow(() -> new RuntimeException("Attempted to create an instance for an offline "
                         + "world!"));
 
@@ -104,7 +104,7 @@ public final class Instance {
     }
 
     public Optional<ServerWorld> getWorld() {
-        return this.server.getWorldManager().getWorld(this.worldKey);
+        return this.server.getWorldManager().world(this.worldKey);
     }
 
     public InstanceType getType() {
@@ -132,7 +132,7 @@ public final class Instance {
     }
 
     public void advance() {
-        final ServerWorld instanceWorld = this.server.getWorldManager().getWorld(this.worldKey).orElse(null);
+        final ServerWorld instanceWorld = this.server.getWorldManager().world(this.worldKey).orElse(null);
         State next;
         if (instanceWorld == null) {
             next = State.FORCE_STOP;
@@ -147,7 +147,7 @@ public final class Instance {
     }
 
     void advanceTo(State state) {
-        final Optional<ServerWorld> world = this.server.getWorldManager().getWorld(this.worldKey);
+        final Optional<ServerWorld> world = this.server.getWorldManager().world(this.worldKey);
         if (!world.isPresent()) {
             this.state = State.FORCE_STOP;
             try {
@@ -195,7 +195,7 @@ public final class Instance {
             throw new IllegalStateException("Attempted to spawn a player into this round who wasn't registered!");
         }
 
-        final ServerWorld world = this.server.getWorldManager().getWorld(worldKey)
+        final ServerWorld world = this.server.getWorldManager().world(this.worldKey)
                 .orElseThrow(() -> new RuntimeException("Attempted to spawn a player in an instance for an offline "
                         + "world!"));
 

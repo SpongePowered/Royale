@@ -36,7 +36,6 @@ import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
-import org.spongepowered.api.event.action.InteractEvent;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.block.entity.ChangeSignEvent;
@@ -56,17 +55,15 @@ import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.util.Ticks;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.SerializationBehavior;
-import org.spongepowered.api.world.ServerLocation;
+import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.exception.InstanceAlreadyExistsException;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
-import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.instance.gen.InstanceMutatorPipeline;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -94,7 +91,7 @@ public final class InstanceManager {
         }
 
         final Instance instance;
-        ServerWorld world = this.server.getWorldManager().getWorld(key).orElse(null);
+        ServerWorld world = this.server.getWorldManager().world(key).orElse(null);
 
         if (world == null) {
             world = this.server.getWorldManager().loadWorld(key).getNow(null);
@@ -103,7 +100,7 @@ public final class InstanceManager {
             }
         }
 
-        world.getProperties().setKeepSpawnLoaded(true);
+        //world.getProperties().setKeepSpawnLoaded(true);
         world.getProperties().setSerializationBehavior(SerializationBehavior.AUTOMATIC_METADATA_ONLY);
 
         instance = new Instance(this.server, this, key, type);
@@ -143,14 +140,14 @@ public final class InstanceManager {
             return;
         }
 
-        final ServerWorld world = this.server.getWorldManager().getWorld(instance.getWorldKey()).orElse(null);
+        final ServerWorld world = this.server.getWorldManager().world(instance.getWorldKey()).orElse(null);
 
         if (world == null) {
             this.instances.remove(instance.getWorldKey());
             return;
         }
 
-        final ServerWorld lobby = this.server.getWorldManager().getWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY)
+        final ServerWorld lobby = this.server.getWorldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY)
                 .orElseThrow(() -> new RuntimeException("Lobby world was not found!"));
 
         // Move everyone out
@@ -160,7 +157,7 @@ public final class InstanceManager {
                 player.getInventory().clear();
             }
 
-            player.setLocation(ServerLocation.of(lobby, lobby.getProperties().getSpawnPosition()));
+            player.setLocation(ServerLocation.of(lobby, lobby.getProperties().spawnPosition()));
         }
 
         this.instances.remove(instance.getWorldKey());
@@ -222,9 +219,9 @@ public final class InstanceManager {
             } else if (!player.hasPlayedBefore()) {
                 this.server.getScheduler().submit(Task.builder()
                         .delay(Ticks.of(0))
-                        .execute(() -> this.server.getWorldManager().getWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY).ifPresent(w -> {
+                        .execute(() -> this.server.getWorldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY).ifPresent(w -> {
                             if (player.isOnline()) {
-                                player.setLocation(ServerLocation.of(w, w.getProperties().getSpawnPosition()));
+                                player.setLocation(ServerLocation.of(w, w.getProperties().spawnPosition()));
                                 InstanceManager.this.convertToLobbyPlayer(player);
                             }
                         }))
@@ -322,7 +319,7 @@ public final class InstanceManager {
     public void onRespawnPlayerSelectWorld(final RespawnPlayerEvent.SelectWorld event, @Getter("getEntity") final ServerPlayer player,
             @Getter("getOriginalWorld") final ServerWorld fromWorld, @Getter("getDestinationWorld") final ServerWorld toWorld) {
 
-        final Instance fromInstance = getInstance(fromWorld.getKey()).orElse(null);
+        final Instance fromInstance = this.getInstance(fromWorld.getKey()).orElse(null);
         Instance toInstance = this.getInstance(toWorld.getKey()).orElse(null);
 
         if (fromInstance != null && toInstance == null && fromInstance.isPlayerRegistered(player.getUniqueId()) && fromWorld.isLoaded()) {
@@ -365,7 +362,7 @@ public final class InstanceManager {
 
     @Listener
     public void onDamagePlayer(final DamageEntityEvent event, @Root final DamageSource source, @Getter("getEntity") final ServerPlayer player) {
-        if (!(source.getType().equals(DamageTypes.FALL) || source.getType().equals(DamageTypes.VOID)) && player.getWorld().getKey()
+        if (!(source.getType().equals(DamageTypes.FALL.get()) || source.getType().equals(DamageTypes.VOID.get())) && player.getWorld().getKey()
                 .equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
             event.setCancelled(true);
         }
@@ -385,9 +382,10 @@ public final class InstanceManager {
     }
 
     @Listener
-    public void onInteractByPlayer(final InteractEvent event, @Root final ServerPlayer player) {
+    //TODO this is wrong. It needs a broader event
+    public void onInteractByPlayer(final InteractBlockEvent.Secondary event, @Root final ServerPlayer player) {
         final ServerWorld world = player.getWorld();
-        final Instance instance = getInstance(world.getKey()).orElse(null);
+        final Instance instance = this.getInstance(world.getKey()).orElse(null);
 
         if (instance != null && !instance.getState().canAnyoneInteract() && instance.isPlayerRegistered(player.getUniqueId())) {
             event.setCancelled(true);
@@ -438,7 +436,7 @@ public final class InstanceManager {
     }
 
     @Listener
-    public void onChangeBlock(final ChangeBlockEvent event, @First final ServerPlayer player) {
+    public void onChangeBlock(final ChangeBlockEvent.All event, @First final ServerPlayer player) {
         for (final Transaction<BlockSnapshot> transaction : event.getTransactions()) {
             final BlockSnapshot snapshot = transaction.getFinal();
             if (!player.hasPermission(Constants.Permissions.ADMIN + ".lobby.edit") && snapshot.getWorld()

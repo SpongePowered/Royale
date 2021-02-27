@@ -29,10 +29,13 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
+import org.spongepowered.api.registry.DefaultedRegistryType;
+import org.spongepowered.api.registry.RegistryRoots;
+import org.spongepowered.api.registry.RegistryType;
 import org.spongepowered.api.world.SerializationBehavior;
-import org.spongepowered.api.world.WorldArchetype;
-import org.spongepowered.api.world.WorldArchetypes;
 import org.spongepowered.api.world.difficulty.Difficulties;
+import org.spongepowered.api.world.server.WorldTemplate;
+import org.spongepowered.royale.instance.InstanceType;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.template.ComponentTemplate;
 
@@ -52,6 +55,8 @@ public final class Constants {
 
     public static final class Plugin {
         public static final String ID = "royale";
+        public static final DefaultedRegistryType<InstanceMutator> INSTANCE_MUTATOR = RegistryType.of(RegistryRoots.SPONGE, ResourceKey.of(Plugin.ID, "instance_mutator")).asDefaultedType(() -> Sponge.getServer().registries());
+        public static final DefaultedRegistryType<InstanceType> INSTANCE_TYPE = RegistryType.of(RegistryRoots.SPONGE, ResourceKey.of(Plugin.ID, "instance_type")).asDefaultedType(() -> Sponge.getServer().registries());
     }
 
     public static final class Map {
@@ -84,8 +89,7 @@ public final class Constants {
 
             DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.instance.getPlugin().getMetadata().getId(), "player_spawn"));
 
-            DEFAULT_MAP_MUTATORS.add(Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class,
-                    ResourceKey.of(Plugin.ID, "player_spawn")).get());
+            DEFAULT_MAP_MUTATORS.add(Sponge.getServer().registries().registry(Plugin.INSTANCE_MUTATOR).findValue(ResourceKey.of(Plugin.ID, "player_spawn")).get());
         }
 
         private Map() {
@@ -121,13 +125,12 @@ public final class Constants {
             public static final ResourceKey LOBBY_WORLD_KEY = ResourceKey.of(Plugin.ID, "lobby");
             public static final String SIGN_HEADER = "Join Game";
 
-            static final WorldArchetype LOBBY_ARCHETYPE = WorldArchetype.builder().from(WorldArchetypes.OVERWORLD.get())
+            static final WorldTemplate LOBBY_TEMPLATE = WorldTemplate.builder().from(WorldTemplate.overworld())
                     .key(Lobby.LOBBY_WORLD_KEY)
                     .loadOnStartup(true)
                     .difficulty(Difficulties.EASY)
-                    .generateSpawnOnLoad(true)
-                    .pvpEnabled(false)
-                    .keepSpawnLoaded(true)
+                    .performsSpawnLogic(true)
+                    .pvp(false)
                     .serializationBehavior(SerializationBehavior.AUTOMATIC_METADATA_ONLY)
                     .build();
 

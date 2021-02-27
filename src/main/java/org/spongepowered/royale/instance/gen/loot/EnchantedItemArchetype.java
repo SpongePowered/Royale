@@ -73,8 +73,8 @@ class EnchantedItemArchetype implements ItemArchetype {
         }
 
         itemStack.offer(Keys.APPLIED_ENCHANTMENTS, enchantmentsToApply);
-        itemStack.offer(Keys.DISPLAY_NAME, name);
-        itemStack.offer(Keys.IS_UNBREAKABLE, unbreakable);
+        itemStack.offer(Keys.DISPLAY_NAME, this.name);
+        itemStack.offer(Keys.IS_UNBREAKABLE, this.unbreakable);
 
         return itemStack;
     }
@@ -92,6 +92,6 @@ class EnchantedItemArchetype implements ItemArchetype {
     }
 
     public final Map<EnchantmentType, VariableAmount> getEnchantments() {
-        return Collections.unmodifiableMap(enchantments);
+        return Collections.unmodifiableMap(this.enchantments);
     }
 }

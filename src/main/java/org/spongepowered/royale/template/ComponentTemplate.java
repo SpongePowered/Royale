@@ -34,6 +34,7 @@ import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.placeholder.PlaceholderContext;
 import org.spongepowered.api.placeholder.PlaceholderParser;
+import org.spongepowered.api.registry.RegistryTypes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,8 +65,7 @@ public final class ComponentTemplate {
             final String entry = matcher.group("token"); // entire thing needed for template matching
             final String placeholder = matcher.group("placeholder");
             try {
-                final Optional<PlaceholderParser> parser = Sponge.getRegistry().getCatalogRegistry()
-                        .get(PlaceholderParser.class, ResourceKey.resolve(placeholder));
+                final Optional<PlaceholderParser> parser = Sponge.getGame().registries().registry(RegistryTypes.PLACEHOLDER_PARSER).findValue(ResourceKey.resolve(placeholder));
                 if (parser.isPresent()) {
                     mapBuilder.put(entry, new ParserContextPair(parser.get(), matcher.group("arg")));
                 } else {
@@ -108,7 +108,7 @@ public final class ComponentTemplate {
                 return Component.empty();
             }
 
-            return parser.parse(PlaceholderContext.builder().setArgumentString(this.args).setAssociatedObject(associatedObject).build()).asComponent();
+            return this.parser.parse(PlaceholderContext.builder().setArgumentString(this.args).setAssociatedObject(associatedObject).build()).asComponent();
         }
 
     }

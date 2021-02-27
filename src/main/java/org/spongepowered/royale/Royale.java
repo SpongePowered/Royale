@@ -34,10 +34,8 @@ import org.spongepowered.api.config.ConfigManager;
 import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.lifecycle.RegisterBuilderEvent;
-import org.spongepowered.api.event.lifecycle.RegisterCatalogEvent;
-import org.spongepowered.api.event.lifecycle.RegisterCatalogRegistryEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
-import org.spongepowered.api.event.lifecycle.RegisterWorldEvent;
+import org.spongepowered.api.event.lifecycle.RegisterRegistryEvent;
 import org.spongepowered.api.event.lifecycle.StartingEngineEvent;
 import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
 import org.spongepowered.configurate.ConfigurateException;
@@ -58,6 +56,8 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 @Plugin(Constants.Plugin.ID)
@@ -104,21 +104,14 @@ public final class Royale {
     }
 
     @Listener
-    public void onRegisterCatalogs(final RegisterCatalogRegistryEvent event) {
-        event.register(InstanceMutator.class, ResourceKey.of(this.plugin, "instance_mutator"));
-        event.register(InstanceType.class, ResourceKey.of(this.plugin, "instance_type"));
-    }
+    public void onRegisterCatalogs(final RegisterRegistryEvent.EngineScoped<Server> event) {
+        final Map<ResourceKey, InstanceMutator> defaultMutators = new HashMap<>();
+        defaultMutators.put(ResourceKey.of(Constants.Plugin.ID, "chest"), new ChestMutator());
+        defaultMutators.put(ResourceKey.of(Constants.Plugin.ID, "player_spawn"), new PlayerSpawnMutator());
+        event.register(ResourceKey.of(Constants.Plugin.ID, "instance_mutator"), true, () -> defaultMutators);
 
-    @Listener
-    public void onRegisterMutators(final RegisterCatalogEvent<InstanceMutator> event) {
-        event.register(new ChestMutator());
-        event.register(new PlayerSpawnMutator());
-    }
-
-    @Listener
-    public void onRegisterInstanceTypes(final RegisterCatalogEvent<InstanceType> event) {
+        final Map<ResourceKey, InstanceType> defaultTypes = new HashMap<>();
         boolean createDefaults = true;
-
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(Constants.Map.INSTANCE_TYPES_FOLDER, entry -> entry.getFileName().toString()
                 .endsWith(".conf"))) {
             for (final Path path : stream) {
@@ -134,12 +127,12 @@ public final class Royale {
 
                 final String instanceId = path.getFileName().toString().split("\\.")[0].toLowerCase();
                 final InstanceType newType = InstanceType.builder()
-                        .from(adapter.getConfig())
                         .key(ResourceKey.of(this.plugin, instanceId))
+                        .from(adapter.getConfig())
                         .build();
 
                 this.plugin.getLogger().info("Registered instance type '{}'", newType.getKey());
-                event.register(newType);
+                defaultTypes.put(ResourceKey.of(this.plugin, instanceId), newType);
                 createDefaults = false;
             }
 
@@ -152,7 +145,7 @@ public final class Royale {
                     .key(ResourceKey.of(this.plugin, "last_man_standing"))
                     .name("Last Man Standing")
                     .build();
-            event.register(defaultType);
+            defaultTypes.put(ResourceKey.of(this.plugin, "last_man_standing"), defaultType);
             this.plugin.getLogger().info("Registered instance type '{}'", defaultType.getKey());
 
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
@@ -165,6 +158,10 @@ public final class Royale {
                 throw new RuntimeException(e);
             }
         }
+        if (defaultTypes.isEmpty()) {
+            throw new RuntimeException("Default InstanceTypes map is empty. Create defaults: " + createDefaults);
+        }
+        event.register(ResourceKey.of(Constants.Plugin.ID, "instance_type"), true, () -> defaultTypes);
     }
 
     @Listener
@@ -174,14 +171,14 @@ public final class Royale {
 
     @Listener
     public void onRegisterCommands(final RegisterCommandEvent<Command.Parameterized> event) {
-        event.register(this.plugin, Commands.rootCommand(this.random), Constants.Plugin.ID, Constants.Plugin.ID
-                .substring(0, 1));
+        event.register(this.plugin, Commands.rootCommand(this.random), Constants.Plugin.ID, Constants.Plugin.ID.substring(0, 1));
     }
 
-    @Listener
-    public void onRegisterWorld(final RegisterWorldEvent event) {
-        event.register(Constants.Map.Lobby.LOBBY_WORLD_KEY, Constants.Map.Lobby.LOBBY_ARCHETYPE);
-    }
+    //TODO
+//    @Listener
+//    public void onRegisterWorld(final RegisterWorldEvent event) {
+//        event.register(Constants.Map.Lobby.LOBBY_WORLD_KEY, Constants.Map.Lobby.LOBBY_TEMPLATE);
+//    }
 
     @Listener
     public void onStartingServer(final StartingEngineEvent<Server> event) {

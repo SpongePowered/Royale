@@ -24,8 +24,8 @@
  */
 package org.spongepowered.royale.instance.gen;
 
-import org.spongepowered.api.CatalogType;
 import org.spongepowered.api.ResourceKey;
+import org.spongepowered.api.ResourceKeyed;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.volume.stream.VolumeFlatMapper;
@@ -35,7 +35,7 @@ import org.spongepowered.royale.instance.Instance;
 import java.util.Objects;
 import java.util.StringJoiner;
 
-public abstract class InstanceMutator implements CatalogType {
+public abstract class InstanceMutator implements ResourceKeyed {
 
     private final ResourceKey key;
 
@@ -66,11 +66,11 @@ public abstract class InstanceMutator implements CatalogType {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
         final InstanceMutator that = (InstanceMutator) o;
-        return java.util.Objects.equals(key, that.key);
+        return Objects.equals(this.key, that.key);
     }
 
     @Override

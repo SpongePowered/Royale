@@ -38,11 +38,10 @@ import org.spongepowered.api.command.exception.CommandException;
 import org.spongepowered.api.command.parameter.CommandContext;
 import org.spongepowered.api.command.parameter.CommonParameters;
 import org.spongepowered.api.command.parameter.Parameter;
-import org.spongepowered.api.command.parameter.managed.standard.CatalogedValueParameters;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.SerializationBehavior;
-import org.spongepowered.api.world.ServerLocation;
+import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.storage.WorldProperties;
 import org.spongepowered.configurate.ConfigurateException;
@@ -76,11 +75,13 @@ final class Commands {
                     .setKey("players").build();
 
     private static ServerWorld getWorld(final CommandContext context) throws CommandException {
-        final Optional<WorldProperties> optWorldProperties = context.getOne(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL);
+        final Optional<ServerWorld> optWorldProperties = context.getOne(CommonParameters.WORLD);
         if (optWorldProperties.isPresent()) {
-            return optWorldProperties.get().getWorld().orElseThrow(() -> new CommandException(
-                    Component.text("World [").append(format(NamedTextColor.GREEN, optWorldProperties.get().getKey().toString()))
-                            .append(Component.text("] is not online."))));
+            if (!optWorldProperties.get().getWorld().isLoaded()) {
+                throw new CommandException(
+                        Component.text("World [").append(format(NamedTextColor.GREEN, optWorldProperties.get().getKey().toString()))
+                                .append(Component.text("] is not online.")));
+            }
         } else if (context.getCause().getLocation().isPresent()) {
             return context.getCause().getLocation().get().getWorld();
         } else {
@@ -101,8 +102,7 @@ final class Commands {
                 .parameter(CommonParameters.ALL_WORLD_PROPERTIES)
                 .setExecutor(context -> {
                     final InstanceType instanceType = context.getOne(Commands.INSTANCE_TYPE_PARAMETER_OPTIONAL).orElseGet(() -> {
-                        final Collection<InstanceType> types = Sponge.getRegistry().getCatalogRegistry().getAllOf(InstanceType.class);
-                        return types.stream().findAny().get();
+                        return Sponge.getServer().registries().registry(Constants.Plugin.INSTANCE_TYPE).stream().findAny().get();
                     });
                     WorldProperties targetProperties = context.getOne(CommonParameters.ALL_WORLD_PROPERTIES).orElseGet(() -> {
                         final Optional<WorldProperties> properties = Sponge.getServer().getWorldManager().getProperties(instanceType.getKey());
@@ -186,9 +186,9 @@ final class Commands {
                 .setExtendedDescription(Component.text("Starts an ")
                         .append(format(NamedTextColor.LIGHT_PURPLE, "instance"))
                         .append(Component.text(".")))
-                .parameter(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL)
+                .parameter(CommonParameters.WORLD)
                 .setExecutor(context -> {
-                    final ServerWorld world = Commands.getWorld(context);
+                    final ServerWorld world =  context.getOne(CommonParameters.WORLD).orElseThrow(() -> new CommandException(Component.text("World was not provided!")));
                     final Optional<Instance> optInstance = Royale.instance.getInstanceManager().getInstance(world.getKey());
                     if (!optInstance.isPresent() || optInstance.get().getState().equals(Instance.State.IDLE)) {
                         try {
@@ -221,14 +221,14 @@ final class Commands {
                         .append(Commands.format(NamedTextColor.LIGHT_PURPLE, "instance"))
                         .append(Component.text("."))
                         .build())
-                .parameter(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL)
+                .parameter(CommonParameters.WORLD)
                 .parameter(Commands.FORCE_PARAMETER)
                 .setExecutor(context -> {
-                    final Optional<WorldProperties> optWorldProperties = context.getOne(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL);
+                    final Optional<ServerWorld> optWorldProperties = context.getOne(CommonParameters.WORLD);
                     final ServerWorld world;
                     if (optWorldProperties.isPresent()) {
-                        final Optional<ServerWorld> opt = optWorldProperties.get().getWorld();
-                        if (!opt.isPresent() && Royale.instance.getInstanceManager().getInstance(optWorldProperties.get().getKey()).isPresent()) {
+                        final ServerWorld opt = optWorldProperties.get().getWorld();
+                        if (!opt.isLoaded() && Royale.instance.getInstanceManager().getInstance(optWorldProperties.get().getKey()).isPresent()) {
                             context.sendMessage(Identity.nil(),
                                     Component.text(String.format("World %s was unloaded, but the instance still exists! Ending instance.",
                                             optWorldProperties.get().getKey()),
@@ -280,7 +280,7 @@ final class Commands {
                         .append(Commands.format(NamedTextColor.LIGHT_PURPLE, "instance"))
                         .append(Component.text("."))
                         .build())
-                .parameter(Parameter.firstOfBuilder(Parameter.seq(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY, CommonParameters.PLAYER_OPTIONAL))
+                .parameter(Parameter.firstOfBuilder(Parameter.seq(CommonParameters.WORLD, CommonParameters.PLAYER_OPTIONAL))
                         .or(CommonParameters.PLAYER_OPTIONAL).optional().build())
                 .setExecutor(context -> {
                     final ServerWorld world = Commands.getWorld(context);
@@ -365,7 +365,7 @@ final class Commands {
                         .append(Commands.format(NamedTextColor.LIGHT_PURPLE, "instance"))
                         .append(Component.text("."))
                         .build())
-                .parameter(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL)
+                .parameter(CommonParameters.WORLD)
                 .parameter(Commands.SERIALIZATION_BEHAVIOR_PARAMETER)
                 .setExecutor(context -> {
                     final ServerWorld world = Commands.getWorld(context);
@@ -402,7 +402,7 @@ final class Commands {
                         .append(Component.text("."))
                         .build())
                 .parameter(Commands.MANY_PLAYERS)
-                .parameter(CommonParameters.ONLINE_WORLD_PROPERTIES_ONLY_OPTIONAL)
+                .parameter(CommonParameters.WORLD)
                 .setPermission(Constants.Plugin.ID + ".command.tpworld")
                 .setExecutor(context -> {
                     final ServerWorld world = Commands.getWorld(context);
@@ -421,8 +421,8 @@ final class Commands {
                     }
                     for (final ServerPlayer target : players) {
                         target.setLocation(world.getEngine().getTeleportHelper().getSafeLocation(ServerLocation.of(world,
-                                world.getProperties().getSpawnPosition())).orElseGet(() -> ServerLocation.of(world, world.getProperties()
-                                .getSpawnPosition())));
+                                world.getProperties().spawnPosition())).orElseGet(() -> ServerLocation.of(world, world.getProperties()
+                                .spawnPosition())));
                     }
                     return CommandResult.success();
                 })

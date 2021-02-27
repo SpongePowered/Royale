@@ -24,11 +24,12 @@
  */
 package org.spongepowered.royale.instance;
 
-import org.spongepowered.api.NamedCatalogType;
 import org.spongepowered.api.ResourceKey;
+import org.spongepowered.api.ResourceKeyed;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.item.inventory.ItemStackSnapshot;
-import org.spongepowered.api.util.NamedCatalogBuilder;
+import org.spongepowered.api.util.Nameable;
+import org.spongepowered.api.util.ResourceKeyedBuilder;
 import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
@@ -46,7 +47,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
-public final class InstanceType implements NamedCatalogType {
+public final class InstanceType implements ResourceKeyed, Nameable {
 
     private final ResourceKey key;
     private final InstanceMutatorPipeline mutatorPipeline;
@@ -87,7 +88,7 @@ public final class InstanceType implements NamedCatalogType {
     }
 
     public static Builder builder() {
-        return Sponge.getRegistry().getBuilderRegistry().provideBuilder(Builder.class);
+        return Sponge.getGame().getBuilderProvider().provide(Builder.class);
     }
 
     @Override
@@ -178,7 +179,7 @@ public final class InstanceType implements NamedCatalogType {
         this.maxY = value.general.maxY;
         this.maxZ = value.general.maxZ;
         this.mutatorPipeline.getMutators().clear();
-        value.general.mapMutators.stream().map(k -> Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, k).get())
+        value.general.mapMutators.stream().map(k -> Sponge.getServer().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(k).get())
                 .forEach(this.mutatorPipeline.getMutators()::add);
         this.defaultItems.clear();
         this.defaultItems.addAll(value.round.defaultItems);
@@ -229,16 +230,16 @@ public final class InstanceType implements NamedCatalogType {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
         final InstanceType instanceType = (InstanceType) o;
-        return java.util.Objects.equals(this.key, instanceType.key);
+        return Objects.equals(this.key, instanceType.key);
     }
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(this.key);
+        return Objects.hash(this.key);
     }
 
     @Override
@@ -267,7 +268,7 @@ public final class InstanceType implements NamedCatalogType {
                 .toString();
     }
 
-    public static final class Builder implements NamedCatalogBuilder<InstanceType, Builder> {
+    public static final class Builder implements ResourceKeyedBuilder<InstanceType, Builder> {
 
         ResourceKey key;
         String name;
@@ -335,7 +336,7 @@ public final class InstanceType implements NamedCatalogType {
             this.worldBorderZ = value.general.worldBorderCenterZ;
             this.worldBorderRadius = value.general.worldBorderRadius;
             this.mutators = value.general.mapMutators.stream()
-                    .map(x -> Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, x)
+                    .map(x -> Sponge.getServer().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(x)
                             .orElseThrow(() -> new IllegalArgumentException("Unknown mutator " + x)))
                     .collect(Collectors.toSet());
             this.defaultItems = new LinkedList<>(value.round.defaultItems);
@@ -380,7 +381,6 @@ public final class InstanceType implements NamedCatalogType {
             return this;
         }
 
-        @Override
         public Builder name(final String name) {
             this.name = name;
             return this;
@@ -441,7 +441,7 @@ public final class InstanceType implements NamedCatalogType {
 
         public Builder mutator(final ResourceKey key) {
             Objects.requireNonNull(key);
-            final Optional<InstanceMutator> mutator = Sponge.getRegistry().getCatalogRegistry().get(InstanceMutator.class, key);
+            final Optional<InstanceMutator> mutator = Sponge.getServer().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(key);
             mutator.ifPresent(instanceMutator -> this.mutators.add(instanceMutator));
             return this;
         }
