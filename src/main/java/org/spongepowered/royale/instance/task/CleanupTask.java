@@ -82,8 +82,8 @@ public final class CleanupTask extends InstanceTask {
 
         if (world != null && world.isLoaded()) {
             if (this.duration < 150) {
-                for (final ServerPlayer player : world.getPlayers()) {
-                    if (!this.getInstance().isPlayerRegistered(player.getUniqueId())) {
+                for (final ServerPlayer player : world.players()) {
+                    if (!this.getInstance().isPlayerRegistered(player.uniqueId())) {
                         continue;
                     }
 
@@ -91,7 +91,7 @@ public final class CleanupTask extends InstanceTask {
                         player.showTitle(this.title);
                     }
 
-                    final Vector3d location = player.getLocation().getPosition();
+                    final Vector3d location = player.location().position();
                     final Human human = world.createEntity(EntityTypes.HUMAN.get(), location);
 
                     ServerLocation spawnLocation = null;
@@ -100,12 +100,12 @@ public final class CleanupTask extends InstanceTask {
                     int tries = 4;
 
                     while (tries > 0) {
-                        spawnLocation = this.getInstance().getServer().getTeleportHelper().getSafeLocation(human.getServerLocation()
+                        spawnLocation = this.getInstance().getServer().teleportHelper().findSafeLocation(human.serverLocation()
                                 .add(random.nextInt(4), 0, random.nextInt(4)), 3, 3).orElse(null);
 
                         if (spawnLocation != null) {
                             human.setLocation(spawnLocation);
-                            if (world.getEntities(human.getBoundingBox().get()).isEmpty()) {
+                            if (world.entities(human.boundingBox().get()).isEmpty()) {
                                 tries--;
                                 continue;
                             }
@@ -115,11 +115,11 @@ public final class CleanupTask extends InstanceTask {
                     }
 
                     if (spawnLocation != null) {
-                        final GoalExecutor<Agent> targetGoal = human.getGoal(GoalExecutorTypes.TARGET.get()).orElse(null);
+                        final GoalExecutor<Agent> targetGoal = human.goal(GoalExecutorTypes.TARGET.get()).orElse(null);
                         targetGoal.addGoal(0, FindNearestAttackableTargetGoal.builder().chance(1).target(ServerPlayer.class)
-                                .filter(e -> this.getInstance().isPlayerRegistered(e.getUniqueId()) && !this.getInstance().isPlayerDead(e.getUniqueId())).build(human));
+                                .filter(e -> this.getInstance().isPlayerRegistered(e.uniqueId()) && !this.getInstance().isPlayerDead(e.uniqueId())).build(human));
 
-                        final GoalExecutor<Agent> normalGoal = human.getGoal(GoalExecutorTypes.NORMAL.get()).orElse(null);
+                        final GoalExecutor<Agent> normalGoal = human.goal(GoalExecutorTypes.NORMAL.get()).orElse(null);
                         normalGoal.addGoal(0, SwimGoal.builder().swimChance(0.8f).build(human));
 
                         final float rangerChance = random.nextFloat();
@@ -155,12 +155,12 @@ public final class CleanupTask extends InstanceTask {
                 }
             } else {
                 // Blow this place to pieces
-                for (final ServerPlayer player : world.getPlayers()) {
-                    if (this.getInstance().isPlayerDead(player.getUniqueId())) {
+                for (final ServerPlayer player : world.players()) {
+                    if (this.getInstance().isPlayerDead(player.uniqueId())) {
                         continue;
                     }
 
-                    final ServerLocation explosionLocation = player.getServerLocation().add(random.nextInt(4), random.nextInt(4), random.nextInt(4));
+                    final ServerLocation explosionLocation = player.serverLocation().add(random.nextInt(4), random.nextInt(4), random.nextInt(4));
 
                     world.triggerExplosion(Explosion.builder()
                             .canCauseFire(true)

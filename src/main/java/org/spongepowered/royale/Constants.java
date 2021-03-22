@@ -55,8 +55,8 @@ public final class Constants {
 
     public static final class Plugin {
         public static final String ID = "royale";
-        public static final DefaultedRegistryType<InstanceMutator> INSTANCE_MUTATOR = RegistryType.of(RegistryRoots.SPONGE, ResourceKey.of(Plugin.ID, "instance_mutator")).asDefaultedType(() -> Sponge.getServer().registries());
-        public static final DefaultedRegistryType<InstanceType> INSTANCE_TYPE = RegistryType.of(RegistryRoots.SPONGE, ResourceKey.of(Plugin.ID, "instance_type")).asDefaultedType(() -> Sponge.getServer().registries());
+        public static final DefaultedRegistryType<InstanceMutator> INSTANCE_MUTATOR = RegistryType.of(RegistryRoots.SPONGE, ResourceKey.of(Plugin.ID, "instance_mutator")).asDefaultedType(() -> Sponge.server().registries());
+        public static final DefaultedRegistryType<InstanceType> INSTANCE_TYPE = RegistryType.of(RegistryRoots.SPONGE, ResourceKey.of(Plugin.ID, "instance_type")).asDefaultedType(() -> Sponge.server().registries());
     }
 
     public static final class Map {
@@ -89,7 +89,7 @@ public final class Constants {
 
             DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.instance.getPlugin().getMetadata().getId(), "player_spawn"));
 
-            DEFAULT_MAP_MUTATORS.add(Sponge.getServer().registries().registry(Plugin.INSTANCE_MUTATOR).findValue(ResourceKey.of(Plugin.ID, "player_spawn")).get());
+            DEFAULT_MAP_MUTATORS.add(Sponge.server().registries().registry(Plugin.INSTANCE_MUTATOR).findValue(ResourceKey.of(Plugin.ID, "player_spawn")).get());
         }
 
         private Map() {

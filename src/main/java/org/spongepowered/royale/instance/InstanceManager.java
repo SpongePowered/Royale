@@ -91,21 +91,21 @@ public final class InstanceManager {
         }
 
         final Instance instance;
-        ServerWorld world = this.server.getWorldManager().world(key).orElse(null);
+        ServerWorld world = this.server.worldManager().world(key).orElse(null);
 
         if (world == null) {
-            world = this.server.getWorldManager().loadWorld(key).getNow(null);
+            world = this.server.worldManager().loadWorld(key).getNow(null);
             if (world == null) {
                 throw new IOException(String.format("Failed to load instance '%s''!", key));
             }
         }
 
         //world.getProperties().setKeepSpawnLoaded(true);
-        world.getProperties().setSerializationBehavior(SerializationBehavior.AUTOMATIC_METADATA_ONLY);
+        world.properties().setSerializationBehavior(SerializationBehavior.AUTOMATIC_METADATA_ONLY);
 
         instance = new Instance(this.server, this, key, type);
 
-        this.instances.put(world.getKey(), instance);
+        this.instances.put(world.key(), instance);
         this.instancesByTypes.computeIfAbsent(type, k -> new LinkedList<>()).add(instance);
 
         final InstanceMutatorPipeline pipeline = type.getMutatorPipeline();
@@ -140,24 +140,24 @@ public final class InstanceManager {
             return;
         }
 
-        final ServerWorld world = this.server.getWorldManager().world(instance.getWorldKey()).orElse(null);
+        final ServerWorld world = this.server.worldManager().world(instance.getWorldKey()).orElse(null);
 
         if (world == null) {
             this.instances.remove(instance.getWorldKey());
             return;
         }
 
-        final ServerWorld lobby = this.server.getWorldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY)
+        final ServerWorld lobby = this.server.worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY)
                 .orElseThrow(() -> new RuntimeException("Lobby world was not found!"));
 
         // Move everyone out
-        for (final ServerPlayer player : world.getPlayers()) {
-            if (instance.isPlayerRegistered(player.getUniqueId())) {
+        for (final ServerPlayer player : world.players()) {
+            if (instance.isPlayerRegistered(player.uniqueId())) {
                 this.convertToLobbyPlayer(player);
-                player.getInventory().clear();
+                player.inventory().clear();
             }
 
-            player.setLocation(ServerLocation.of(lobby, lobby.getProperties().spawnPosition()));
+            player.setLocation(ServerLocation.of(lobby, lobby.properties().spawnPosition()));
         }
 
         this.instances.remove(instance.getWorldKey());
@@ -170,7 +170,7 @@ public final class InstanceManager {
             }
         }
 
-        if (!this.server.getWorldManager().unloadWorld(world).get()) {
+        if (!this.server.worldManager().unloadWorld(world).get()) {
             throw new RuntimeException(String.format("Failed to unload world for instance '%s'!", key));
         }
     }
@@ -191,21 +191,21 @@ public final class InstanceManager {
             return;
         }
 
-        final ServerWorld world = player.getWorld();
-        final Instance instance = this.getInstance(world.getKey()).orElse(null);
+        final ServerWorld world = player.world();
+        final Instance instance = this.getInstance(world.key()).orElse(null);
 
         if (instance != null) {
-            if (instance.isPlayerRegistered(player.getUniqueId())) {
+            if (instance.isPlayerRegistered(player.uniqueId())) {
                 if (event instanceof ServerSideConnectionEvent.Join) {
                     // Player has played before, disconnected...let them come back as spectator
-                    if (instance.isPlayerDead(player.getUniqueId())) {
+                    if (instance.isPlayerDead(player.uniqueId())) {
                         instance.spectate(player);
                     }
                 } else {
                     // Player disconnecting instantly means they forfeit
                     instance.disqualifyPlayer(player);
                     if (instance.isRoundOver()) {
-                        if (world.getPlayers().isEmpty()) {
+                        if (world.players().isEmpty()) {
                             instance.advanceTo(Instance.State.FORCE_STOP);
                         } else {
                             instance.advanceTo(Instance.State.PRE_END);
@@ -214,14 +214,14 @@ public final class InstanceManager {
                 }
             }
         } else {
-            if (world.getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
+            if (world.key().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                 this.convertToLobbyPlayer(player);
             } else if (!player.hasPlayedBefore()) {
-                this.server.getScheduler().submit(Task.builder()
+                this.server.scheduler().submit(Task.builder()
                         .delay(Ticks.of(0))
-                        .execute(() -> this.server.getWorldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY).ifPresent(w -> {
+                        .execute(() -> this.server.worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY).ifPresent(w -> {
                             if (player.isOnline()) {
-                                player.setLocation(ServerLocation.of(w, w.getProperties().spawnPosition()));
+                                player.setLocation(ServerLocation.of(w, w.properties().spawnPosition()));
                                 InstanceManager.this.convertToLobbyPlayer(player);
                             }
                         }))
@@ -234,9 +234,9 @@ public final class InstanceManager {
 
     @Listener(order = Order.LAST)
     public void onMoveEntity(final MoveEntityEvent event, @First final ServerPlayer player) {
-        final ServerWorld world = player.getWorld();
+        final ServerWorld world = player.world();
 
-        final Instance instance = this.getInstance(world.getKey()).orElse(null);
+        final Instance instance = this.getInstance(world.key()).orElse(null);
 
         // We only care about inner-instance movement
         if (instance == null) {
@@ -244,12 +244,12 @@ public final class InstanceManager {
         }
 
         // We only care about registered players
-        if (!instance.isPlayerRegistered(player.getUniqueId())) {
+        if (!instance.isPlayerRegistered(player.uniqueId())) {
             return;
         }
 
         // If a Player has already spawned, this means they are playing. See if the instance allows movement
-        if (instance.isPlayerSpawned(player.getUniqueId()) && !instance.isPlayerDead(player.getUniqueId()) && !instance.getState().canAnyoneMove()) {
+        if (instance.isPlayerSpawned(player.uniqueId()) && !instance.isPlayerDead(player.uniqueId()) && !instance.getState().canAnyoneMove()) {
             event.setCancelled(true);
         }
     }
@@ -257,23 +257,23 @@ public final class InstanceManager {
 
     @Listener(order = Order.LAST)
     public void onChangeEntityWorld(final ChangeEntityWorldEvent event, @First final ServerPlayer player) {
-        final ServerWorld fromWorld = event.getOriginalWorld();
-        final ServerWorld toWorld = event.getDestinationWorld();
+        final ServerWorld fromWorld = event.originalWorld();
+        final ServerWorld toWorld = event.destinationWorld();
 
-        final Instance fromInstance = this.getInstance(fromWorld.getKey()).orElse(null);
-        final Instance toInstance = this.getInstance(toWorld.getKey()).orElse(null);
+        final Instance fromInstance = this.getInstance(fromWorld.key()).orElse(null);
+        final Instance toInstance = this.getInstance(toWorld.key()).orElse(null);
 
         // We don't care about non-instances from and to.
-        if (fromInstance == null && toInstance == null && !toWorld.getKey().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
+        if (fromInstance == null && toInstance == null && !toWorld.key().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
             return;
         }
 
         if (fromInstance != null) {
 
-            player.setScoreboard(this.server.getServerScoreboard().get());
+            player.setScoreboard(this.server.serverScoreboard().get());
 
             // Switching out of instance means we kill them in the instance they left
-            if (fromInstance.isPlayerRegistered(player.getUniqueId())) {
+            if (fromInstance.isPlayerRegistered(player.uniqueId())) {
                 fromInstance.disqualifyPlayer(player);
                 if (fromInstance.isRoundOver()) {
                     fromInstance.advanceTo(Instance.State.PRE_END);
@@ -283,9 +283,9 @@ public final class InstanceManager {
                 this.convertToLobbyPlayer(player);
             } else {
                 // Switching into an instance
-                if (toInstance != null && toInstance.isPlayerRegistered(player.getUniqueId())) {
+                if (toInstance != null && toInstance.isPlayerRegistered(player.uniqueId())) {
                     // Already dead here? Adjust them as a spectator
-                    if (toInstance.isPlayerDead(player.getUniqueId())) {
+                    if (toInstance.isPlayerDead(player.uniqueId())) {
                         toInstance.spectate(player);
 
                         player.setScoreboard(toInstance.getScoreboard().getHandle());
@@ -301,12 +301,12 @@ public final class InstanceManager {
     }
 
     @Listener(order = Order.LAST)
-    public void onDestructEntity(final DestructEntityEvent.Death event, @Getter("getEntity") final ServerPlayer player) {
-        final ServerWorld world = player.getWorld();
-        final Instance instance = this.getInstance(world.getKey()).orElse(null);
+    public void onDestructEntity(final DestructEntityEvent.Death event, @Getter("entity") final ServerPlayer player) {
+        final ServerWorld world = player.world();
+        final Instance instance = this.getInstance(world.key()).orElse(null);
 
         if (instance != null) {
-            if (instance.isPlayerRegistered(player.getUniqueId())) {
+            if (instance.isPlayerRegistered(player.uniqueId())) {
                 instance.disqualifyPlayer(player);
                 if (instance.isRoundOver()) {
                     instance.advanceTo(Instance.State.PRE_END);
@@ -316,29 +316,29 @@ public final class InstanceManager {
     }
 
     @Listener(order = Order.LAST)
-    public void onRespawnPlayerSelectWorld(final RespawnPlayerEvent.SelectWorld event, @Getter("getEntity") final ServerPlayer player,
-            @Getter("getOriginalWorld") final ServerWorld fromWorld, @Getter("getDestinationWorld") final ServerWorld toWorld) {
+    public void onRespawnPlayerSelectWorld(final RespawnPlayerEvent.SelectWorld event, @Getter("entity") final ServerPlayer player,
+            @Getter("originalWorld") final ServerWorld fromWorld, @Getter("destinationWorld") final ServerWorld toWorld) {
 
-        final Instance fromInstance = this.getInstance(fromWorld.getKey()).orElse(null);
-        Instance toInstance = this.getInstance(toWorld.getKey()).orElse(null);
+        final Instance fromInstance = this.getInstance(fromWorld.key()).orElse(null);
+        Instance toInstance = this.getInstance(toWorld.key()).orElse(null);
 
-        if (fromInstance != null && toInstance == null && fromInstance.isPlayerRegistered(player.getUniqueId()) && fromWorld.isLoaded()) {
+        if (fromInstance != null && toInstance == null && fromInstance.isPlayerRegistered(player.uniqueId()) && fromWorld.isLoaded()) {
             event.setDestinationWorld(fromWorld);
         }
     }
 
     @Listener(order = Order.LAST)
-    public void onRespawnPlayer(final RespawnPlayerEvent.Recreate event, @Getter("getRecreatedPlayer") final ServerPlayer player,
-            @Getter("getOriginalWorld") final ServerWorld fromWorld, @Getter("getDestinationWorld") final ServerWorld toWorld) {
+    public void onRespawnPlayer(final RespawnPlayerEvent.Recreate event, @Getter("recreatedPlayer") final ServerPlayer player,
+            @Getter("originalWorld") final ServerWorld fromWorld, @Getter("destinationWorld") final ServerWorld toWorld) {
 
-        final Instance fromInstance = this.getInstance(fromWorld.getKey()).orElse(null);
-        Instance toInstance = this.getInstance(toWorld.getKey()).orElse(null);
+        final Instance fromInstance = this.getInstance(fromWorld.key()).orElse(null);
+        Instance toInstance = this.getInstance(toWorld.key()).orElse(null);
 
-        if (fromInstance != null && toInstance == null && fromInstance.isPlayerRegistered(player.getUniqueId()) && fromWorld.isLoaded()) {
-            event.setDestinationPosition(event.getOriginalPosition());
+        if (fromInstance != null && toInstance == null && fromInstance.isPlayerRegistered(player.uniqueId()) && fromWorld.isLoaded()) {
+            event.setDestinationPosition(event.originalPosition());
         }
 
-        toInstance = this.getInstance(toWorld.getKey()).orElse(null);
+        toInstance = this.getInstance(toWorld.key()).orElse(null);
 
         if (fromInstance != null) {
             if (fromInstance.equals(toInstance)) {
@@ -346,23 +346,23 @@ public final class InstanceManager {
             } else if (toInstance != null) {
                 player.setScoreboard(toInstance.getScoreboard().getHandle());
             } else {
-                player.setScoreboard(this.server.getServerScoreboard().orElse(null));
+                player.setScoreboard(this.server.serverScoreboard().orElse(null));
             }
         }
     }
 
     @Listener(order = Order.LAST)
-    public void onAttackPlayer(final AttackEntityEvent event, @Getter("getEntity") final ServerPlayer player) {
-        final Instance instance = this.getInstance(player.getWorld().getKey()).orElse(null);
+    public void onAttackPlayer(final AttackEntityEvent event, @Getter("entity") final ServerPlayer player) {
+        final Instance instance = this.getInstance(player.world().key()).orElse(null);
 
-        if (instance != null && !instance.isPlayerRegistered(player.getUniqueId())) {
+        if (instance != null && !instance.isPlayerRegistered(player.uniqueId())) {
             event.setCancelled(true);
         }
     }
 
     @Listener
-    public void onDamagePlayer(final DamageEntityEvent event, @Root final DamageSource source, @Getter("getEntity") final ServerPlayer player) {
-        if (!(source.getType().equals(DamageTypes.FALL.get()) || source.getType().equals(DamageTypes.VOID.get())) && player.getWorld().getKey()
+    public void onDamagePlayer(final DamageEntityEvent event, @Root final DamageSource source, @Getter("entity") final ServerPlayer player) {
+        if (!(source.type().equals(DamageTypes.FALL.get()) || source.type().equals(DamageTypes.VOID.get())) && player.world().key()
                 .equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
             event.setCancelled(true);
         }
@@ -370,10 +370,10 @@ public final class InstanceManager {
 
     @Listener
     public void onChangeSign(final ChangeSignEvent event, @Root final ServerPlayer player) {
-        if (this.isTeleportSign(event.getText().get())) {
+        if (this.isTeleportSign(event.text().get())) {
             if (player.hasPermission(Constants.Permissions.ADMIN + ".create.sign")) {
                 player.sendMessage(Identity.nil(), Component.text("Successfully created world teleportation sign!", NamedTextColor.GREEN));
-                event.getText().set(0, event.getText().get(0).colorIfAbsent(NamedTextColor.AQUA));
+                event.text().set(0, event.text().get(0).colorIfAbsent(NamedTextColor.AQUA));
             } else {
                 player.sendMessage(Identity.nil(), Component.text("You do not have permission to create a world teleportation sign!", NamedTextColor.RED));
                 event.setCancelled(true);
@@ -384,17 +384,17 @@ public final class InstanceManager {
     @Listener
     //TODO this is wrong. It needs a broader event
     public void onInteractByPlayer(final InteractBlockEvent.Secondary event, @Root final ServerPlayer player) {
-        final ServerWorld world = player.getWorld();
-        final Instance instance = this.getInstance(world.getKey()).orElse(null);
+        final ServerWorld world = player.world();
+        final Instance instance = this.getInstance(world.key()).orElse(null);
 
-        if (instance != null && !instance.getState().canAnyoneInteract() && instance.isPlayerRegistered(player.getUniqueId())) {
+        if (instance != null && !instance.getState().canAnyoneInteract() && instance.isPlayerRegistered(player.uniqueId())) {
             event.setCancelled(true);
         }
 
         if (event instanceof InteractBlockEvent.Secondary) {
-            final BlockSnapshot block = ((InteractBlockEvent.Secondary) event).getBlock();
+            final BlockSnapshot block = ((InteractBlockEvent.Secondary) event).block();
 
-            block.getLocation().flatMap(Location::getBlockEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
+            block.location().flatMap(Location::blockEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
                 if (this.isTeleportSign(lines)) {
                     final String namespace = PlainComponentSerializer.plain().serialize(lines.get(0));
                     final String value = PlainComponentSerializer.plain().serialize(lines.get(1));
@@ -437,9 +437,9 @@ public final class InstanceManager {
 
     @Listener
     public void onChangeBlock(final ChangeBlockEvent.All event, @First final ServerPlayer player) {
-        for (final Transaction<BlockSnapshot> transaction : event.getTransactions()) {
-            final BlockSnapshot snapshot = transaction.getFinal();
-            if (!player.hasPermission(Constants.Permissions.ADMIN + ".lobby.edit") && snapshot.getWorld()
+        for (final Transaction<BlockSnapshot> transaction : event.transactions()) {
+            final BlockSnapshot snapshot = transaction.finalReplacement();
+            if (!player.hasPermission(Constants.Permissions.ADMIN + ".lobby.edit") && snapshot.world()
                     .equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                 transaction.setValid(false);
             }
@@ -447,7 +447,7 @@ public final class InstanceManager {
     }
 
     private void convertToLobbyPlayer(final ServerPlayer player) {
-        player.setScoreboard(this.server.getServerScoreboard().orElse(null));
+        player.setScoreboard(this.server.serverScoreboard().orElse(null));
         Utils.resetPlayer(player);
     }
 

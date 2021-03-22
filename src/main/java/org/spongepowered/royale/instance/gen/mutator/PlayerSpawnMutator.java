@@ -47,7 +47,7 @@ public final class PlayerSpawnMutator extends SignMutator {
     @Override
     public VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance) {
         return (world, blockEntitySupplier, x, y, z) -> {
-            final BlockState air = BlockTypes.AIR.get().getDefaultState();
+            final BlockState air = BlockTypes.AIR.get().defaultState();
             world.setBlock(x, y, z, air, BlockChangeFlags.ALL);
             // Always remove the block entity
             world.removeBlockEntity(x, y, z);

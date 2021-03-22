@@ -44,7 +44,7 @@ public abstract class InstanceMutator implements ResourceKeyed {
     }
 
     @Override
-    public final ResourceKey getKey() {
+    public final ResourceKey key() {
         return this.key;
     }
 

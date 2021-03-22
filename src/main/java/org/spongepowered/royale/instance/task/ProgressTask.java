@@ -61,7 +61,7 @@ public final class ProgressTask extends InstanceTask {
     @Override
     public boolean cancel() {
         for (final UUID profile : this.bossBarViewers) {
-            Sponge.getServer().getPlayer(profile).ifPresent(p -> p.hideBossBar(this.bossBar));
+            Sponge.server().player(profile).ifPresent(p -> p.hideBossBar(this.bossBar));
         }
         return this.handle.cancel();
     }
@@ -79,7 +79,7 @@ public final class ProgressTask extends InstanceTask {
             }
 
             final float percent = (float) this.roundLengthRemaining * 1f / this.roundLengthTotal;
-            this.bossBar.percent(percent);
+            this.bossBar.progress(percent);
 
             if (percent < 0.33) {
                 this.bossBar.color(BossBar.Color.RED);
@@ -97,8 +97,8 @@ public final class ProgressTask extends InstanceTask {
                 this.bossBar.name(Component.text(String.format("Time remaining: %02d", seconds)));
             }
 
-            for (final ServerPlayer player : world.getPlayers()) {
-                if (this.bossBarViewers.add(player.getUniqueId())) {
+            for (final ServerPlayer player : world.players()) {
+                if (this.bossBarViewers.add(player.uniqueId())) {
                     player.showBossBar(this.bossBar);
                 }
             }

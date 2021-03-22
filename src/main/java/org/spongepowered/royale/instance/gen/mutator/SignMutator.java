@@ -67,7 +67,7 @@ abstract class SignMutator extends InstanceMutator {
     @Override
     public String toString() {
         return new StringJoiner(", ", this.getClass().getSimpleName() + "[", "]")
-                .add("key=" + this.getKey())
+                .add("key=" + this.key())
                 .add("signId=" + this.signId)
                 .toString();
     }

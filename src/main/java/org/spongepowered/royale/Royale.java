@@ -79,10 +79,10 @@ public final class Royale {
 
         this.plugin = plugin;
         this.configFile = configFile;
-        this.eventManager = game.getEventManager();
+        this.eventManager = game.eventManager();
         this.random = new Random();
         this.options = ConfigurationOptions.defaults()
-                .serializers(configManager.getSerializers().childBuilder()
+                .serializers(configManager.serializers().childBuilder()
                             .register(ComponentTemplate.class, new ComponentTemplateTypeSerializer())
                                      .build());
     }
@@ -131,7 +131,7 @@ public final class Royale {
                         .from(adapter.getConfig())
                         .build();
 
-                this.plugin.getLogger().info("Registered instance type '{}'", newType.getKey());
+                this.plugin.getLogger().info("Registered instance type '{}'", newType.key());
                 defaultTypes.put(ResourceKey.of(this.plugin, instanceId), newType);
                 createDefaults = false;
             }
@@ -146,10 +146,10 @@ public final class Royale {
                     .name("Last Man Standing")
                     .build();
             defaultTypes.put(ResourceKey.of(this.plugin, "last_man_standing"), defaultType);
-            this.plugin.getLogger().info("Registered instance type '{}'", defaultType.getKey());
+            this.plugin.getLogger().info("Registered instance type '{}'", defaultType.key());
 
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
-                    InstanceTypeConfiguration.class, this.options, Constants.Map.INSTANCE_TYPES_FOLDER.resolve(defaultType.getKey().getValue() +
+                    InstanceTypeConfiguration.class, this.options, Constants.Map.INSTANCE_TYPES_FOLDER.resolve(defaultType.key().value() +
                 ".conf"));
             defaultType.injectIntoConfig(adapter.getConfig());
             try {
@@ -182,7 +182,7 @@ public final class Royale {
 
     @Listener
     public void onStartingServer(final StartingEngineEvent<Server> event) {
-        this.instanceManager = new InstanceManager(event.getEngine());
+        this.instanceManager = new InstanceManager(event.engine());
         this.eventManager.registerListeners(this.plugin, this.instanceManager);
     }
 

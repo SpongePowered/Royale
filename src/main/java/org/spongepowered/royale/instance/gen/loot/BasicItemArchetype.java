@@ -43,7 +43,7 @@ class BasicItemArchetype implements ItemArchetype {
 
     @Override
     public ItemStack create(final Random rand) {
-        final int amount = this.quantity.getFlooredAmount(rand);
+        final int amount = this.quantity.flooredAmount(rand);
         return ItemStack.builder().itemType(this.type).quantity(amount).build();
     }
 

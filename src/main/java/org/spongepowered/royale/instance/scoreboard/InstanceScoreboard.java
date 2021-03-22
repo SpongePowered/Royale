@@ -66,19 +66,19 @@ public final class InstanceScoreboard {
     public InstanceScoreboard(final Instance instance) {
         this.scoreboard = Scoreboard.builder().build();
         this.objective =
-                Objective.builder().name("main").displayName(Component.text(instance.getWorldKey().getFormatted(), NamedTextColor.GREEN))
+                Objective.builder().name("main").displayName(Component.text(instance.getWorldKey().formatted(), NamedTextColor.GREEN))
                         .criterion(Criteria.DUMMY).build();
 
         // Instance type
-        this.instanceTypeScore = this.objective.getOrCreateScore(Component.text(instance.getType().getName(), NamedTextColor.RED));
+        this.instanceTypeScore = this.objective.scoreOrCreate(Component.text(instance.getType().name(), NamedTextColor.RED));
         this.instanceTypeScore.setScore(0);
 
         // Dashes
-        this.dashesScore = this.objective.getOrCreateScore(Component.text("----------------"));
+        this.dashesScore = this.objective.scoreOrCreate(Component.text("----------------"));
         this.dashesScore.setScore(0);
 
         // Empty line
-        this.emptyLineScore = this.objective.getOrCreateScore(Component.empty());
+        this.emptyLineScore = this.objective.scoreOrCreate(Component.empty());
         this.emptyLineScore.setScore(0);
 
         this.scoreboard.addObjective(this.objective);
@@ -92,25 +92,25 @@ public final class InstanceScoreboard {
     }
 
     public void addPlayer(final ServerPlayer player) {
-        final Score score = this.objective.getOrCreateScore(Component.text(player.getName()));
+        final Score score = this.objective.scoreOrCreate(Component.text(player.name()));
         score.setScore(0);
 
-        final Team team = Team.builder().name(player.getName()).build();
-        team.addMember(player.getTeamRepresentation());
+        final Team team = Team.builder().name(player.name()).build();
+        team.addMember(player.teamRepresentation());
         this.scoreboard.registerTeam(team);
 
-        this.playerData.put(player.getUniqueId(), new PlayerData(score, team, player.getName(), player.getUniqueId()));
+        this.playerData.put(player.uniqueId(), new PlayerData(score, team, player.name(), player.uniqueId()));
         player.setScoreboard(this.scoreboard);
 
         this.sortScoreboard();
     }
 
     public void killPlayer(final Player player) {
-        if (!this.playerData.containsKey(player.getUniqueId())) {
+        if (!this.playerData.containsKey(player.uniqueId())) {
             return;
         }
 
-        final PlayerData data = this.playerData.get(player.getUniqueId());
+        final PlayerData data = this.playerData.get(player.uniqueId());
         data.team.setPrefix(Component.text("", null, TextDecoration.STRIKETHROUGH));
         data.dead = true;
 

@@ -53,9 +53,9 @@ class PotionItemArchetype extends BasicItemArchetype {
 
     @Override
     public ItemStack create(final Random rand) {
-        final int amount = this.getQuantity().getFlooredAmount(rand);
+        final int amount = this.getQuantity().flooredAmount(rand);
         final List<PotionEffect> itemEffects = new ArrayList<>();
-        itemEffects.add(PotionEffect.of(this.effect, this.power.getFlooredAmount(rand), this.duration.getFlooredAmount(rand)));
+        itemEffects.add(PotionEffect.of(this.effect, this.power.flooredAmount(rand), this.duration.flooredAmount(rand)));
         return ItemStack.builder()
                 .itemType(this.getType())
                 .quantity(amount)

@@ -78,7 +78,7 @@ public final class EndTask extends InstanceTask {
             if (this.winners.size() > 1) {
                 winner = Optional.empty();
             } else {
-                winner = this.getInstance().getServer().getPlayer(this.winners.get(0));
+                winner = this.getInstance().getServer().player(this.winners.get(0));
             }
 
             final Component content =
@@ -101,17 +101,17 @@ public final class EndTask extends InstanceTask {
                                 .type(ParticleTypes.FIREWORK)
                                 .quantity(30)
                                 .build(),
-                        winner.get().getLocation().getPosition());
+                        winner.get().location().position());
 
-                for (final ServerPlayer player : world.getPlayers()) {
-                    if (player.getUniqueId().equals(winner.get().getUniqueId())) {
+                for (final ServerPlayer player : world.players()) {
+                    if (player.uniqueId().equals(winner.get().uniqueId())) {
                         player.showTitle(winnerTitle);
                     } else {
                         player.showTitle(title);
                     }
                 }
 
-                this.getInstance().getServer().getBroadcastAudience()
+                this.getInstance().getServer().broadcastAudience()
                         .sendMessage(Identity.nil(), LinearComponents.linear(NamedTextColor.GREEN, winner.get().displayName().get(),
                                 NamedTextColor.WHITE, Component.text(" has won the game!")));
             }

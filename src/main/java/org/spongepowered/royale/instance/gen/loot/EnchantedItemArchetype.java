@@ -58,7 +58,7 @@ class EnchantedItemArchetype implements ItemArchetype {
 
     @Override
     public ItemStack create(final Random rand) {
-        final int amount = this.quantity.getFlooredAmount(rand);
+        final int amount = this.quantity.flooredAmount(rand);
         final ItemStack itemStack = ItemStack.builder()
                 .itemType(this.type)
                 .quantity(amount)
@@ -66,7 +66,7 @@ class EnchantedItemArchetype implements ItemArchetype {
 
         final List<Enchantment> enchantmentsToApply = new ArrayList<>();
         for (final Map.Entry<EnchantmentType, VariableAmount> entry : this.enchantments.entrySet()) {
-            final int level = entry.getValue().getFlooredAmount(rand);
+            final int level = entry.getValue().flooredAmount(rand);
             if (level > 0) {
                 enchantmentsToApply.add(Enchantment.builder().type(entry.getKey()).level(level).build());
             }

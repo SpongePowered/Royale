@@ -83,7 +83,7 @@ public final class StartTask extends InstanceTask {
             }
 
             // Make sure a player ref isn't still here
-            world.getPlayers().forEach(player -> player.showTitle(this.startTitles.get(this.seconds)));
+            world.players().forEach(player -> player.showTitle(this.startTitles.get(this.seconds)));
 
             this.seconds++;
         }

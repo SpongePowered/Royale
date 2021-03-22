@@ -62,12 +62,12 @@ public final class ChestMutator extends SignMutator {
             final List<ItemArchetype> items = lootTable.get(Royale.instance.getRandom());
 
             Royale.instance.getPlugin().getLogger().info("Generating loot chest via table '{}' at {}x, {}y, {}z", lootTableId.toLowerCase(), x, y, z);
-            final BlockState defaultChestState = BlockTypes.CHEST.get().getDefaultState();
+            final BlockState defaultChestState = BlockTypes.CHEST.get().defaultState();
             final BlockState newChestState = defaultChestState.with(Keys.DIRECTION, facingDirection)
                 .orElse(defaultChestState);
             world.setBlock(x, y, z, newChestState, BlockChangeFlags.ALL);
 
-            final BlockEntity blockEntity = world.getBlockEntity(x, y, z)
+            final BlockEntity blockEntity = world.blockEntity(x, y, z)
                 .orElseThrow(() -> new IllegalStateException("Something is quite wrong...we set a Chest down yet found no block entity. This is a serious issue likely due to server misconfiguration!"));
             if (!(blockEntity instanceof Chest)) {
                 throw new IllegalStateException(String.format("Something is quite wrong...we set a Chest down yet found a [%s] instead. This is a "
@@ -75,7 +75,7 @@ public final class ChestMutator extends SignMutator {
             }
             final Chest chest = (Chest) blockEntity;
             for (final ItemArchetype item : items) {
-                chest.getInventory().offer(item.create(Royale.instance.getRandom()));
+                chest.inventory().offer(item.create(Royale.instance.getRandom()));
             }
 
             return Optional.of(chest);

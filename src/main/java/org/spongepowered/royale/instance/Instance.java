@@ -86,13 +86,13 @@ public final class Instance {
         this.instanceType = instanceType;
         this.scoreboard = new InstanceScoreboard(this);
 
-        final ServerWorld world = this.server.getWorldManager().world(worldKey)
+        final ServerWorld world = this.server.worldManager().world(worldKey)
                 .orElseThrow(() -> new RuntimeException("Attempted to create an instance for an offline "
                         + "world!"));
 
-        world.getBorder().setCenter(instanceType.getWorldBorderX(), instanceType.getWorldBorderZ());
-        world.getBorder().setDiameter(instanceType.getWorldBorderRadius() * 2);
-        world.getBorder().setWarningDistance(0);
+        world.border().setCenter(instanceType.getWorldBorderX(), instanceType.getWorldBorderZ());
+        world.border().setDiameter(instanceType.getWorldBorderRadius() * 2);
+        world.border().setWarningDistance(0);
     }
 
     public Server getServer() {
@@ -104,7 +104,7 @@ public final class Instance {
     }
 
     public Optional<ServerWorld> getWorld() {
-        return this.server.getWorldManager().world(this.worldKey);
+        return this.server.worldManager().world(this.worldKey);
     }
 
     public InstanceType getType() {
@@ -132,7 +132,7 @@ public final class Instance {
     }
 
     public void advance() {
-        final ServerWorld instanceWorld = this.server.getWorldManager().world(this.worldKey).orElse(null);
+        final ServerWorld instanceWorld = this.server.worldManager().world(this.worldKey).orElse(null);
         State next;
         if (instanceWorld == null) {
             next = State.FORCE_STOP;
@@ -147,7 +147,7 @@ public final class Instance {
     }
 
     void advanceTo(State state) {
-        final Optional<ServerWorld> world = this.server.getWorldManager().world(this.worldKey);
+        final Optional<ServerWorld> world = this.server.worldManager().world(this.worldKey);
         if (!world.isPresent()) {
             this.state = State.FORCE_STOP;
             try {
@@ -182,7 +182,7 @@ public final class Instance {
             return false;
         }
 
-        this.registeredPlayers.add(player.getUniqueId());
+        this.registeredPlayers.add(player.uniqueId());
         return true;
     }
 
@@ -191,17 +191,17 @@ public final class Instance {
     }
 
     public void spawnPlayer(final ServerPlayer player) {
-        if (!this.registeredPlayers.contains(player.getUniqueId())) {
+        if (!this.registeredPlayers.contains(player.uniqueId())) {
             throw new IllegalStateException("Attempted to spawn a player into this round who wasn't registered!");
         }
 
-        final ServerWorld world = this.server.getWorldManager().world(this.worldKey)
+        final ServerWorld world = this.server.worldManager().world(this.worldKey)
                 .orElseThrow(() -> new RuntimeException("Attempted to spawn a player in an instance for an offline "
                         + "world!"));
 
         // If the player has a consumed spawn and this method is called, we put them back at spawn
-        if (this.playerSpawns.containsKey(player.getUniqueId())) {
-            player.setLocation(ServerLocation.of(world, this.playerSpawns.get(player.getUniqueId())));
+        if (this.playerSpawns.containsKey(player.uniqueId())) {
+            player.setLocation(ServerLocation.of(world, this.playerSpawns.get(player.uniqueId())));
             return;
         }
 
@@ -215,7 +215,7 @@ public final class Instance {
 
         player.setLocation(ServerLocation.of(world, playerSpawn));
 
-        this.playerSpawns.put(player.getUniqueId(), playerSpawn);
+        this.playerSpawns.put(player.uniqueId(), playerSpawn);
 
         final int playerCount = this.instanceType.getAutomaticStartPlayerCount();
         if (playerCount == this.registeredPlayers.size() && this.state == State.IDLE) {
@@ -234,8 +234,8 @@ public final class Instance {
 
     void disqualifyPlayer(final Player player) {
         this.scoreboard.killPlayer(player);
-        this.playerDeaths.add(player.getUniqueId());
-        player.getInventory().clear();
+        this.playerDeaths.add(player.uniqueId());
+        player.inventory().clear();
     }
 
     boolean isRoundOver() {
@@ -246,13 +246,13 @@ public final class Instance {
         Utils.resetPlayer(player);
 
         if (first) {
-            player.getInventory().clear();
+            player.inventory().clear();
 
             for (final ItemStackSnapshot snapshot : this.instanceType.getDefaultItems()) {
-                if (snapshot.getType() == ItemTypes.ELYTRA.get()) {
+                if (snapshot.type() == ItemTypes.ELYTRA.get()) {
                     player.setChest(snapshot.createStack());
                 } else {
-                    player.getInventory().offer(snapshot.createStack());
+                    player.inventory().offer(snapshot.createStack());
                 }
             }
         }
@@ -266,10 +266,10 @@ public final class Instance {
         if (next.doesCancelTasksOnAdvance()) {
             // Cancel previous tasks when advancing a state. Prevents stale state tasks
             for (final UUID uuid : this.tasks) {
-                final ScheduledTask task = Sponge.getServer().getScheduler().getTaskById(uuid).orElse(null);
+                final ScheduledTask task = Sponge.server().scheduler().taskById(uuid).orElse(null);
                 if (task != null) {
-                    if (task.getTask().getConsumer() instanceof InstanceTask) {
-                        ((InstanceTask) task.getTask().getConsumer()).cancel();
+                    if (task.task().consumer() instanceof InstanceTask) {
+                        ((InstanceTask) task.task().consumer()).cancel();
                     } else {
                         task.cancel();
                     }
@@ -281,44 +281,44 @@ public final class Instance {
 
         switch (next) {
             case PRE_START:
-                this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
+                this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
                         .plugin(Royale.instance.getPlugin())
                         .execute(new StartTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Start Countdown - " + this.worldKey)
                         .build()
-                ).getUniqueId());
+                ).uniqueId());
                 break;
             case POST_START:
-                this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
+                this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
                         .plugin(Royale.instance.getPlugin())
                         .execute(new ProgressTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Progress Countdown - " + this.worldKey)
                         .build()
-                ).getUniqueId());
+                ).uniqueId());
                 break;
             case RUNNING:
                 break;
             case CLEANUP:
-                this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
+                this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
                         .plugin(Royale.instance.getPlugin())
                         .execute(new CleanupTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Cleanup - " + this.worldKey)
                         .build()
-                ).getUniqueId());
+                ).uniqueId());
                 break;
             case PRE_END:
                 final List<UUID> winners = new ArrayList<>(this.playerSpawns.keySet());
                 winners.removeAll(this.playerDeaths);
-                this.tasks.add(Sponge.getServer().getScheduler().submit(Task.builder()
+                this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
                         .plugin(Royale.instance.getPlugin())
                         .execute(new EndTask(this, winners))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - End Countdown - " + this.worldKey)
                         .build()
-                ).getUniqueId());
+                ).uniqueId());
                 break;
             case POST_END:
             case FORCE_STOP:

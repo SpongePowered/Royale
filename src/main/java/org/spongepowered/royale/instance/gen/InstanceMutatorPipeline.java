@@ -61,7 +61,7 @@ public final class InstanceMutatorPipeline {
         final Vector3i max = instance.getType().getBlockMax();
 
         for (final InstanceMutator mutator : this.mutators) {
-            Royale.instance.getPlugin().getLogger().info("Mutating instance [{}] with mutator [{}]...", instance.getWorldKey(), mutator.getKey());
+            Royale.instance.getPlugin().getLogger().info("Mutating instance [{}] with mutator [{}]...", instance.getWorldKey(), mutator.key());
         }
 
         final Vector3i size = instance.getType().getBlockSize();
@@ -71,7 +71,7 @@ public final class InstanceMutatorPipeline {
 
         this.mutators.forEach(mutator -> mutator.prepare(instance));
 
-        this.mutators.forEach(mutator -> world.getBlockEntityStream(min, max, StreamOptions.forceLoadedAndCopied())
+        this.mutators.forEach(mutator -> world.blockEntityStream(min, max, StreamOptions.forceLoadedAndCopied())
             .filter(mutator.getBlockEntityPredicate(instance))
             .flatMap(mutator.getBlockEntityMapper(instance))
             .apply(VolumeCollectors.applyBlockEntitiesOrRemove(world)));

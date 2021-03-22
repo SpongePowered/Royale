@@ -88,16 +88,16 @@ public final class InstanceType implements ResourceKeyed, Nameable {
     }
 
     public static Builder builder() {
-        return Sponge.getGame().getBuilderProvider().provide(Builder.class);
+        return Sponge.game().builderProvider().provide(Builder.class);
     }
 
     @Override
-    public ResourceKey getKey() {
+    public ResourceKey key() {
         return this.key;
     }
 
     @Override
-    public String getName() {
+    public String name() {
         return this.name;
     }
 
@@ -179,7 +179,7 @@ public final class InstanceType implements ResourceKeyed, Nameable {
         this.maxY = value.general.maxY;
         this.maxZ = value.general.maxZ;
         this.mutatorPipeline.getMutators().clear();
-        value.general.mapMutators.stream().map(k -> Sponge.getServer().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(k).get())
+        value.general.mapMutators.stream().map(k -> Sponge.server().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(k).get())
                 .forEach(this.mutatorPipeline.getMutators()::add);
         this.defaultItems.clear();
         this.defaultItems.addAll(value.round.defaultItems);
@@ -213,7 +213,7 @@ public final class InstanceType implements ResourceKeyed, Nameable {
         config.general.worldBorderCenterZ = this.worldBorderZ;
         config.general.worldBorderRadius = this.worldBorderRadius;
         config.general.mapMutators.clear();
-        config.general.mapMutators.addAll(this.mutatorPipeline.getMutators().stream().map(InstanceMutator::getKey).collect(Collectors.toList()));
+        config.general.mapMutators.addAll(this.mutatorPipeline.getMutators().stream().map(InstanceMutator::key).collect(Collectors.toList()));
 
         config.round.defaultItems.clear();
         config.round.defaultItems.addAll(this.defaultItems);
@@ -336,7 +336,7 @@ public final class InstanceType implements ResourceKeyed, Nameable {
             this.worldBorderZ = value.general.worldBorderCenterZ;
             this.worldBorderRadius = value.general.worldBorderRadius;
             this.mutators = value.general.mapMutators.stream()
-                    .map(x -> Sponge.getServer().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(x)
+                    .map(x -> Sponge.server().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(x)
                             .orElseThrow(() -> new IllegalArgumentException("Unknown mutator " + x)))
                     .collect(Collectors.toSet());
             this.defaultItems = new LinkedList<>(value.round.defaultItems);
@@ -441,7 +441,7 @@ public final class InstanceType implements ResourceKeyed, Nameable {
 
         public Builder mutator(final ResourceKey key) {
             Objects.requireNonNull(key);
-            final Optional<InstanceMutator> mutator = Sponge.getServer().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(key);
+            final Optional<InstanceMutator> mutator = Sponge.server().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(key);
             mutator.ifPresent(instanceMutator -> this.mutators.add(instanceMutator));
             return this;
         }
