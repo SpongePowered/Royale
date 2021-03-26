@@ -9,9 +9,8 @@ version = "${project.properties["minecraftVersion"]}-r${project.properties["apiV
 
 repositories {
     mavenLocal()
-    maven {
-        name = "sponge v2"
-        setUrl("https://repo-new.spongepowered.org/repository/maven-public/")
+    maven("https://repo.spongepowered.org/repository/maven-public/") {
+        name = "sponge"
     }
 }
 
