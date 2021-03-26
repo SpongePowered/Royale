@@ -65,7 +65,7 @@ public final class InstanceMutatorPipeline {
         }
 
         final Vector3i size = instance.getType().getBlockSize();
-        Royale.instance.getPlugin().getLogger().error("[Mutator] Performing pass for instance {} - {} blocks total.", instance.getWorldKey(),
+        Royale.instance.getPlugin().getLogger().info("[Mutator] Performing pass for instance {} - {} blocks total.", instance.getWorldKey(),
                 size.getX() *
                 size.getY() * size.getZ());
 
