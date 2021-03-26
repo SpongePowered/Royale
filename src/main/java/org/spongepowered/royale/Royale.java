@@ -212,7 +212,7 @@ public final class Royale {
                 scheduler.createExecutor(this.plugin).submit(() -> {
                     worldManager.loadWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY).handle((x, ex) -> {
                         if (ex != null) {
-                            this.logger.fatal("UNABLE TO LOAD LOBBY WORLD. Shutting down the server.", e);
+                            this.logger.fatal("UNABLE TO LOAD LOBBY WORLD. Shutting down the server.", ex);
                             scheduler.createExecutor(this.plugin).submit(() -> Sponge.server().shutdown());
                         }
                         return null;
