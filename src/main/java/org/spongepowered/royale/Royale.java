@@ -41,6 +41,7 @@ import org.spongepowered.api.event.lifecycle.RegisterRegistryEvent;
 import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
 import org.spongepowered.api.event.lifecycle.StartingEngineEvent;
 import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
+import org.spongepowered.api.scheduler.Scheduler;
 import org.spongepowered.api.world.server.WorldManager;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationOptions;
@@ -198,20 +199,29 @@ public final class Royale {
 
     @Listener
     public void onServerStarted(final StartedEngineEvent<Server> event) {
-        // We join because we want to ensure that we can load the world and we don't
-        // need people joining before it's all okay!
         final WorldManager worldManager = Sponge.server().worldManager();
-        if (!worldManager.saveTemplate(Constants.Map.Lobby.LOBBY_TEMPLATE).join()) {
-            this.logger.fatal("UNABLE TO SAVE LOBBY WORLD TEMPLATE. Shutting down the server.");
-            Sponge.server().shutdown();
-        } else {
-            try {
-                worldManager.loadWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY).join();
-            } catch (final Exception e) {
-                this.logger.fatal("UNABLE TO LOAD LOBBY WORLD. Shutting down the server.", e);
-                Sponge.server().shutdown();
+        final Scheduler scheduler = Sponge.server().scheduler();
+        worldManager.saveTemplate(Constants.Map.Lobby.LOBBY_TEMPLATE).handle((result, exception) -> {
+            if (exception != null) {
+                this.logger.fatal("UNABLE TO SAVE LOBBY WORLD TEMPLATE. Shutting down the server.", exception);
+                scheduler.createExecutor(this.plugin).submit(() -> Sponge.server().shutdown());
+            } else if (!result) {
+                this.logger.fatal("UNABLE TO SAVE LOBBY WORLD TEMPLATE. Shutting down the server.");
+                scheduler.createExecutor(this.plugin).submit(() -> Sponge.server().shutdown());
+            } else {
+                scheduler.createExecutor(this.plugin).submit(() -> {
+                    worldManager.loadWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY).handle((x, ex) -> {
+                        if (ex != null) {
+                            this.logger.fatal("UNABLE TO LOAD LOBBY WORLD. Shutting down the server.", e);
+                            scheduler.createExecutor(this.plugin).submit(() -> Sponge.server().shutdown());
+                        }
+                        return null;
+                    });
+                    return null;
+                });
             }
-        }
+            return null;
+        });
     }
 
     @Listener
