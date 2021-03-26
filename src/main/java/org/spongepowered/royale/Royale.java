@@ -25,9 +25,11 @@
 package org.spongepowered.royale;
 
 import com.google.inject.Inject;
+import org.apache.logging.log4j.Logger;
 import org.spongepowered.api.Game;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.config.ConfigManager;
@@ -36,8 +38,10 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.lifecycle.RegisterBuilderEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
 import org.spongepowered.api.event.lifecycle.RegisterRegistryEvent;
+import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
 import org.spongepowered.api.event.lifecycle.StartingEngineEvent;
 import org.spongepowered.api.event.lifecycle.StoppingEngineEvent;
+import org.spongepowered.api.world.server.WorldManager;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.plugin.PluginContainer;
@@ -70,11 +74,16 @@ public final class Royale {
     private final EventManager eventManager;
     private final Random random;
     private final ConfigurationOptions options;
+    private final Logger logger;
 
     private InstanceManager instanceManager;
 
     @Inject
-    public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile, final Game game, final ConfigManager configManager) {
+    public Royale(final PluginContainer plugin,
+            @ConfigDir(sharedRoot = false) final Path configFile,
+            final Game game,
+            final ConfigManager configManager,
+            final Logger logger) {
         Royale.instance = this;
 
         this.plugin = plugin;
@@ -85,6 +94,7 @@ public final class Royale {
                 .serializers(configManager.serializers().childBuilder()
                             .register(ComponentTemplate.class, new ComponentTemplateTypeSerializer())
                                      .build());
+        this.logger = logger;
     }
 
     public PluginContainer getPlugin() {
@@ -184,6 +194,24 @@ public final class Royale {
     public void onStartingServer(final StartingEngineEvent<Server> event) {
         this.instanceManager = new InstanceManager(event.engine());
         this.eventManager.registerListeners(this.plugin, this.instanceManager);
+    }
+
+    @Listener
+    public void onServerStarted(final StartedEngineEvent<Server> event) {
+        // We join because we want to ensure that we can load the world and we don't
+        // need people joining before it's all okay!
+        final WorldManager worldManager = Sponge.server().worldManager();
+        if (!worldManager.saveTemplate(Constants.Map.Lobby.LOBBY_TEMPLATE).join()) {
+            this.logger.fatal("UNABLE TO SAVE LOBBY WORLD TEMPLATE. Shutting down the server.");
+            Sponge.server().shutdown();
+        } else {
+            try {
+                worldManager.loadWorld(Constants.Map.Lobby.LOBBY_WORLD_KEY).join();
+            } catch (final Exception e) {
+                this.logger.fatal("UNABLE TO LOAD LOBBY WORLD. Shutting down the server.", e);
+                Sponge.server().shutdown();
+            }
+        }
     }
 
     @Listener
