@@ -27,9 +27,9 @@ package org.spongepowered.royale.instance;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
+import org.spongepowered.api.adventure.SpongeComponents;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.Transaction;
@@ -396,8 +396,8 @@ public final class InstanceManager {
 
             block.location().flatMap(Location::blockEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
                 if (this.isTeleportSign(lines)) {
-                    final String namespace = PlainComponentSerializer.plain().serialize(lines.get(0));
-                    final String value = PlainComponentSerializer.plain().serialize(lines.get(1));
+                    final String namespace = SpongeComponents.plainSerializer().serialize(lines.get(0));
+                    final String value = SpongeComponents.plainSerializer().serialize(lines.get(1));
 
                     if (namespace.isEmpty() || value.isEmpty()) {
                         final Collection<Instance> instances = this.getAll();
@@ -452,6 +452,6 @@ public final class InstanceManager {
     }
 
     private boolean isTeleportSign(final List<Component> lines) {
-        return lines.size() != 0 && PlainComponentSerializer.plain().serialize(lines.get(0)).equalsIgnoreCase(Constants.Map.Lobby.SIGN_HEADER);
+        return lines.size() != 0 && SpongeComponents.plainSerializer().serialize(lines.get(0)).equalsIgnoreCase(Constants.Map.Lobby.SIGN_HEADER);
     }
 }
