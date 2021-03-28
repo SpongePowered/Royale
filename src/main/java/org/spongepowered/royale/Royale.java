@@ -232,12 +232,6 @@ public final class Royale {
         });
     }
 
-    @Listener
-    public void onStoppingServer(final StoppingEngineEvent<Server> event) {
-        this.eventManager.unregisterListeners(this.instanceManager);
-        this.instanceManager = null;
-    }
-
     public InstanceManager getInstanceManager() {
         return this.instanceManager;
     }
