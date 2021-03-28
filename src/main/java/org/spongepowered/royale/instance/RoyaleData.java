@@ -32,26 +32,12 @@ import org.spongepowered.api.data.persistence.DataStore;
 import org.spongepowered.api.data.value.Value;
 import org.spongepowered.api.event.lifecycle.RegisterDataEvent;
 import org.spongepowered.api.util.TypeTokens;
+import org.spongepowered.royale.Royale;
 
-public interface RoyaleData {
+public final class RoyaleData {
 
-    Key<Value<String>> WORLD = Key.builder().key(ResourceKey.of("royale", "world")).type(TypeTokens.STRING_VALUE_TOKEN).build();
-    Key<Value<String>> TYPE = Key.builder().key(ResourceKey.of("royale", "type")).type(TypeTokens.STRING_VALUE_TOKEN).build();
+    public static final Key<Value<ResourceKey>> WORLD = Key.builder().key(ResourceKey.of(Royale.getInstance().getPlugin(), "world")).type(TypeTokens.RESOURCE_KEY_VALUE_TOKEN).build();
 
-    static void register(RegisterDataEvent event)
-    {
-        final ResourceKey datastoreKey = ResourceKey.of("royale", "elevator");
-
-        final DataStore dataStore = DataStore.builder().pluginData(datastoreKey)
-                .holder(Sign.class)
-                .keys(RoyaleData.WORLD, RoyaleData.TYPE)
-                .build();
-
-        final DataRegistration registration = DataRegistration.builder()
-                .dataKey(RoyaleData.WORLD, RoyaleData.TYPE)
-                .store(dataStore)
-                .build();
-        event.register(registration);
-    }
+    public static final Key<Value<ResourceKey>> TYPE = Key.builder().key(ResourceKey.of(Royale.getInstance().getPlugin(), "type")).type(TypeTokens.RESOURCE_KEY_VALUE_TOKEN).build();
 
 }

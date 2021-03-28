@@ -28,8 +28,8 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.sound.SoundTypes;
@@ -69,8 +69,6 @@ import java.util.concurrent.TimeUnit;
 
 public final class Instance {
 
-    private final Server server;
-    private final InstanceManager instanceManager;
     private final ResourceKey worldKey;
     private final InstanceType instanceType;
     private final Set<UUID> registeredPlayers = new HashSet<>();
@@ -80,26 +78,12 @@ public final class Instance {
     private final Set<UUID> tasks = new LinkedHashSet<>();
     private final InstanceScoreboard scoreboard;
     private State state = State.IDLE;
-    private ServerLocation signLoc;
+    @Nullable private ServerLocation signLoc;
 
-    public Instance(final Server server, final InstanceManager instanceManager, final ResourceKey worldKey, final InstanceType instanceType) {
-        this.server = server;
-        this.instanceManager = instanceManager;
-        this.worldKey = worldKey;
+    public Instance(final ServerWorld world, final InstanceType instanceType) {
+        this.worldKey = world.key();
         this.instanceType = instanceType;
         this.scoreboard = new InstanceScoreboard(this);
-
-        final ServerWorld world = this.server.worldManager().world(worldKey)
-                .orElseThrow(() -> new RuntimeException("Attempted to create an instance for an offline "
-                        + "world!"));
-
-        world.border().setCenter(instanceType.getWorldBorderX(), instanceType.getWorldBorderZ());
-        world.border().setDiameter(instanceType.getWorldBorderRadius() * 2);
-        world.border().setWarningDistance(0);
-    }
-
-    public Server getServer() {
-        return this.server;
     }
 
     public ResourceKey getWorldKey() {
@@ -107,7 +91,7 @@ public final class Instance {
     }
 
     public Optional<ServerWorld> getWorld() {
-        return this.server.worldManager().world(this.worldKey);
+        return Sponge.server().worldManager().world(this.worldKey);
     }
 
     public InstanceType getType() {
@@ -139,7 +123,7 @@ public final class Instance {
     }
 
     public void advance() {
-        final ServerWorld instanceWorld = this.server.worldManager().world(this.worldKey).orElse(null);
+        final ServerWorld instanceWorld = Sponge.server().worldManager().world(this.worldKey).orElse(null);
         State next;
         if (instanceWorld == null) {
             next = State.FORCE_STOP;
@@ -154,14 +138,10 @@ public final class Instance {
     }
 
     void advanceTo(State state) {
-        final Optional<ServerWorld> world = this.server.worldManager().world(this.worldKey);
+        final Optional<ServerWorld> world = Sponge.server().worldManager().world(this.worldKey);
         if (!world.isPresent()) {
             this.state = State.FORCE_STOP;
-            try {
-                this.instanceManager.unloadInstance(this.worldKey);
-            } catch (final Exception e) {
-                throw new RuntimeException(e);
-            }
+            Royale.getInstance().getInstanceManager().unloadInstance(this.worldKey).join();
             return;
         }
 
@@ -202,7 +182,7 @@ public final class Instance {
             throw new IllegalStateException("Attempted to spawn a player into this round who wasn't registered!");
         }
 
-        final ServerWorld world = this.server.worldManager().world(this.worldKey)
+        final ServerWorld world = Sponge.server().worldManager().world(this.worldKey)
                 .orElseThrow(() -> new RuntimeException("Attempted to spawn a player in an instance for an offline "
                         + "world!"));
 
@@ -227,7 +207,7 @@ public final class Instance {
         final int playerCount = this.instanceType.getAutomaticStartPlayerCount();
         if (playerCount == this.registeredPlayers.size() && this.state == State.IDLE) {
             try {
-                this.instanceManager.startInstance(this.worldKey);
+                Royale.getInstance().getInstanceManager().startInstance(this.worldKey);
             } catch (final UnknownInstanceException e) {
                 e.printStackTrace();
             }
@@ -302,7 +282,7 @@ public final class Instance {
         switch (next) {
             case PRE_START:
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
-                        .plugin(Royale.instance.getPlugin())
+                        .plugin(Royale.getInstance().getPlugin())
                         .execute(new StartTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Start Countdown - " + this.worldKey)
@@ -311,7 +291,7 @@ public final class Instance {
                 break;
             case POST_START:
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
-                        .plugin(Royale.instance.getPlugin())
+                        .plugin(Royale.getInstance().getPlugin())
                         .execute(new ProgressTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Progress Countdown - " + this.worldKey)
@@ -322,7 +302,7 @@ public final class Instance {
                 break;
             case CLEANUP:
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
-                        .plugin(Royale.instance.getPlugin())
+                        .plugin(Royale.getInstance().getPlugin())
                         .execute(new CleanupTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Cleanup - " + this.worldKey)
@@ -333,7 +313,7 @@ public final class Instance {
                 final List<UUID> winners = new ArrayList<>(this.playerSpawns.keySet());
                 winners.removeAll(this.playerDeaths);
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
-                        .plugin(Royale.instance.getPlugin())
+                        .plugin(Royale.getInstance().getPlugin())
                         .execute(new EndTask(this, winners))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - End Countdown - " + this.worldKey)
@@ -342,11 +322,7 @@ public final class Instance {
                 break;
             case POST_END:
             case FORCE_STOP:
-                try {
-                    this.instanceManager.unloadInstance(this.worldKey);
-                } catch (final Exception e) {
-                    throw new RuntimeException(e);
-                }
+                Royale.getInstance().getInstanceManager().unloadInstance(this.worldKey).join();
                 break;
         }
         this.updateSign();
@@ -387,6 +363,9 @@ public final class Instance {
     }
 
     public void updateSign() {
+        if (this.signLoc == null) {
+            return;
+        }
         if (this.signLoc.world().isLoaded()) {
             this.signLoc.blockEntity().ifPresent(this::updateSign0);
         }

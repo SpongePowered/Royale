@@ -41,12 +41,15 @@ import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.Instance;
 import org.spongepowered.royale.instance.gen.loot.ItemArchetype;
-import org.spongepowered.royale.instance.gen.loot.Loot;
+import org.spongepowered.royale.instance.gen.loot.Loots;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 public final class ChestMutator extends SignMutator {
+
+    private final Random random = new Random();
 
     public ChestMutator() {
         super(ResourceKey.of(Constants.Plugin.ID, "chest"), "chest");
@@ -58,10 +61,10 @@ public final class ChestMutator extends SignMutator {
             final Sign sign = (Sign) blockentitySupplier.get();
             final Direction facingDirection = sign.get(Keys.DIRECTION).orElse(null);
             final String lootTableId = SpongeComponents.plainSerializer().serialize(sign.lines().get(1));
-            final LootTable<ItemArchetype> lootTable = Loot.getTable(lootTableId.toLowerCase());
-            final List<ItemArchetype> items = lootTable.get(Royale.instance.getRandom());
+            final LootTable<ItemArchetype> lootTable = Loots.getTable(lootTableId.toLowerCase());
+            final List<ItemArchetype> items = lootTable.get(this.random);
 
-            Royale.instance.getPlugin().getLogger().info("Generating loot chest via table '{}' at {}x, {}y, {}z", lootTableId.toLowerCase(), x, y, z);
+            Royale.getInstance().getPlugin().getLogger().info("Generating loot chest via table '{}' at {}x, {}y, {}z", lootTableId.toLowerCase(), x, y, z);
             final BlockState defaultChestState = BlockTypes.CHEST.get().defaultState();
             final BlockState newChestState = defaultChestState.with(Keys.DIRECTION, facingDirection)
                 .orElse(defaultChestState);
@@ -75,7 +78,7 @@ public final class ChestMutator extends SignMutator {
             }
             final Chest chest = (Chest) blockEntity;
             for (final ItemArchetype item : items) {
-                chest.inventory().offer(item.create(Royale.instance.getRandom()));
+                chest.inventory().offer(item.create(this.random));
             }
 
             return Optional.of(chest);

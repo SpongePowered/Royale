@@ -57,26 +57,29 @@ public final class InstanceMutatorPipeline {
                 .orElseThrow(() -> new RuntimeException(String.format("Attempting to mutate instance '%s' but it's world is not loaded!"
                         , instance.getWorldKey())));
 
-        final Vector3i min = instance.getType().getBlockMin();
-        final Vector3i max = instance.getType().getBlockMax();
+        final double r = world.border().diameter() / 2;
+        final Vector3i min = world.border().center().toInt().sub(r, world.border().center().getY(), r);
+        final Vector3i max = world.border().center().toInt().add(r, world.maximumHeight() - world.border().center().getY(), r);
 
         for (final InstanceMutator mutator : this.mutators) {
-            Royale.instance.getPlugin().getLogger().info("Mutating instance [{}] with mutator [{}]...", instance.getWorldKey(), mutator.key());
+            Royale.getInstance().getPlugin().getLogger().info("Mutating instance [{}] with mutator [{}]...", instance.getWorldKey(), mutator.key());
         }
 
-        final Vector3i size = instance.getType().getBlockSize();
-        Royale.instance.getPlugin().getLogger().info("[Mutator] Performing pass for instance {} - {} blocks total.", instance.getWorldKey(),
-                size.getX() *
-                size.getY() * size.getZ());
+        Royale.getInstance().getPlugin().getLogger().info("[Mutator] Performing pass for instance {} - {} blocks total.", instance.getWorldKey(),
+                world.border().diameter() * world.border().diameter());
 
-        this.mutators.forEach(mutator -> mutator.prepare(instance));
+        for (InstanceMutator instanceMutator : this.mutators) {
+            instanceMutator.prepare(instance);
+        }
 
-        this.mutators.forEach(mutator -> world.blockEntityStream(min, max, StreamOptions.forceLoadedAndCopied())
-            .filter(mutator.getBlockEntityPredicate(instance))
-            .flatMap(mutator.getBlockEntityMapper(instance))
-            .apply(VolumeCollectors.applyBlockEntitiesOrRemove(world)));
+        for (InstanceMutator mutator : this.mutators) {
+            world.blockEntityStream(min, max, StreamOptions.forceLoadedAndCopied())
+                    .filter(mutator.getBlockEntityPredicate(instance))
+                    .flatMap(mutator.getBlockEntityMapper(instance))
+                    .apply(VolumeCollectors.applyBlockEntitiesOrRemove(world));
+        }
 
-        Royale.instance.getPlugin().getLogger().info("[Mutator] Done.");
+        Royale.getInstance().getPlugin().getLogger().info("[Mutator] Done.");
     }
 
     @Override

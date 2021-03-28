@@ -57,7 +57,6 @@ import org.spongepowered.api.world.explosion.Explosion;
 import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.vector.Vector3d;
-import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.Instance;
 
 import java.time.Duration;
@@ -87,6 +86,7 @@ public final class CleanupTask extends InstanceTask {
 
     private final long roundLengthTotal;
     private long roundLengthRemaining;
+    private final Random random = new Random();
 
     public CleanupTask(final Instance instance) {
         super(instance);
@@ -100,7 +100,6 @@ public final class CleanupTask extends InstanceTask {
 
         final ServerWorld world =
                 this.getInstance().getWorld().orElseThrow(() -> new RuntimeException("Attempt made to cleanup an instance whose world is unloaded!"));
-        final Random random = Royale.instance.getRandom();
 
         final TextComponent append = Component.text("OVERTIME!", NamedTextColor.RED)
                 .append(Component.space())
@@ -158,7 +157,7 @@ public final class CleanupTask extends InstanceTask {
 
         boolean waterSpawn = false;
         while (tries > 0) {
-            spawnLocation = this.getInstance().getServer().teleportHelper().findSafeLocation(
+            spawnLocation = Sponge.server().teleportHelper().findSafeLocation(
                     playerLocaction.add((random.nextInt(4) + 5) * (random.nextBoolean() ? 1 : -1), 0,
                                         (random.nextInt(4) + 5) * (random.nextBoolean() ? 1 : -1)) , 3, 3).orElse(null);
 

@@ -29,6 +29,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.LinearComponents;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.effect.particle.ParticleEffect;
 import org.spongepowered.api.effect.particle.ParticleTypes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
@@ -78,7 +79,7 @@ public final class EndTask extends InstanceTask {
             if (this.winners.size() > 1) {
                 winner = Optional.empty();
             } else {
-                winner = this.getInstance().getServer().player(this.winners.get(0));
+                winner = Sponge.server().player(this.winners.get(0));
             }
 
             final Component content =
@@ -111,12 +112,12 @@ public final class EndTask extends InstanceTask {
                     }
                 }
 
-                this.getInstance().getServer().broadcastAudience()
+                Sponge.server().broadcastAudience()
                         .sendMessage(Identity.nil(), LinearComponents.linear(NamedTextColor.GREEN, winner.get().displayName().get(),
                                 NamedTextColor.WHITE, Component.text(" has won the game!")));
             }
 
-            Royale.instance.getPlugin().getLogger().info("Round finished!");
+            Royale.getInstance().getPlugin().getLogger().info("Round finished!");
         }
 
         this.endLengthRemaining--;

@@ -55,21 +55,12 @@ public final class InstanceType implements ResourceKeyed, Nameable {
     private ComponentTemplate nameTemplate, roundStartTemplate, roundEndTemplate;
     private final List<ItemStackSnapshot> defaultItems;
     private long roundStartLength, roundLength, roundEndLength;
-    private int centerX, centerZ, minX, minY, minZ, maxX, maxY, maxZ, automaticStartPlayerCount, worldBorderX, worldBorderZ, worldBorderRadius;
-    private Vector3i min, max, size;
+    private int automaticStartPlayerCount;
 
     private InstanceType(final Builder builder) {
         this.key = builder.key;
         this.name = builder.name;
         this.nameTemplate = builder.nameTemplate;
-        this.centerX = builder.centerX;
-        this.centerZ = builder.centerZ;
-        this.minX = builder.minX;
-        this.minY = builder.minY;
-        this.minZ = builder.minZ;
-        this.maxX = builder.maxX;
-        this.maxY = builder.maxY;
-        this.maxZ = builder.maxZ;
         this.mutatorPipeline = new InstanceMutatorPipeline();
         this.mutatorPipeline.getMutators().addAll(builder.mutators);
         this.defaultItems = builder.defaultItems;
@@ -79,12 +70,6 @@ public final class InstanceType implements ResourceKeyed, Nameable {
         this.roundEndTemplate = builder.roundEndTemplate;
         this.roundEndLength = builder.roundEndLength;
         this.automaticStartPlayerCount = builder.automaticStartPlayerCount;
-        this.size = new Vector3i(builder.maxX - builder.minX, builder.maxY - builder.minY, builder.maxZ - builder.minZ);
-        this.min = new Vector3i(builder.centerX + builder.minX, builder.minY, builder.centerZ + builder.minZ);
-        this.max = new Vector3i(builder.centerX + builder.maxX, builder.maxY, builder.centerZ + builder.maxZ).sub(1, 1, 1);
-        this.worldBorderX = builder.worldBorderX;
-        this.worldBorderZ = builder.worldBorderZ;
-        this.worldBorderRadius = builder.worldBorderRadius;
     }
 
     public static Builder builder() {
@@ -133,36 +118,6 @@ public final class InstanceType implements ResourceKeyed, Nameable {
         return this.defaultItems;
     }
 
-    /**
-     * Inclusive.
-     */
-    public Vector3i getBlockMin() {
-        return this.min;
-    }
-
-    /**
-     * Inclusive.
-     */
-    public Vector3i getBlockMax() {
-        return this.max;
-    }
-
-    public Vector3i getBlockSize() {
-        return this.size;
-    }
-
-    public int getWorldBorderX() {
-        return this.worldBorderX;
-    }
-
-    public int getWorldBorderZ() {
-        return this.worldBorderZ;
-    }
-
-    public int getWorldBorderRadius() {
-        return this.worldBorderRadius;
-    }
-
     public InstanceMutatorPipeline getMutatorPipeline() {
         return this.mutatorPipeline;
     }
@@ -170,14 +125,6 @@ public final class InstanceType implements ResourceKeyed, Nameable {
     public void injectFromConfig(final InstanceTypeConfiguration value) {
         this.name = value.general.name;
         this.nameTemplate = value.general.nameTemplate;
-        this.centerX = value.general.centerX;
-        this.centerZ = value.general.centerZ;
-        this.minX = value.general.minX;
-        this.minY = value.general.minY;
-        this.minZ = value.general.minZ;
-        this.maxX = value.general.maxX;
-        this.maxY = value.general.maxY;
-        this.maxZ = value.general.maxZ;
         this.mutatorPipeline.getMutators().clear();
         value.general.mapMutators.stream().map(k -> Sponge.server().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(k).get())
                 .forEach(this.mutatorPipeline.getMutators()::add);
@@ -189,29 +136,12 @@ public final class InstanceType implements ResourceKeyed, Nameable {
         this.roundLength = value.round.length;
         this.roundEndLength = value.round.end;
         this.automaticStartPlayerCount = value.round.automaticStartPlayerCount;
-        this.worldBorderX = value.general.worldBorderCenterX;
-        this.worldBorderZ = value.general.worldBorderCenterZ;
-        this.worldBorderRadius = value.general.worldBorderRadius;
-        this.size = new Vector3i(this.maxX - this.minX, this.maxY - this.minY, this.maxZ - this.minZ);
-        this.min = new Vector3i(this.centerX + this.minX, this.minY, this.centerZ + this.minZ);
-        this.max = new Vector3i(this.centerX + this.maxX, this.maxY, this.centerZ + this.maxZ).sub(1, 1, 1);
     }
 
     public void injectIntoConfig(final InstanceTypeConfiguration config) {
 
         config.general.name = this.name;
         config.general.nameTemplate = this.nameTemplate;
-        config.general.centerX = this.centerX;
-        config.general.centerZ = this.centerZ;
-        config.general.minX = this.minX;
-        config.general.minY = this.minY;
-        config.general.minZ = this.minZ;
-        config.general.maxX = this.maxX;
-        config.general.maxY = this.maxY;
-        config.general.maxZ = this.maxZ;
-        config.general.worldBorderCenterX = this.worldBorderX;
-        config.general.worldBorderCenterZ = this.worldBorderZ;
-        config.general.worldBorderRadius = this.worldBorderRadius;
         config.general.mapMutators.clear();
         config.general.mapMutators.addAll(this.mutatorPipeline.getMutators().stream().map(InstanceMutator::key).collect(Collectors.toList()));
 
@@ -256,15 +186,6 @@ public final class InstanceType implements ResourceKeyed, Nameable {
                 .add("roundEndLength=" + this.roundEndLength)
                 .add("automaticPlayerStartCount=" + this.automaticStartPlayerCount)
                 .add("mutatorPipeline=" + this.mutatorPipeline)
-                .add("centerX=" + this.centerX)
-                .add("centerZ=" + this.centerZ)
-                .add("minX=" + this.minX)
-                .add("minY=" + this.minY)
-                .add("minZ=" + this.minZ)
-                .add("maxX=" + this.maxX)
-                .add("maxY=" + this.maxY)
-                .add("maxZ=" + this.maxZ)
-                .add("size=" + this.size)
                 .toString();
     }
 
@@ -278,18 +199,6 @@ public final class InstanceType implements ResourceKeyed, Nameable {
         int automaticStartPlayerCount;
         Set<InstanceMutator> mutators;
 
-        private int centerX;
-        private int centerZ;
-        private int minX;
-        private int minY;
-        private int minZ;
-        private int maxX;
-        private int maxY;
-        private int maxZ;
-        private int worldBorderX;
-        private int worldBorderZ;
-        private int worldBorderRadius;
-
         public Builder() {
             this.reset();
         }
@@ -298,17 +207,6 @@ public final class InstanceType implements ResourceKeyed, Nameable {
             this.key = value.key;
             this.name = value.name;
             this.nameTemplate = value.nameTemplate;
-            this.centerX = value.centerX;
-            this.centerZ = value.centerZ;
-            this.minX = value.minX;
-            this.minY = value.minY;
-            this.minZ = value.minZ;
-            this.maxX = value.maxX;
-            this.maxY = value.maxY;
-            this.maxZ = value.maxZ;
-            this.worldBorderX = value.worldBorderX;
-            this.worldBorderZ = value.worldBorderZ;
-            this.worldBorderRadius = value.worldBorderRadius;
 
             this.mutators = new HashSet<>(value.mutatorPipeline.getMutators());
             this.defaultItems = new LinkedList<>(value.defaultItems);
@@ -324,17 +222,6 @@ public final class InstanceType implements ResourceKeyed, Nameable {
         public Builder from(final InstanceTypeConfiguration value) {
             this.name = value.general.name;
             this.nameTemplate = value.general.nameTemplate;
-            this.centerX = value.general.centerX;
-            this.centerZ = value.general.centerZ;
-            this.minX = value.general.minX;
-            this.minY = value.general.minY;
-            this.minZ = value.general.minZ;
-            this.maxX = value.general.maxX;
-            this.maxY = value.general.maxY;
-            this.maxZ = value.general.maxZ;
-            this.worldBorderX = value.general.worldBorderCenterX;
-            this.worldBorderZ = value.general.worldBorderCenterZ;
-            this.worldBorderRadius = value.general.worldBorderRadius;
             this.mutators = value.general.mapMutators.stream()
                     .map(x -> Sponge.server().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(x)
                             .orElseThrow(() -> new IllegalArgumentException("Unknown mutator " + x)))
@@ -361,17 +248,6 @@ public final class InstanceType implements ResourceKeyed, Nameable {
             this.roundLength = Constants.Map.Round.DEFAULT_LENGTH;
             this.roundEndLength = Constants.Map.Round.DEFAULT_END_LENGTH;
             this.automaticStartPlayerCount = Constants.Map.Round.DEFAULT_AUTOMATIC_START_PLAYER_COUNT;
-            this.centerX = Constants.Map.DEFAULT_CENTER_X;
-            this.centerZ = Constants.Map.DEFAULT_CENTER_Z;
-            this.minX = -Constants.Map.DEFAULT_MAP_WIDTH;
-            this.minY = Constants.Map.DEFAULT_MAP_MIN_Y;
-            this.minZ = -Constants.Map.DEFAULT_MAP_WIDTH;
-            this.maxX = Constants.Map.DEFAULT_MAP_WIDTH;
-            this.maxY = Constants.Map.DEFAULT_MAP_MAX_Y;
-            this.maxZ = Constants.Map.DEFAULT_MAP_WIDTH;
-            this.worldBorderX = Constants.Map.DEFAULT_WORLD_BORDER_CENTER_X;
-            this.worldBorderZ = Constants.Map.DEFAULT_WORLD_BORDER_CENTER_Z;
-            this.worldBorderRadius = Constants.Map.DEFAULT_WORLD_BORDER_RADIUS;
             return this;
         }
 

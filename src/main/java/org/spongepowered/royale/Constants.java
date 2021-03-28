@@ -61,22 +61,12 @@ public final class Constants {
 
     public static final class Map {
 
-        public static final Path INSTANCE_TYPES_FOLDER = Royale.instance.getConfigFile().resolve("types");
+        public static final Path INSTANCE_TYPES_FOLDER = Royale.getInstance().getConfigFile().resolve("types");
 
         public static final List<ResourceKey> DEFAULT_MAP_MUTATOR_IDS = new ArrayList<>();
 
         public static final Set<InstanceMutator> DEFAULT_MAP_MUTATORS = new HashSet<>();
-
-        public static final int DEFAULT_CENTER_X = 0;
-        public static final int DEFAULT_CENTER_Z = 0;
-        public static final int DEFAULT_MAP_LENGTH = 250;
-        public static final int DEFAULT_MAP_WIDTH = 250;
-        public static final int DEFAULT_MAP_MIN_Y = 0;
-        public static final int DEFAULT_MAP_MAX_Y = 256;
         public static final ComponentTemplate DEFAULT_TEXT_TEMPLATE_NAME = new ComponentTemplate("<red><pl_sponge:name></red>");
-        public static final int DEFAULT_WORLD_BORDER_CENTER_X = 0;
-        public static final int DEFAULT_WORLD_BORDER_CENTER_Z = 0;
-        public static final int DEFAULT_WORLD_BORDER_RADIUS = 250;
 
         static {
             if (Files.notExists(INSTANCE_TYPES_FOLDER)) {
@@ -87,7 +77,7 @@ public final class Constants {
                 }
             }
 
-            DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.instance.getPlugin().getMetadata().getId(), "player_spawn"));
+            DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.getInstance().getPlugin().getMetadata().getId(), "player_spawn"));
 
             DEFAULT_MAP_MUTATORS.add(Sponge.server().registries().registry(Plugin.INSTANCE_MUTATOR).findValue(ResourceKey.of(Plugin.ID, "player_spawn")).get());
         }

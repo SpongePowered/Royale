@@ -24,9 +24,11 @@
  */
 package org.spongepowered.royale.instance;
 
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.royale.Royale;
 
 import java.util.ArrayList;
 
@@ -34,10 +36,11 @@ class Utils {
 
     static void resetPlayer(final ServerPlayer player) {
         player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
-        player.offer(Keys.HEALTH, player.getValue(Keys.MAX_HEALTH).get().get());
+        player.offer(Keys.HEALTH, player.maxHealth().get());
         player.offer(Keys.FOOD_LEVEL, 20);
         player.offer(Keys.SATURATION, 20d);
         player.offer(Keys.EXHAUSTION, 20d);
-        player.offer(Keys.POTION_EFFECTS, new ArrayList<>());
+        player.remove(Keys.POTION_EFFECTS);
     }
+
 }
