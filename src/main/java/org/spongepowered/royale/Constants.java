@@ -123,7 +123,7 @@ public final class Constants {
         public static final class Lobby {
 
             public static final ResourceKey LOBBY_WORLD_KEY = ResourceKey.of(Plugin.ID, "lobby");
-            public static final String SIGN_HEADER = "Join Game";
+            public static final String JOIN_SIGN_HEADER = "Join Game";
 
             static final WorldTemplate LOBBY_TEMPLATE = WorldTemplate.builder().from(WorldTemplate.overworld())
                     .key(Lobby.LOBBY_WORLD_KEY)

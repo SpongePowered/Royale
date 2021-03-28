@@ -89,6 +89,11 @@ final class Commands {
             .addParser(new WorldKeyParameter())
             .build();
 
+    private static final Parameter.Value<ResourceKey> INSTANCE_KEY_PARAMETER = Parameter.builder(ResourceKey.class)
+            .key("instance key")
+            .addParser(new InstanceKeyParameter())
+            .build();
+
     private static ServerWorld getWorld(final CommandContext context) throws CommandException {
         final Optional<ServerWorld> optWorldProperties = context.one(CommonParameters.WORLD);
         if (optWorldProperties.isPresent()) {
@@ -114,8 +119,8 @@ final class Commands {
                         .append(Component.text(" with the specified instance "))
                         .append(format(NamedTextColor.LIGHT_PURPLE, "type"))
                         .append(Component.text(".")))
-                .addParameter(Commands.INSTANCE_TYPE_PARAMETER_OPTIONAL)
                 .addParameter(Commands.WORLD_KEY_PARAMETER)
+                .addParameter(Commands.INSTANCE_TYPE_PARAMETER_OPTIONAL)
                 .executor(context -> {
                     final InstanceType instanceType = context.one(Commands.INSTANCE_TYPE_PARAMETER_OPTIONAL)
                             .orElseGet(() -> Sponge.server().registries().registry(Constants.Plugin.INSTANCE_TYPE).stream().findAny().get());
@@ -129,13 +134,6 @@ final class Commands {
                                             + "could not be loaded!", instanceType.key()))));
                         } else {
                             Commands.runOnMainThread(() -> {
-                                context.sendMessage(Identity.nil(), Component.text().content("Creating an instance from [")
-                                        .append(Commands.format(NamedTextColor.GREEN, targetWorldKey.asString()))
-                                        .append(Component.text("] using instance type "))
-                                        .append(Commands.format(NamedTextColor.LIGHT_PURPLE, instanceType.name()))
-                                        .append(Component.text("."))
-                                        .build());
-
                                 final Instance currentInstance = Royale.instance.getInstanceManager().getInstance(targetWorldKey).orElse(null);
                                 if (currentInstance != null) {
                                     context.sendMessage(Identity.nil(),
@@ -145,11 +143,14 @@ final class Commands {
                                                     Component.text(" is already an instance!"))
                                     );
                                 } else {
-                                    try {
-                                        Royale.instance.getInstanceManager().createInstance(targetWorldKey, instanceType);
-                                    } catch (final IOException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                                    context.sendMessage(Identity.nil(), Component.text().content("Creating an instance from [")
+                                            .append(Commands.format(NamedTextColor.GREEN, targetWorldKey.asString()))
+                                            .append(Component.text("] using instance type "))
+                                            .append(Commands.format(NamedTextColor.LIGHT_PURPLE, instanceType.name()))
+                                            .append(Component.text("."))
+                                            .build());
+
+                                    Royale.instance.getInstanceManager().createInstance(targetWorldKey, instanceType, null);
 
                                     context.sendMessage(Identity.nil(),
                                             Component.text().content("Created instance for [")
@@ -195,25 +196,34 @@ final class Commands {
                 .extendedDescription(Component.text("Starts an ")
                         .append(format(NamedTextColor.LIGHT_PURPLE, "instance"))
                         .append(Component.text(".")))
-                .addParameter(CommonParameters.WORLD)
+                .addParameter(Commands.INSTANCE_KEY_PARAMETER)
                 .executor(context -> {
-                    final ServerWorld world =  context.one(CommonParameters.WORLD).orElseThrow(() -> new CommandException(Component.text("World was not provided!")));
-                    final Optional<Instance> optInstance = Royale.instance.getInstanceManager().getInstance(world.key());
+                    final ResourceKey worldKey =  context.one(Commands.INSTANCE_KEY_PARAMETER).orElseThrow(() -> new CommandException(Component.text("World was not provided!")));
+
+                    final Optional<Instance> optInstance = Royale.instance.getInstanceManager().getInstance(worldKey);
                     if (!optInstance.isPresent() || optInstance.get().getState().equals(Instance.State.IDLE)) {
-                        try {
-                            context.sendMessage(Identity.nil(),
-                                    Component.text().content("Starting round countdown in [")
-                                        .append(Commands.format(NamedTextColor.GREEN, world.key().toString()))
-                                        .append(Component.text("]."))
-                                        .build());
-                            Royale.instance.getInstanceManager().startInstance(world.key());
-                        } catch (final UnknownInstanceException e) {
-                            throw new CommandException(Component.text().content("Unable to start round in [")
-                                        .append(Commands.format(NamedTextColor.GREEN, world.key().toString()))
+                        if (optInstance.get().registeredPlayers() <= 1)
+                        {
+                            context.sendMessage(Identity.nil(), Component.text("Not enough players to start round!", NamedTextColor.RED));
+                        }
+                        else
+                        {
+                            try {
+                                context.sendMessage(Identity.nil(),
+                                        Component.text().content("Starting round countdown in [")
+                                                .append(Commands.format(NamedTextColor.GREEN, worldKey.toString()))
+                                                .append(Component.text("]."))
+                                                .build());
+                                Royale.instance.getInstanceManager().startInstance(worldKey);
+                            } catch (final UnknownInstanceException e) {
+                                throw new CommandException(Component.text().content("Unable to start round in [")
+                                        .append(Commands.format(NamedTextColor.GREEN, worldKey.toString()))
                                         .append(Component.text("], was it created?"))
                                         .build()
-                            );
+                                );
+                            }
                         }
+
                     } else {
                         context.sendMessage(Identity.nil(), Component.text("Round already in progress."));
                     }
@@ -230,20 +240,20 @@ final class Commands {
                         .append(Commands.format(NamedTextColor.LIGHT_PURPLE, "instance"))
                         .append(Component.text("."))
                         .build())
-                .addParameter(CommonParameters.WORLD)
+                .addParameter(Commands.INSTANCE_KEY_PARAMETER)
                 .addParameter(Commands.FORCE_PARAMETER)
                 .executor(context -> {
-                    final Optional<ServerWorld> optWorldProperties = context.one(CommonParameters.WORLD);
+                    final Optional<ResourceKey> optWorldKey = context.one(Commands.INSTANCE_KEY_PARAMETER);
                     final ServerWorld world;
-                    if (optWorldProperties.isPresent()) {
-                        world = optWorldProperties.get().world();
-                        if (!world.isLoaded() && Royale.instance.getInstanceManager().getInstance(optWorldProperties.get().key()).isPresent()) {
+                    if (optWorldKey.isPresent()) {
+                        world = Sponge.server().worldManager().world(optWorldKey.get()).get();
+                        if (!world.isLoaded() && Royale.instance.getInstanceManager().getInstance(optWorldKey.get()).isPresent()) {
                             context.sendMessage(Identity.nil(),
                                     Component.text(String.format("World %s was unloaded, but the instance still exists! Ending instance.",
-                                            optWorldProperties.get().key()),
+                                            optWorldKey.get()),
                                             NamedTextColor.YELLOW));
                             try {
-                                Royale.instance.getInstanceManager().endInstance(optWorldProperties.get().key(), true);
+                                Royale.instance.getInstanceManager().endInstance(optWorldKey.get(), true);
                             } catch (final UnknownInstanceException e) {
                                 e.printStackTrace();
                             }
@@ -251,7 +261,7 @@ final class Commands {
                         }
                         if (!world.isLoaded()) {
                             throw new CommandException(Component.text().content("World [")
-                                .append(Commands.format(NamedTextColor.GREEN, optWorldProperties.get().key().toString()))
+                                .append(Commands.format(NamedTextColor.GREEN, optWorldKey.get().toString()))
                                 .append(Component.text("] is not online."))
                                 .build());
                         }
@@ -291,10 +301,23 @@ final class Commands {
                         .append(Commands.format(NamedTextColor.LIGHT_PURPLE, "instance"))
                         .append(Component.text("."))
                         .build())
-                .addParameter(Parameter.firstOfBuilder(Parameter.seq(CommonParameters.WORLD, CommonParameters.PLAYER_OPTIONAL))
+                .addParameter(Parameter.firstOfBuilder(Parameter.seq(Commands.INSTANCE_KEY_PARAMETER, CommonParameters.PLAYER_OPTIONAL))
                         .or(CommonParameters.PLAYER_OPTIONAL).optional().build())
                 .executor(context -> {
-                    final ServerWorld world = Commands.getWorld(context);
+                    final ServerWorld world;
+                    final Optional<ResourceKey> optWorldKey = context.one(Commands.INSTANCE_KEY_PARAMETER);
+                    if (optWorldKey.isPresent()) {
+                        world = Sponge.server().worldManager().world(optWorldKey.get()).get();
+                        if (!world.isLoaded()) {
+                            throw new CommandException(
+                                    Component.text("World [").append(format(NamedTextColor.GREEN, optWorldKey.toString()))
+                                            .append(Component.text("] is not online.")));
+                        }
+                    } else if (context.cause().location().isPresent()) {
+                        world = context.cause().location().get().world();
+                    } else {
+                        throw new CommandException(Component.text("World was not provided!"));
+                    }
 
                     final Optional<ServerPlayer> playerReturn = context.one(CommonParameters.PLAYER_OPTIONAL);
                     final ServerPlayer player;
@@ -509,15 +532,15 @@ final class Commands {
                     context.sendMessage(Identity.nil(), Component.text("Some help should go here..."));
                     return CommandResult.success();
                 })
-                .addChild(Commands.createCommand(random), "create", "c")
+                .addChild(Commands.createCommand(random), "create")
                 .addChild(Commands.startCommand(), "start")
-                .addChild(Commands.endCommand(), "end", "e")
-                .addChild(Commands.joinCommand(), "join", "j")
-                .addChild(Commands.reloadCommand(), "reload", "rel")
+                .addChild(Commands.endCommand(), "end")
+                .addChild(Commands.joinCommand(), "join")
+                .addChild(Commands.reloadCommand(), "reload")
                 .addChild(Commands.setCommand(), "set")
                 .addChild(Commands.tpWorldCommand(), "tpworld", "tpw")
-                .addChild(Commands.loadWorldCommand(), "loadworld", "load", "lw")
-                .addChild(Commands.unloadWorldCommand(), "unloadworld", "unload", "uw")
+                .addChild(Commands.loadWorldCommand(), "loadworld", "load")
+                .addChild(Commands.unloadWorldCommand(), "unloadworld", "unload")
                 .build();
     }
 
@@ -551,6 +574,38 @@ final class Commands {
             return Collections.singletonList(ClientCompletionTypes.RESOURCE_KEY.get());
         }
     }
+
+    private static class InstanceKeyParameter implements ValueParameter<ResourceKey> {
+
+        @Override
+        public List<String> complete(final CommandContext context, final String currentInput) {
+            return Royale.instance.getInstanceManager().getAll().stream().map(Instance::getWorldKey)
+                    .map(ResourceKey::asString)
+                    .filter(x -> x.startsWith(currentInput.toLowerCase(Locale.ROOT)))
+                    .collect(Collectors.toList());
+        }
+
+        @Override
+        public Optional<? extends ResourceKey> parseValue(final Parameter.Key<? super ResourceKey> parameterKey,
+                final ArgumentReader.Mutable reader,
+                final CommandContext.Builder context) throws ArgumentParseException {
+            final ResourceKey key = reader.parseResourceKey();
+            if (Sponge.server().worldManager().worldExists(key)) {
+                final Optional<Instance> instance = Royale.instance.getInstanceManager().getInstance(key);
+                if (instance.isPresent()) {
+                    return Optional.of(key);
+                }
+                throw reader.createException(Commands.format(NamedTextColor.RED, String.format("The world %s is not an instance.", key.formatted())));
+            }
+            throw reader.createException(Commands.format(NamedTextColor.RED, String.format("The world %s does not exist.", key.formatted())));
+        }
+
+        @Override
+        public List<ClientCompletionType> clientCompletionType() {
+            return Collections.singletonList(ClientCompletionTypes.RESOURCE_KEY.get());
+        }
+    }
+
 
     private static void runOnMainThread(final Runnable action) {
         if (Sponge.server().onMainThread()) {

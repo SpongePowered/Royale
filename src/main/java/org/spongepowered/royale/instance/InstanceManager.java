@@ -29,10 +29,15 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.adventure.SpongeComponents;
 import org.spongepowered.api.block.BlockSnapshot;
+import org.spongepowered.api.block.entity.BlockEntity;
+import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.Transaction;
+import org.spongepowered.api.effect.potion.PotionEffect;
+import org.spongepowered.api.effect.potion.PotionEffectTypes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
@@ -63,7 +68,6 @@ import org.spongepowered.royale.instance.exception.InstanceAlreadyExistsExceptio
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 import org.spongepowered.royale.instance.gen.InstanceMutatorPipeline;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -85,7 +89,7 @@ public final class InstanceManager {
         this.instancesByTypes = new HashMap<>();
     }
 
-    public void createInstance(final ResourceKey key, final InstanceType type) throws IOException {
+    public Instance createInstance(final ResourceKey key, final InstanceType type, ServerLocation signLoc) {
         if (this.instances.containsKey(key)) {
             throw new InstanceAlreadyExistsException(key.toString());
         }
@@ -96,7 +100,7 @@ public final class InstanceManager {
         if (world == null) {
             world = this.server.worldManager().loadWorld(key).getNow(null);
             if (world == null) {
-                throw new IOException(String.format("Failed to load instance '%s''!", key));
+                throw new RuntimeException(String.format("Failed to load instance '%s''!", key));
             }
         }
 
@@ -104,12 +108,14 @@ public final class InstanceManager {
         world.properties().setSerializationBehavior(SerializationBehavior.AUTOMATIC_METADATA_ONLY);
 
         instance = new Instance(this.server, this, key, type);
+        instance.assign(signLoc);
 
         this.instances.put(world.key(), instance);
         this.instancesByTypes.computeIfAbsent(type, k -> new LinkedList<>()).add(instance);
 
         final InstanceMutatorPipeline pipeline = type.getMutatorPipeline();
         pipeline.mutate(instance);
+        return instance;
     }
 
     public void startInstance(final ResourceKey key) throws UnknownInstanceException {
@@ -169,6 +175,8 @@ public final class InstanceManager {
                 this.instancesByTypes.remove(instance.getType());
             }
         }
+
+        instance.updateSign();
 
         if (!this.server.worldManager().unloadWorld(world).get()) {
             throw new RuntimeException(String.format("Failed to unload world for instance '%s'!", key));
@@ -307,6 +315,12 @@ public final class InstanceManager {
 
         if (instance != null) {
             if (instance.isPlayerRegistered(player.uniqueId())) {
+                event.setCancelled(true);
+                player.offer(Keys.HEALTH, 20.0);
+                player.transform(Keys.POTION_EFFECTS, list -> {
+                    list.add(PotionEffect.of(PotionEffectTypes.NIGHT_VISION, 1, 1000000000));
+                    return list;
+                });
                 instance.disqualifyPlayer(player);
                 if (instance.isRoundOver()) {
                     instance.advanceTo(Instance.State.PRE_END);
@@ -372,8 +386,35 @@ public final class InstanceManager {
     public void onChangeSign(final ChangeSignEvent event, @Root final ServerPlayer player) {
         if (this.isTeleportSign(event.text().get())) {
             if (player.hasPermission(Constants.Permissions.ADMIN + ".create.sign")) {
+
+                final String namespace = SpongeComponents.plainSerializer().serialize(event.text().get(1));
+                final String value = SpongeComponents.plainSerializer().serialize(event.text().get(2));
+                final String type = SpongeComponents.plainSerializer().serialize(event.text().get(3));
+                final ResourceKey typeKey = ResourceKey.of("royale", type);
+
+                final ResourceKey worldKey = ResourceKey.of(namespace, value);
+                final Optional<ServerWorld> world = Sponge.server().worldManager().world(worldKey);
+                if (!Sponge.server().worldManager().world(worldKey).isPresent()) {
+                    player.sendMessage(Identity.nil(), Component.text(String.format("Could not find the world %s!", worldKey), NamedTextColor.RED));
+                    return;
+                }
+
+                final Optional<InstanceType> instanceType = Constants.Plugin.INSTANCE_TYPE.get().findValue(typeKey);
+                if (!instanceType.isPresent()) {
+                    player.sendMessage(Identity.nil(), Component.text(String.format("Could not find the instance type %s!", typeKey), NamedTextColor.RED));
+                    return;
+                }
+
+                event.text().set(0, event.text().get(0).color(NamedTextColor.AQUA));
+
+                event.text().set(1, world.get().properties().displayName().orElse(Component.text(worldKey.asString())));
+                event.text().set(2, Component.empty());
+                event.sign().offer(RoyaleData.WORLD, worldKey.asString());
+                event.text().set(3, Component.text(instanceType.get().name()));
+
+                event.sign().offer(RoyaleData.TYPE, typeKey.asString());
+
                 player.sendMessage(Identity.nil(), Component.text("Successfully created world teleportation sign!", NamedTextColor.GREEN));
-                event.text().set(0, event.text().get(0).colorIfAbsent(NamedTextColor.AQUA));
             } else {
                 player.sendMessage(Identity.nil(), Component.text("You do not have permission to create a world teleportation sign!", NamedTextColor.RED));
                 event.setCancelled(true);
@@ -384,55 +425,59 @@ public final class InstanceManager {
     @Listener
     //TODO this is wrong. It needs a broader event
     public void onInteractByPlayer(final InteractBlockEvent.Secondary event, @Root final ServerPlayer player) {
-        final ServerWorld world = player.world();
-        final Instance instance = this.getInstance(world.key()).orElse(null);
+//        final ServerWorld world = player.world();
+//        final Instance instance = this.getInstance(world.key()).orElse(null);
+//
+//        if (instance != null && !instance.getState().canAnyoneInteract() && instance.isPlayerRegistered(player.uniqueId())) {
+//            event.setCancelled(true);
+//        }
 
-        if (instance != null && !instance.getState().canAnyoneInteract() && instance.isPlayerRegistered(player.uniqueId())) {
-            event.setCancelled(true);
-        }
+        final BlockSnapshot block = event.block();
+        block.location().flatMap(Location::blockEntity).filter(Sign.class::isInstance).ifPresent(sign -> {
+            final Optional<ResourceKey> worldKey = sign.get(RoyaleData.WORLD).map(ResourceKey::resolve);
+            final Optional<ResourceKey> typeKey = sign.get(RoyaleData.TYPE).map(ResourceKey::resolve);
+            if (worldKey.isPresent() && typeKey.isPresent()) {
 
-        if (event instanceof InteractBlockEvent.Secondary) {
-            final BlockSnapshot block = ((InteractBlockEvent.Secondary) event).block();
-
-            block.location().flatMap(Location::blockEntity).flatMap(t -> t.get(Keys.SIGN_LINES)).ifPresent(lines -> {
-                if (this.isTeleportSign(lines)) {
-                    final String namespace = SpongeComponents.plainSerializer().serialize(lines.get(0));
-                    final String value = SpongeComponents.plainSerializer().serialize(lines.get(1));
-
-                    if (namespace.isEmpty() || value.isEmpty()) {
-                        final Collection<Instance> instances = this.getAll();
-                        if (instances.size() != 1) {
-                            player.sendMessage(Identity.nil(),
-                                    Component.text(String.format("Unable to automatically join select - there are %s to choose from.", instances.size()),
-                                            NamedTextColor.RED));
-                            return;
-
-                        }
-                        final Instance realInstance = instances.stream().findAny().get();
-                        if (realInstance != null) {
-                            if (realInstance.registerPlayer(player)) {
-                                realInstance.spawnPlayer(player);
-                            }
-                        }
+                final Optional<Instance> optInstance = this.getInstance(worldKey.get());
+                if (optInstance.isPresent()) {
+                    final Instance instance = optInstance.get();
+                    if (!instance.canRegisterMorePlayers()) {
+                        player.sendActionBar(Component.text("World is full!", NamedTextColor.RED));
                     } else {
-                        final ResourceKey key = ResourceKey.of(namespace, value);
-                        final Optional<Instance> optInstance = this.getInstance(key);
-                        if (optInstance.isPresent()) {
-                            if (!optInstance.get().canRegisterMorePlayers()) {
-                                player.sendMessage(Identity.nil(), Component.text("World is full!", NamedTextColor.RED));
-                                return;
-                            }
-                            player.sendMessage(Identity.nil(), Component.text(String.format("Joining world '%s'", key), NamedTextColor.GREEN));
-                            if (optInstance.get().registerPlayer(player)) {
-                                optInstance.get().spawnPlayer(player);
-                            }
-                        } else {
-                            player.sendMessage(Identity.nil(), Component.text(String.format("World '%s' isn't up yet!", key), NamedTextColor.RED));
+                        player.sendActionBar(Component.text(String.format("Joining world '%s'", worldKey.get()), NamedTextColor.GREEN));
+                        if (instance.registerPlayer(player)) {
+                            instance.spawnPlayer(player);
                         }
                     }
+
+
+                    instance.updateSign();
+
+
+                } else {
+                    final Optional<InstanceType> type = Constants.Plugin.INSTANCE_TYPE.get().findValue(typeKey.get());
+                    player.sendActionBar(Component.text(String.format("World '%s' isn't up yet! Creating instance...", worldKey.get()), NamedTextColor.RED));
+                    sign.transform(Keys.SIGN_LINES, lines -> {
+                        lines.set(2, Component.text("creating Instance", NamedTextColor.YELLOW));
+                        return lines;
+                    });
+
+                    this.server.worldManager().loadWorld(worldKey.get()).thenAccept(world -> {
+                        Sponge.server().scheduler().submit(Task.builder()
+                                .execute(() -> this.createInstance(sign, worldKey.get(), type.get()))
+                                .plugin(Royale.instance.getPlugin()).build());
+                    });
+
                 }
-            });
-        }
+            }
+
+        });
+    }
+
+    private void createInstance(BlockEntity sign, ResourceKey worldKey, InstanceType type) {
+        final Instance instance = this.createInstance(worldKey, type, sign.serverLocation());
+        final int spawns = instance.spawns();
+        instance.updateSign();
     }
 
     @Listener
@@ -452,6 +497,6 @@ public final class InstanceManager {
     }
 
     private boolean isTeleportSign(final List<Component> lines) {
-        return lines.size() != 0 && SpongeComponents.plainSerializer().serialize(lines.get(0)).equalsIgnoreCase(Constants.Map.Lobby.SIGN_HEADER);
+        return lines.size() != 0 && SpongeComponents.plainSerializer().serialize(lines.get(0)).equalsIgnoreCase(Constants.Map.Lobby.JOIN_SIGN_HEADER);
     }
 }

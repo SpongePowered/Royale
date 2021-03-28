@@ -37,6 +37,7 @@ import org.spongepowered.api.event.EventManager;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.lifecycle.RegisterBuilderEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
+import org.spongepowered.api.event.lifecycle.RegisterDataEvent;
 import org.spongepowered.api.event.lifecycle.RegisterRegistryEvent;
 import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
 import org.spongepowered.api.event.lifecycle.StartingEngineEvent;
@@ -50,6 +51,7 @@ import org.spongepowered.plugin.jvm.Plugin;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.InstanceManager;
 import org.spongepowered.royale.instance.InstanceType;
+import org.spongepowered.royale.instance.RoyaleData;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.instance.gen.mutator.ChestMutator;
@@ -115,6 +117,11 @@ public final class Royale {
     }
 
     @Listener
+    public void onRegisterData(RegisterDataEvent event) {
+        RoyaleData.register(event);
+    }
+
+    @Listener
     public void onRegisterCatalogs(final RegisterRegistryEvent.EngineScoped<Server> event) {
         final Map<ResourceKey, InstanceMutator> defaultMutators = new HashMap<>();
         defaultMutators.put(ResourceKey.of(Constants.Plugin.ID, "chest"), new ChestMutator());
@@ -153,10 +160,10 @@ public final class Royale {
 
         if (createDefaults) {
             final InstanceType defaultType = InstanceType.builder()
-                    .key(ResourceKey.of(this.plugin, "last_man_standing"))
+                    .key(ResourceKey.of(this.plugin, "last_man_standin"))
                     .name("Last Man Standing")
                     .build();
-            defaultTypes.put(ResourceKey.of(this.plugin, "last_man_standing"), defaultType);
+            defaultTypes.put(ResourceKey.of(this.plugin, "last_man_standin"), defaultType);
             this.plugin.getLogger().info("Registered instance type '{}'", defaultType.key());
 
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(

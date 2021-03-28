@@ -75,7 +75,6 @@ public final class InstanceMutatorPipeline {
             .filter(mutator.getBlockEntityPredicate(instance))
             .flatMap(mutator.getBlockEntityMapper(instance))
             .apply(VolumeCollectors.applyBlockEntitiesOrRemove(world)));
-
     }
 
     @Override

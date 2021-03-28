@@ -25,12 +25,14 @@
 package org.spongepowered.royale.instance;
 
 import net.kyori.adventure.identity.Identity;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.Keys;
+import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
@@ -78,6 +80,7 @@ public final class Instance {
     private final Set<UUID> tasks = new LinkedHashSet<>();
     private final InstanceScoreboard scoreboard;
     private State state = State.IDLE;
+    private ServerLocation signLoc;
 
     public Instance(final Server server, final InstanceManager instanceManager, final ResourceKey worldKey, final InstanceType instanceType) {
         this.server = server;
@@ -121,6 +124,10 @@ public final class Instance {
 
     public boolean isPlayerRegistered(final UUID uniqueId) {
         return this.registeredPlayers.contains(uniqueId);
+    }
+
+    public int registeredPlayers() {
+        return this.registeredPlayers.size();
     }
 
     public boolean isPlayerSpawned(final UUID uniqueId) {
@@ -236,6 +243,19 @@ public final class Instance {
         this.scoreboard.killPlayer(player);
         this.playerDeaths.add(player.uniqueId());
         player.inventory().clear();
+        player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
+        final int playersLeft = this.playersLeft();
+        if (playersLeft > 0) {
+            for (Player playerInWorld : player.world().players()) {
+                playerInWorld.sendActionBar(Component.text(playersLeft + " players left", NamedTextColor.GREEN));
+            }
+        }
+        player.world().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
+        this.updateSign();
+    }
+
+    public int playersLeft() {
+        return this.playerSpawns.size() - this.playerDeaths.size();
     }
 
     boolean isRoundOver() {
@@ -329,6 +349,7 @@ public final class Instance {
                 }
                 break;
         }
+        this.updateSign();
     }
 
     @Override
@@ -355,6 +376,47 @@ public final class Instance {
                 .add("type", this.instanceType)
                 .add("state", this.state)
                 .toString();
+    }
+
+    public int spawns() {
+        return this.registeredPlayers.size() + this.unusedSpawns.size();
+    }
+
+    public void assign(ServerLocation signLoc) {
+        this.signLoc = signLoc;
+    }
+
+    public void updateSign() {
+        if (this.signLoc.world().isLoaded()) {
+            this.signLoc.blockEntity().ifPresent(this::updateSign0);
+        }
+    }
+
+    private void updateSign0(org.spongepowered.api.block.entity.BlockEntity sign) {
+        Component statusLine;
+        Component headerLine = Component.text("Join Game", NamedTextColor.AQUA);
+        final int playersTotal = this.registeredPlayers();
+        switch (this.state) {
+            case PRE_END:
+                statusLine = Component.text("not ready", NamedTextColor.YELLOW);
+                break;
+            case IDLE:
+                statusLine = Component.text("waiting " + playersTotal + "/" + this.spawns(), NamedTextColor.GREEN);
+                break;
+            case RUNNING:
+                statusLine = Component.text("running " + playersLeft() + "/" + playersTotal, NamedTextColor.YELLOW);
+                break;
+            case CLEANUP:
+                statusLine = Component.text("cleanup " + (playersTotal - playersLeft()) + "/" + playersTotal, NamedTextColor.YELLOW);
+                break;
+            default:
+                statusLine = Component.text(this.state.name());
+        }
+        sign.transform(Keys.SIGN_LINES, lines -> {
+            lines.set(0, headerLine);
+            lines.set(2, statusLine);
+            return lines;
+        });
     }
 
     interface InstanceState {
