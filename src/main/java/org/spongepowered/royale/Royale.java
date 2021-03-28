@@ -49,6 +49,7 @@ import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.jvm.Plugin;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
+import org.spongepowered.royale.instance.EventHandler;
 import org.spongepowered.royale.instance.InstanceManager;
 import org.spongepowered.royale.instance.InstanceType;
 import org.spongepowered.royale.instance.RoyaleData;
@@ -201,7 +202,7 @@ public final class Royale {
     @Listener
     public void onStartingServer(final StartingEngineEvent<Server> event) {
         this.instanceManager = new InstanceManager(event.engine());
-        this.eventManager.registerListeners(this.plugin, this.instanceManager);
+        this.eventManager.registerListeners(this.plugin, new EventHandler());
     }
 
     @Listener
