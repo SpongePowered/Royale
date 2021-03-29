@@ -115,7 +115,7 @@ public final class CleanupTask extends InstanceTask {
                 if (this.bossBarViewers.add(player.uniqueId())) {
                     player.showBossBar(this.bossBar);
                 }
-                if (this.getInstance().isPlayerDead(player.uniqueId())) {
+                if (!this.getInstance().isPlayerAlive(player)) {
                     continue;
                 }
 
@@ -201,7 +201,7 @@ public final class CleanupTask extends InstanceTask {
     private Human customizeHuman(Random random, Human human) {
         final GoalExecutor<Agent> targetGoal = human.goal(GoalExecutorTypes.TARGET.get()).orElse(null);
         targetGoal.addGoal(0, FindNearestAttackableTargetGoal.builder().chance(1).target(ServerPlayer.class)
-                .filter(e -> this.getInstance().isPlayerRegistered(e.uniqueId()) && !this.getInstance().isPlayerDead(e.uniqueId())).build(human));
+                .filter(e -> this.getInstance().isPlayerAlive((ServerPlayer) e)).build(human));
 
         final GoalExecutor<Agent> normalGoal = human.goal(GoalExecutorTypes.NORMAL.get()).orElse(null);
         normalGoal.addGoal(0, SwimGoal.builder().swimChance(0.8f).build(human));

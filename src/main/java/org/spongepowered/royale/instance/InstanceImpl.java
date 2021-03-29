@@ -114,6 +114,16 @@ public final class InstanceImpl implements Instance {
     }
 
     @Override
+    public boolean isPlayerRegistered(ServerPlayer player) {
+        return this.registeredPlayers.contains(player.uniqueId());
+    }
+
+    @Override
+    public boolean isPlayerAlive(ServerPlayer player) {
+        return this.isPlayerRegistered(player) && !this.playerDeaths.contains(player.uniqueId());
+    }
+
+    @Override
     public boolean isFull() {
         return this.unusedSpawns.isEmpty();
     }
@@ -132,20 +142,8 @@ public final class InstanceImpl implements Instance {
         return this.scoreboard;
     }
 
-    public boolean isPlayerRegistered(final UUID uniqueId) {
-        return this.registeredPlayers.contains(uniqueId);
-    }
-
-    public int registeredPlayers() {
+    private int registeredPlayers() {
         return this.registeredPlayers.size();
-    }
-
-    public boolean isPlayerSpawned(final UUID uniqueId) {
-        return this.playerSpawns.containsKey(uniqueId);
-    }
-
-    public boolean isPlayerDead(final UUID uniqueId) {
-        return this.playerDeaths.contains(uniqueId);
     }
 
     public void advance() {
@@ -315,10 +313,6 @@ public final class InstanceImpl implements Instance {
                 }
             }
         }
-    }
-
-    void spectate(final ServerPlayer player) {
-        player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
     }
 
     private void onStateAdvance(final State next) {

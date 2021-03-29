@@ -75,8 +75,8 @@ public final class EventHandler {
             return;
         }
 
-        if (instanceOpt.get().isPlayerRegistered(player.uniqueId())) {
-            instanceOpt.get().spectate(player);
+        if (instanceOpt.get().isPlayerRegistered(player)) {
+            player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
         }
     }
 
@@ -88,7 +88,7 @@ public final class EventHandler {
             return;
         }
 
-        if (instanceOpt.get().isPlayerRegistered(player.uniqueId())) {
+        if (instanceOpt.get().isPlayerRegistered(player)) {
             instanceOpt.get().kick(Collections.singleton(player));
             if (instanceOpt.get().isRoundOver()) {
                 if (world.players().isEmpty()) {
@@ -111,7 +111,7 @@ public final class EventHandler {
         }
 
         // We only care about registered players
-        if (!instance.get().isPlayerRegistered(player.uniqueId())) {
+        if (!instance.get().isPlayerRegistered(player)) {
             return;
         }
 
@@ -133,7 +133,7 @@ public final class EventHandler {
         final Optional<InstanceImpl> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
 
         if (instance.isPresent()) {
-            if (instance.get().isPlayerRegistered(player.uniqueId())) {
+            if (instance.get().isPlayerRegistered(player)) {
                 instance.get().disqualifyPlayers(Collections.singleton(player));
                 event.setCancelled(true);
                 player.offer(Keys.HEALTH, player.maxHealth().get());
@@ -198,7 +198,7 @@ public final class EventHandler {
         }
 
         final Optional<InstanceImpl> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
-        if (instance.isPresent() && !instance.get().getState().canAnyoneInteract() && instance.get().isPlayerRegistered(player.uniqueId())) {
+        if (instance.isPresent() && !instance.get().getState().canAnyoneInteract() && instance.get().isPlayerRegistered(player)) {
             event.transactions(Operations.BREAK.get()).forEach(Transaction::invalidate);
         }
     }
@@ -208,7 +208,7 @@ public final class EventHandler {
         final ServerWorld world = player.world();
         final Optional<InstanceImpl> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
 
-        if (instance.isPresent() && !instance.get().getState().canAnyoneInteract() && instance.get().isPlayerRegistered(player.uniqueId())) {
+        if (instance.isPresent() && !instance.get().getState().canAnyoneInteract() && instance.get().isPlayerRegistered(player)) {
             event.setCancelled(true);
         }
     }

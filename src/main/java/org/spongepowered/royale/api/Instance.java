@@ -38,6 +38,10 @@ public interface Instance {
 
     boolean addPlayer(ServerPlayer player);
 
+    boolean isPlayerRegistered(ServerPlayer player);
+
+    boolean isPlayerAlive(ServerPlayer player);
+
     boolean isFull();
 
     InstanceType getType();
