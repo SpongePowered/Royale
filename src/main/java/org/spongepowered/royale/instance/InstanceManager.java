@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public final class InstanceManager {
@@ -103,7 +104,7 @@ public final class InstanceManager {
         }
     }
 
-    void restartInstance(final ResourceKey key, InstanceType instanceType, List<ServerLocation> signLoc) {
+    void restartInstance(final ResourceKey key, InstanceType instanceType, Set<ServerLocation> signLoc) {
         Objects.requireNonNull(key, "key must not be null");
         this.unloadInstance(key).thenComposeAsync(b -> this.createInstance(key, instanceType, false), Royale.getInstance().getTaskExecutorService())
                                 .thenAcceptAsync(instance -> instance.link(signLoc), Royale.getInstance().getTaskExecutorService());

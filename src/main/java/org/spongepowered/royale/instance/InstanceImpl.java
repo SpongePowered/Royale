@@ -80,14 +80,14 @@ public final class InstanceImpl implements Instance {
     private final Set<UUID> playerDeaths = new HashSet<>();
     private final Set<UUID> tasks = new LinkedHashSet<>();
     private final InstanceScoreboard scoreboard;
-    private final List<ServerLocation> signLoc;
+    private final Set<ServerLocation> signLoc;
     private State state = State.IDLE;
 
     public InstanceImpl(final ServerWorld world, final InstanceType instanceType) {
         this.worldKey = world.key();
         this.instanceType = instanceType;
         this.scoreboard = new InstanceScoreboard(this);
-        this.signLoc = new ArrayList<>();
+        this.signLoc = new HashSet<>();
     }
 
     @Override
@@ -425,7 +425,7 @@ public final class InstanceImpl implements Instance {
         return false;
     }
 
-    public void link(List<ServerLocation> signLoc) {
+    public void link(Set<ServerLocation> signLoc) {
         this.signLoc.addAll(signLoc);
         this.updateSign();
     }
