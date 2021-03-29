@@ -99,8 +99,9 @@ public final class InstanceImpl implements Instance {
     }
 
     @Override
-    public boolean addSpawnpoint(Vector3d vector3d) {
-        return false; //TODO
+    public boolean addSpawnpoint(Vector3d spawn) {
+        this.unusedSpawns.push(spawn);
+        return true;
     }
 
     @Override
@@ -185,10 +186,6 @@ public final class InstanceImpl implements Instance {
 
         this.registeredPlayers.add(player.uniqueId());
         return true;
-    }
-
-    public void addPlayerSpawn(final Vector3d spawn) {
-        this.unusedSpawns.push(spawn);
     }
 
     public void spawnPlayer(final ServerPlayer player) {
@@ -374,7 +371,11 @@ public final class InstanceImpl implements Instance {
 
     @Override
     public boolean link(Sign sign) {
-        return this.signLoc.add(sign.serverLocation());
+        if (this.signLoc.add(sign.serverLocation())) {
+            updateSign0(sign);
+            return true;
+        }
+        return false;
     }
 
     public void updateSign() {
@@ -383,6 +384,11 @@ public final class InstanceImpl implements Instance {
                 location.blockEntity().ifPresent(this::updateSign0);
             }
         }
+    }
+
+    @Override
+    public boolean kickAll() {
+        return false;
     }
 
     private void updateSign0(org.spongepowered.api.block.entity.BlockEntity sign) {

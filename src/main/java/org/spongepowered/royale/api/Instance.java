@@ -41,4 +41,6 @@ public interface Instance {
 
     boolean link(Sign sign);
 
+    boolean kickAll();
+
 }

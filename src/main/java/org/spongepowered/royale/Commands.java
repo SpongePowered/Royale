@@ -145,7 +145,7 @@ final class Commands {
                     context.sendMessage(Identity.nil(), msg);
                     context.cause().location().ifPresent(loc -> {
                         for (InstanceImpl instance : Royale.getInstance().getInstanceManager().getAll()) {
-                            instance.addPlayerSpawn(loc.position());
+                            instance.addSpawnpoint(loc.position());
                         }
                     });
                     return CommandResult.success();

@@ -216,6 +216,14 @@ public final class EventHandler {
                         lines.set(3, Component.text(tkey.get().formatted()));
                         return lines;
                     });
+                    final Optional<InstanceImpl> instOpt = Royale.getInstance().getInstanceManager().getInstance(wKey.get());
+                    if (instOpt.isPresent()) {
+                        instOpt.get().link((Sign) sign);
+                    } else {
+                        final InstanceType type = Constants.Plugin.INSTANCE_TYPE.get().findValue(tkey.get()).get();
+                        Royale.getInstance().getInstanceManager().createInstance(wKey.get(), type, false)
+                                .thenAcceptAsync(instance -> instance.link((Sign) sign), Royale.getInstance().getTaskExecutorService());
+                    }
                 }
             }
         });
