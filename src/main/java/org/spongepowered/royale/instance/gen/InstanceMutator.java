@@ -30,7 +30,7 @@ import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.volume.stream.VolumeFlatMapper;
 import org.spongepowered.api.world.volume.stream.VolumePredicate;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.util.Objects;
 import java.util.StringJoiner;
@@ -48,13 +48,13 @@ public abstract class InstanceMutator implements ResourceKeyed {
         return this.key;
     }
 
-    public void prepare(final Instance instance) {
+    public void prepare(final InstanceImpl instance) {
 
     }
 
-    public abstract VolumePredicate<ServerWorld, BlockEntity> getBlockEntityPredicate(final Instance instance);
+    public abstract VolumePredicate<ServerWorld, BlockEntity> getBlockEntityPredicate(final InstanceImpl instance);
 
-    public abstract VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance);
+    public abstract VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final InstanceImpl instance);
 
     @Override
     public int hashCode() {

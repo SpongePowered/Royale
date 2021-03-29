@@ -36,7 +36,7 @@ import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.Royale;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.time.Duration;
 import java.util.List;
@@ -51,7 +51,7 @@ public final class EndTask extends InstanceTask {
     private ScheduledTask handle;
     private long endLengthRemaining;
 
-    public EndTask(final Instance instance, final List<UUID> winners) {
+    public EndTask(final InstanceImpl instance, final List<UUID> winners) {
         super(instance);
         this.winners = winners;
         this.endLengthTotal = instance.getType().getRoundEndLength();

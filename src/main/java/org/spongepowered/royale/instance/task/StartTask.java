@@ -29,7 +29,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.world.server.ServerWorld;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -44,7 +44,7 @@ public final class StartTask extends InstanceTask {
 
     private ScheduledTask handle;
 
-    public StartTask(final Instance instance) {
+    public StartTask(final InstanceImpl instance) {
         super(instance);
 
         this.startTitles = new LinkedList<>();

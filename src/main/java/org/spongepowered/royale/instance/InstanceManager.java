@@ -43,13 +43,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 public final class InstanceManager {
 
-    private final Map<ResourceKey, Instance> instances = new HashMap<>();
+    private final Map<ResourceKey, InstanceImpl> instances = new HashMap<>();
 
-    public CompletableFuture<Instance> createInstance(final ResourceKey key, final InstanceType type, final boolean force) {
+    public CompletableFuture<InstanceImpl> createInstance(final ResourceKey key, final InstanceType type, final boolean force) {
         Objects.requireNonNull(key, "key must not be null");
         Objects.requireNonNull(type, "type must not be null");
 
@@ -60,13 +59,13 @@ public final class InstanceManager {
             }
             w.properties().setSerializationBehavior(SerializationBehavior.AUTOMATIC_METADATA_ONLY);
 
-            final Instance instance = new Instance(w, type);
-            final Instance previous = this.instances.putIfAbsent(w.key(), instance);
+            final InstanceImpl instance = new InstanceImpl(w, type);
+            final InstanceImpl previous = this.instances.putIfAbsent(w.key(), instance);
             if (previous != null) {
                 if (!force) {
                     throw new InstanceAlreadyExistsException(key.formatted());
                 }
-                if (previous.getState() != Instance.State.IDLE) {
+                if (previous.getState() != InstanceImpl.State.IDLE) {
                     throw new IllegalStateException("Instance is not IDLE");
                 }
                 this.instances.replace(w.key(), instance);
@@ -80,31 +79,31 @@ public final class InstanceManager {
 
     public void startInstance(final ResourceKey key) throws UnknownInstanceException {
         Objects.requireNonNull(key, "key must not be null");
-        final Instance instance = this.instances.get(key);
+        final InstanceImpl instance = this.instances.get(key);
         if (instance == null) {
             throw new UnknownInstanceException(key.formatted());
         }
 
-        instance.advanceTo(Instance.State.PRE_START);
+        instance.advanceTo(InstanceImpl.State.PRE_START);
     }
 
     public void endInstance(final ResourceKey key, final boolean force) throws UnknownInstanceException {
         Objects.requireNonNull(key, "key must not be null");
-        final Instance instance = this.instances.get(key);
+        final InstanceImpl instance = this.instances.get(key);
         if (instance == null) {
             throw new UnknownInstanceException(key.formatted());
         }
 
         if (force) {
-            instance.advanceTo(Instance.State.FORCE_STOP);
+            instance.advanceTo(InstanceImpl.State.FORCE_STOP);
         } else {
-            instance.advanceTo(Instance.State.PRE_END);
+            instance.advanceTo(InstanceImpl.State.PRE_END);
         }
     }
 
     CompletableFuture<Boolean> unloadInstance(final ResourceKey key) {
         Objects.requireNonNull(key, "key must not be null");
-        final Instance instance = this.instances.get(key);
+        final InstanceImpl instance = this.instances.get(key);
         if (instance == null) {
             return CompletableFuture.completedFuture(true);
         }
@@ -140,12 +139,12 @@ public final class InstanceManager {
         return CompletableFuture.completedFuture(true);
     }
 
-    public Optional<Instance> getInstance(final ResourceKey key) {
+    public Optional<InstanceImpl> getInstance(final ResourceKey key) {
         Objects.requireNonNull(key, "key must not be null");
         return Optional.ofNullable(this.instances.get(key));
     }
 
-    public Collection<Instance> getAll() {
+    public Collection<InstanceImpl> getAll() {
         return Collections.unmodifiableCollection(this.instances.values());
     }
 

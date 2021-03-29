@@ -51,7 +51,7 @@ import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.EventHandler;
 import org.spongepowered.royale.instance.InstanceManager;
 import org.spongepowered.royale.instance.InstanceType;
-import org.spongepowered.royale.instance.RoyaleData;
+import org.spongepowered.royale.api.RoyaleKeys;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.instance.gen.mutator.ChestMutator;
@@ -122,11 +122,11 @@ public final class Royale {
 
         final DataStore dataStore = DataStore.builder().pluginData(datastoreKey)
                 .holder(Sign.class, ServerPlayer.class)
-                .keys(RoyaleData.WORLD, RoyaleData.TYPE)
+                .keys(RoyaleKeys.WORLD, RoyaleKeys.TYPE)
                 .build();
 
         final DataRegistration registration = DataRegistration.builder()
-                .dataKey(RoyaleData.WORLD, RoyaleData.TYPE)
+                .dataKey(RoyaleKeys.WORLD, RoyaleKeys.TYPE)
                 .store(dataStore)
                 .build();
         event.register(registration);

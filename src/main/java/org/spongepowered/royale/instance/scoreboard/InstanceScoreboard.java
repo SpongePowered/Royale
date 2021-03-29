@@ -35,7 +35,7 @@ import org.spongepowered.api.scoreboard.Team;
 import org.spongepowered.api.scoreboard.criteria.Criteria;
 import org.spongepowered.api.scoreboard.displayslot.DisplaySlots;
 import org.spongepowered.api.scoreboard.objective.Objective;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -63,7 +63,7 @@ public final class InstanceScoreboard {
     private final Score instanceTypeScore, dashesScore, emptyLineScore;
     private final Map<UUID, PlayerData> playerData = new HashMap<>();
 
-    public InstanceScoreboard(final Instance instance) {
+    public InstanceScoreboard(final InstanceImpl instance) {
         this.scoreboard = Scoreboard.builder().build();
         this.objective =
                 Objective.builder().name("main").displayName(Component.text(instance.getWorldKey().formatted(), NamedTextColor.GREEN))

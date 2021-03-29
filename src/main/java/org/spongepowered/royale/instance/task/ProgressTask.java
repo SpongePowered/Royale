@@ -30,7 +30,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.world.server.ServerWorld;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -51,7 +51,7 @@ public final class ProgressTask extends InstanceTask {
 
     private ScheduledTask handle;
 
-    public ProgressTask(final Instance instance) {
+    public ProgressTask(final InstanceImpl instance) {
         super(instance);
 
         this.roundLengthTotal = instance.getType().getRoundLength();
@@ -74,7 +74,7 @@ public final class ProgressTask extends InstanceTask {
 
         // Make sure the world is still around and loaded
         if (world != null && world.isLoaded()) {
-            if (this.getInstance().getState() == Instance.State.POST_START) {
+            if (this.getInstance().getState() == InstanceImpl.State.POST_START) {
                 this.getInstance().advance();
             }
 

@@ -39,7 +39,7 @@ import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.volume.stream.VolumeFlatMapper;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 import org.spongepowered.royale.instance.gen.loot.ItemArchetype;
 import org.spongepowered.royale.instance.gen.loot.Loots;
 
@@ -56,7 +56,7 @@ public final class ChestMutator extends SignMutator {
     }
 
     @Override
-    public VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance) {
+    public VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final InstanceImpl instance) {
         return (world, blockentitySupplier, x, y, z) -> {
             final Sign sign = (Sign) blockentitySupplier.get();
             final Direction facingDirection = sign.get(Keys.DIRECTION).orElse(null);

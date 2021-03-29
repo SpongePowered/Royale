@@ -31,6 +31,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.Player;
@@ -45,6 +46,8 @@ import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
+import org.spongepowered.royale.api.Instance;
+import org.spongepowered.royale.api.InstanceState;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 import org.spongepowered.royale.instance.scoreboard.InstanceScoreboard;
 import org.spongepowered.royale.instance.task.CleanupTask;
@@ -67,7 +70,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-public final class Instance {
+public final class InstanceImpl implements Instance {
 
     private final ResourceKey worldKey;
     private final InstanceType instanceType;
@@ -78,12 +81,13 @@ public final class Instance {
     private final Set<UUID> tasks = new LinkedHashSet<>();
     private final InstanceScoreboard scoreboard;
     private State state = State.IDLE;
-    @Nullable private ServerLocation signLoc;
+    private List<ServerLocation> signLoc;
 
-    public Instance(final ServerWorld world, final InstanceType instanceType) {
+    public InstanceImpl(final ServerWorld world, final InstanceType instanceType) {
         this.worldKey = world.key();
         this.instanceType = instanceType;
         this.scoreboard = new InstanceScoreboard(this);
+        this.signLoc = new ArrayList<>();
     }
 
     public ResourceKey getWorldKey() {
@@ -92,6 +96,16 @@ public final class Instance {
 
     public Optional<ServerWorld> getWorld() {
         return Sponge.server().worldManager().world(this.worldKey);
+    }
+
+    @Override
+    public boolean addSpawnpoint(Vector3d vector3d) {
+        return false; //TODO
+    }
+
+    @Override
+    public boolean isFull() {
+        return false; //TODO
     }
 
     public InstanceType getType() {
@@ -341,7 +355,7 @@ public final class Instance {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        final Instance instance = (Instance) o;
+        final InstanceImpl instance = (InstanceImpl) o;
         return Objects.equals(this.worldKey, instance.worldKey);
     }
 
@@ -358,16 +372,16 @@ public final class Instance {
         return this.registeredPlayers.size() + this.unusedSpawns.size();
     }
 
-    public void assign(ServerLocation signLoc) {
-        this.signLoc = signLoc;
+    @Override
+    public boolean link(Sign sign) {
+        return this.signLoc.add(sign.serverLocation());
     }
 
     public void updateSign() {
-        if (this.signLoc == null) {
-            return;
-        }
-        if (this.signLoc.world().isLoaded()) {
-            this.signLoc.blockEntity().ifPresent(this::updateSign0);
+        for (ServerLocation location : this.signLoc) {
+            if (location.world().isLoaded()) {
+                location.blockEntity().ifPresent(this::updateSign0);
+            }
         }
     }
 
@@ -398,24 +412,7 @@ public final class Instance {
         });
     }
 
-    interface InstanceState {
 
-        default boolean canAnyoneMove() {
-            return true;
-        }
-
-        default boolean canAnyoneInteract() {
-            return false;
-        }
-
-        default boolean doesCancelTasksOnAdvance() {
-            return true;
-        }
-
-        default boolean doesCheckRoundStatusOnAdvance() {
-            return true;
-        }
-    }
 
     public enum State implements InstanceState {
 

@@ -25,19 +25,19 @@
 package org.spongepowered.royale.instance.task;
 
 import org.spongepowered.api.scheduler.ScheduledTask;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.util.function.Consumer;
 
 public abstract class InstanceTask implements Consumer<ScheduledTask> {
 
-    private final Instance instance;
+    private final InstanceImpl instance;
 
-    InstanceTask(final Instance instance) {
+    InstanceTask(final InstanceImpl instance) {
         this.instance = instance;
     }
 
-    public final Instance getInstance() {
+    public final InstanceImpl getInstance() {
         return this.instance;
     }
 

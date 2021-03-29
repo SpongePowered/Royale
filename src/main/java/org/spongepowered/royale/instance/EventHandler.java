@@ -55,6 +55,7 @@ import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
+import org.spongepowered.royale.api.RoyaleKeys;
 
 import java.util.List;
 import java.util.Optional;
@@ -64,7 +65,7 @@ public final class EventHandler {
     @Listener(order = Order.LAST)
     public void onJoin(final ServerSideConnectionEvent.Join event, @Getter("player") final ServerPlayer player) {
         final ServerWorld world = player.world();
-        final Optional<Instance> instanceOpt = Royale.getInstance().getInstanceManager().getInstance(world.key());
+        final Optional<InstanceImpl> instanceOpt = Royale.getInstance().getInstanceManager().getInstance(world.key());
         if (!instanceOpt.isPresent()) {
             return;
         }
@@ -77,7 +78,7 @@ public final class EventHandler {
     @Listener(order = Order.LAST)
     public void onDisconnect(final ServerSideConnectionEvent.Disconnect event, @Getter("player") final ServerPlayer player) {
         final ServerWorld world = player.world();
-        final Optional<Instance> instanceOpt = Royale.getInstance().getInstanceManager().getInstance(world.key());
+        final Optional<InstanceImpl> instanceOpt = Royale.getInstance().getInstanceManager().getInstance(world.key());
         if (!instanceOpt.isPresent()) {
             return;
         }
@@ -86,9 +87,9 @@ public final class EventHandler {
             instanceOpt.get().disqualifyPlayer(player);
             if (instanceOpt.get().isRoundOver()) {
                 if (world.players().isEmpty()) {
-                    instanceOpt.get().advanceTo(Instance.State.FORCE_STOP);
+                    instanceOpt.get().advanceTo(InstanceImpl.State.FORCE_STOP);
                 } else {
-                    instanceOpt.get().advanceTo(Instance.State.PRE_END);
+                    instanceOpt.get().advanceTo(InstanceImpl.State.PRE_END);
                 }
             }
         }
@@ -97,7 +98,7 @@ public final class EventHandler {
     @Listener(order = Order.LAST)
     public void onMoveEntity(final MoveEntityEvent event, @Getter("entity") final ServerPlayer player) {
         final ServerWorld world = player.world();
-        final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
+        final Optional<InstanceImpl> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
 
         // We only care about inner-instance movement
         if (!instance.isPresent()) {
@@ -123,7 +124,7 @@ public final class EventHandler {
     @Listener(order = Order.LAST)
     public void onDestructEntity(final DestructEntityEvent.Death event, @Getter("entity") final ServerPlayer player) {
         final ServerWorld world = player.world();
-        final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
+        final Optional<InstanceImpl> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
 
         if (instance.isPresent()) {
             if (instance.get().isPlayerRegistered(player.uniqueId())) {
@@ -136,7 +137,7 @@ public final class EventHandler {
                     return list;
                 });
                 if (instance.get().isRoundOver()) {
-                    instance.get().advanceTo(Instance.State.PRE_END);
+                    instance.get().advanceTo(InstanceImpl.State.PRE_END);
                 }
             }
         }
@@ -157,7 +158,7 @@ public final class EventHandler {
             return;
         }
 
-        final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
+        final Optional<InstanceImpl> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
         if (instance.isPresent() && !instance.get().getState().canAnyoneInteract() && instance.get().isPlayerRegistered(player.uniqueId())) {
             event.transactions(Operations.BREAK.get()).forEach(Transaction::invalidate);
         }
@@ -166,7 +167,7 @@ public final class EventHandler {
     @Listener
     public void onInteract(final InteractBlockEvent.Secondary event, @Root final ServerPlayer player) {
         final ServerWorld world = player.world();
-        final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
+        final Optional<InstanceImpl> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
 
         if (instance.isPresent() && !instance.get().getState().canAnyoneInteract() && instance.get().isPlayerRegistered(player.uniqueId())) {
             event.setCancelled(true);
@@ -176,12 +177,12 @@ public final class EventHandler {
     @Listener
     public void onInteractByPlayer(final InteractBlockEvent.Secondary event, @Root final ServerPlayer player) {
         event.block().location().flatMap(Location::blockEntity).filter(Sign.class::isInstance).ifPresent(sign -> {
-            final Optional<ResourceKey> worldKey = sign.get(RoyaleData.WORLD);
-            final Optional<ResourceKey> typeKey = sign.get(RoyaleData.TYPE);
+            final Optional<ResourceKey> worldKey = sign.get(RoyaleKeys.WORLD);
+            final Optional<ResourceKey> typeKey = sign.get(RoyaleKeys.TYPE);
             if (worldKey.isPresent() && typeKey.isPresent()) {
-                final Optional<Instance> optInstance = Royale.getInstance().getInstanceManager().getInstance(worldKey.get());
+                final Optional<InstanceImpl> optInstance = Royale.getInstance().getInstanceManager().getInstance(worldKey.get());
                 if (optInstance.isPresent()) {
-                    final Instance instance = optInstance.get();
+                    final InstanceImpl instance = optInstance.get();
                     if (!instance.canRegisterMorePlayers()) {
                         player.sendActionBar(Component.text("World is full!", NamedTextColor.RED));
                     } else {
@@ -200,14 +201,14 @@ public final class EventHandler {
 
                     final InstanceType type = Constants.Plugin.INSTANCE_TYPE.get().value(typeKey.get());
                     Royale.getInstance().getInstanceManager().createInstance(worldKey.get(), type, false)
-                            .thenAcceptAsync(Instance::updateSign, Royale.getInstance().getTaskExecutorService());
+                            .thenAcceptAsync(InstanceImpl::updateSign, Royale.getInstance().getTaskExecutorService());
                 }
             } else {
-                final Optional<ResourceKey> wKey = player.get(RoyaleData.WORLD);
-                final Optional<ResourceKey> tkey = player.get(RoyaleData.TYPE);
+                final Optional<ResourceKey> wKey = player.get(RoyaleKeys.WORLD);
+                final Optional<ResourceKey> tkey = player.get(RoyaleKeys.TYPE);
                 if (wKey.isPresent() && tkey.isPresent() && player.hasPermission(Constants.Permissions.ADMIN + ".create.sign")) {
-                    sign.offer(RoyaleData.WORLD, wKey.get());
-                    sign.offer(RoyaleData.TYPE, tkey.get());
+                    sign.offer(RoyaleKeys.WORLD, wKey.get());
+                    sign.offer(RoyaleKeys.TYPE, tkey.get());
                     sign.transform(Keys.SIGN_LINES, lines -> {
                         lines.set(0, Component.text(wKey.get().namespace(), NamedTextColor.AQUA));
                         lines.set(1, Component.text(wKey.get().formatted()));

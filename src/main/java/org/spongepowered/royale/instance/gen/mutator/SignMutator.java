@@ -31,7 +31,7 @@ import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.volume.stream.VolumePredicate;
 import org.spongepowered.royale.Royale;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 
 import java.util.StringJoiner;
@@ -46,7 +46,7 @@ abstract class SignMutator extends InstanceMutator {
     }
 
     @Override
-    public VolumePredicate<ServerWorld, BlockEntity> getBlockEntityPredicate(final Instance instance) {
+    public VolumePredicate<ServerWorld, BlockEntity> getBlockEntityPredicate(final InstanceImpl instance) {
         return (world, blockEntitySupplier, x, y, z) -> {
             final BlockEntity blockEntity = blockEntitySupplier.get();
             if (!(blockEntity instanceof Sign)) {

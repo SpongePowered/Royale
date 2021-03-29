@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.royale.instance;
+package org.spongepowered.royale.api;
 
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.entity.Sign;
@@ -34,7 +34,7 @@ import org.spongepowered.api.event.lifecycle.RegisterDataEvent;
 import org.spongepowered.api.util.TypeTokens;
 import org.spongepowered.royale.Royale;
 
-public final class RoyaleData {
+public final class RoyaleKeys {
 
     public static final Key<Value<ResourceKey>> WORLD = Key.builder().key(ResourceKey.of(Royale.getInstance().getPlugin(), "world")).type(TypeTokens.RESOURCE_KEY_VALUE_TOKEN).build();
 

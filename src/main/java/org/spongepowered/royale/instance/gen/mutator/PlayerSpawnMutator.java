@@ -34,7 +34,7 @@ import org.spongepowered.api.world.volume.stream.VolumeFlatMapper;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.util.Optional;
 
@@ -45,7 +45,7 @@ public final class PlayerSpawnMutator extends SignMutator {
     }
 
     @Override
-    public VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final Instance instance) {
+    public VolumeFlatMapper<ServerWorld, BlockEntity> getBlockEntityMapper(final InstanceImpl instance) {
         return (world, blockEntitySupplier, x, y, z) -> {
             final BlockState air = BlockTypes.AIR.get().defaultState();
             world.setBlock(x, y, z, air, BlockChangeFlags.ALL);

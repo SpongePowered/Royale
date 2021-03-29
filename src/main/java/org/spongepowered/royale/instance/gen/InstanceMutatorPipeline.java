@@ -29,7 +29,7 @@ import org.spongepowered.api.world.volume.stream.StreamOptions;
 import org.spongepowered.api.world.volume.stream.VolumeCollectors;
 import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Royale;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -51,7 +51,7 @@ public final class InstanceMutatorPipeline {
         return this.mutators;
     }
 
-    public void mutate(final Instance instance) {
+    public void mutate(final InstanceImpl instance) {
 
         final ServerWorld world = instance.getWorld()
                 .orElseThrow(() -> new RuntimeException(String.format("Attempting to mutate instance '%s' but it's world is not loaded!"

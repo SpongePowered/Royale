@@ -57,7 +57,7 @@ import org.spongepowered.api.world.explosion.Explosion;
 import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.vector.Vector3d;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -88,7 +88,7 @@ public final class CleanupTask extends InstanceTask {
     private long roundLengthRemaining;
     private final Random random = new Random();
 
-    public CleanupTask(final Instance instance) {
+    public CleanupTask(final InstanceImpl instance) {
         super(instance);
         this.roundLengthTotal = 150;
         this.roundLengthRemaining = this.roundLengthTotal;

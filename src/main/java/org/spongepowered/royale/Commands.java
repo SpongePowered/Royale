@@ -45,9 +45,9 @@ import org.spongepowered.api.command.parameter.managed.clientcompletion.ClientCo
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
-import org.spongepowered.royale.instance.Instance;
+import org.spongepowered.royale.instance.InstanceImpl;
 import org.spongepowered.royale.instance.InstanceType;
-import org.spongepowered.royale.instance.RoyaleData;
+import org.spongepowered.royale.api.RoyaleKeys;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 
@@ -113,7 +113,7 @@ final class Commands {
                                 for (final ServerPlayer player : Sponge.server().onlinePlayers()) {
                                     if (player.world().key().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                                         player.sendMessage(Identity.nil(), Component.text().clickEvent(SpongeComponents.executeCallback(commandCause -> {
-                                            final Optional<Instance> inst = Royale.getInstance().getInstanceManager().getInstance(targetWorldKey);
+                                            final Optional<InstanceImpl> inst = Royale.getInstance().getInstanceManager().getInstance(targetWorldKey);
                                             if (inst.isPresent()) {
                                                 final ServerPlayer serverPlayer = (ServerPlayer) commandCause.root();
                                                 if (inst.get().registerPlayer(serverPlayer)) {
@@ -136,7 +136,7 @@ final class Commands {
                 .permission(Constants.Plugin.ID + ".command.status")
                 .executor(context -> {
                     Component msg = Component.text("Lobby: ").append(worldStatus(Constants.Map.Lobby.LOBBY_WORLD_KEY));
-                    for (Instance instance : Royale.getInstance().getInstanceManager().getAll()) {
+                    for (InstanceImpl instance : Royale.getInstance().getInstanceManager().getAll()) {
                         msg = msg.append(Component.newline())
                                 .append(Component.text("Instance " + instance.getWorldKey() + ": ")
                                 .append(worldStatus(instance.getWorldKey())))
@@ -144,7 +144,7 @@ final class Commands {
                     }
                     context.sendMessage(Identity.nil(), msg);
                     context.cause().location().ifPresent(loc -> {
-                        for (Instance instance : Royale.getInstance().getInstanceManager().getAll()) {
+                        for (InstanceImpl instance : Royale.getInstance().getInstanceManager().getAll()) {
                             instance.addPlayerSpawn(loc.position());
                         }
                     });
@@ -166,8 +166,8 @@ final class Commands {
                     final ServerPlayer player = (ServerPlayer) context.cause().root();
                     final ResourceKey targetWorldKey = context.requireOne(Commands.WORLD_KEY_PARAMETER);
                     final InstanceType type = context.requireOne(Commands.INSTANCE_TYPE_PARAMETER);
-                    player.offer(RoyaleData.WORLD, targetWorldKey);
-                    player.offer(RoyaleData.TYPE, type.key());
+                    player.offer(RoyaleKeys.WORLD, targetWorldKey);
+                    player.offer(RoyaleKeys.TYPE, type.key());
                     return CommandResult.success();
                 })
                 .build();
@@ -182,8 +182,8 @@ final class Commands {
                     }
 
                     final ServerPlayer player = (ServerPlayer) context.cause().root();
-                    player.remove(RoyaleData.WORLD);
-                    player.remove(RoyaleData.TYPE);
+                    player.remove(RoyaleKeys.WORLD);
+                    player.remove(RoyaleKeys.TYPE);
                     return CommandResult.success();
                 })
                 .build();
@@ -279,7 +279,7 @@ final class Commands {
                     final ServerPlayer player = (ServerPlayer) context.cause().root();
                     final ResourceKey worldKey = context.requireOne(Commands.INSTANCE_KEY_PARAMETER);
 
-                    final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(worldKey);
+                    final Optional<InstanceImpl> instance = Royale.getInstance().getInstanceManager().getInstance(worldKey);
                     if (!instance.isPresent()) {
                         throw new CommandException(
                                 Component.text().content("Instance [")
@@ -389,7 +389,7 @@ final class Commands {
 
         @Override
         public List<String> complete(final CommandContext context, final String currentInput) {
-            return Royale.getInstance().getInstanceManager().getAll().stream().map(Instance::getWorldKey)
+            return Royale.getInstance().getInstanceManager().getAll().stream().map(InstanceImpl::getWorldKey)
                     .map(ResourceKey::formatted)
                     .filter(x -> x.startsWith(currentInput.toLowerCase(Locale.ROOT)))
                     .collect(Collectors.toList());
@@ -401,7 +401,7 @@ final class Commands {
                 final CommandContext.Builder context) throws ArgumentParseException {
             final ResourceKey key = reader.parseResourceKey();
             if (Sponge.server().worldManager().worldExists(key)) {
-                final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(key);
+                final Optional<InstanceImpl> instance = Royale.getInstance().getInstanceManager().getInstance(key);
                 if (instance.isPresent()) {
                     return Optional.of(key);
                 }
