@@ -27,6 +27,7 @@ package org.spongepowered.royale.instance.scoreboard;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.scoreboard.Score;
@@ -92,8 +93,8 @@ public final class InstanceScoreboard {
     }
 
     public void addPlayer(final ServerPlayer player) {
-        final Score score = this.objective.scoreOrCreate(Component.text(player.name()));
-        score.setScore(0);
+        final Score score = this.objective.scoreOrCreate(Component.text(player.name(), NamedTextColor.DARK_GREEN));
+        score.setScore(1);
 
         final Team team = Team.builder().name(player.name()).build();
         team.addMember(player.teamRepresentation());
@@ -111,7 +112,10 @@ public final class InstanceScoreboard {
         }
 
         final PlayerData data = this.playerData.get(player.uniqueId());
-        data.team.setPrefix(Component.text("", null, TextDecoration.STRIKETHROUGH));
+        this.objective.removeScore(data.score);
+        final Score score = this.objective.scoreOrCreate(Component.text(player.name(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH ));
+        score.setScore(0);
+        data.score = score;
         data.dead = true;
 
         this.sortScoreboard();
@@ -119,7 +123,10 @@ public final class InstanceScoreboard {
 
     public void removePlayer(final ServerPlayer player) {
         final PlayerData data = this.playerData.remove(player.uniqueId());
+        data.team.unregister();
+        this.objective.removeScore(data.score);
         this.sortScoreboard();
+        Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
     }
 
     private void sortScoreboard() {
