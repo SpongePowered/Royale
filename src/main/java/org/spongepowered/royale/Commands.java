@@ -143,11 +143,6 @@ final class Commands {
                                 .append(Component.text(" (" + instance.getState() + ") "));
                     }
                     context.sendMessage(Identity.nil(), msg);
-                    context.cause().location().ifPresent(loc -> {
-                        for (InstanceImpl instance : Royale.getInstance().getInstanceManager().getAll()) {
-                            instance.addSpawnpoint(loc.position());
-                        }
-                    });
                     return CommandResult.success();
                 })
                 .build();
