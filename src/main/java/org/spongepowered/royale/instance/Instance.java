@@ -219,7 +219,7 @@ public final class Instance {
                 + "starts."));
     }
 
-    void disqualifyPlayer(final Player player) {
+    public void disqualifyPlayer(final ServerPlayer player) {
         this.scoreboard.killPlayer(player);
         this.playerDeaths.add(player.uniqueId());
         player.inventory().clear();

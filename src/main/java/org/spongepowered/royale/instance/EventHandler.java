@@ -43,6 +43,7 @@ import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.block.InteractBlockEvent;
 import org.spongepowered.api.event.cause.entity.damage.DamageTypes;
 import org.spongepowered.api.event.cause.entity.damage.source.DamageSource;
+import org.spongepowered.api.event.entity.ChangeEntityWorldEvent;
 import org.spongepowered.api.event.entity.DamageEntityEvent;
 import org.spongepowered.api.event.entity.DestructEntityEvent;
 import org.spongepowered.api.event.entity.MoveEntityEvent;
@@ -105,6 +106,11 @@ public final class EventHandler {
 
         // We only care about registered players
         if (!instance.get().isPlayerRegistered(player.uniqueId())) {
+            return;
+        }
+
+        if (event instanceof ChangeEntityWorldEvent && !((ChangeEntityWorldEvent) event).originalWorld().equals(((ChangeEntityWorldEvent) event).destinationWorld())) {
+            instance.get().disqualifyPlayer(player);
             return;
         }
 
