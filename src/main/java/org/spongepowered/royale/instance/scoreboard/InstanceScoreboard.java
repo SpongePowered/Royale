@@ -105,7 +105,7 @@ public final class InstanceScoreboard {
         this.sortScoreboard();
     }
 
-    public void killPlayer(final Player player) {
+    public void killPlayer(final ServerPlayer player) {
         if (!this.playerData.containsKey(player.uniqueId())) {
             return;
         }
@@ -114,6 +114,11 @@ public final class InstanceScoreboard {
         data.team.setPrefix(Component.text("", null, TextDecoration.STRIKETHROUGH));
         data.dead = true;
 
+        this.sortScoreboard();
+    }
+
+    public void removePlayer(final ServerPlayer player) {
+        final PlayerData data = this.playerData.remove(player.uniqueId());
         this.sortScoreboard();
     }
 

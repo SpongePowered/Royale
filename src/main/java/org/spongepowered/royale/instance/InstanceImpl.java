@@ -239,16 +239,26 @@ public final class InstanceImpl implements Instance {
 
     @Override
     public boolean disqualifyPlayers(final Collection<ServerPlayer> players) {
-        for (ServerPlayer player : players) {
-            this.removePlayer(player);
-            this.resetPlayer(player);
-            player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
+        if (this.state == State.IDLE) {
+            for (ServerPlayer player : players) {
+                this.registeredPlayers.remove(player.uniqueId());
+                final Vector3d spawn = this.playerSpawns.remove(player.uniqueId());
+                this.unusedSpawns.offer(spawn);
+
+                this.scoreboard.removePlayer(player);
+            }
+        } else {
+            for (ServerPlayer player : players) {
+                this.removePlayer(player);
+                this.resetPlayer(player);
+                player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
+            }
+            final int playersLeft = this.registeredPlayers.size() - this.playerDeaths.size();
+            if (playersLeft > 0) {
+                getWorld().get().sendActionBar(Component.text(playersLeft + " players left", NamedTextColor.GREEN));
+            }
+            getWorld().get().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
         }
-        final int playersLeft = this.registeredPlayers.size() - this.playerDeaths.size();
-        if (playersLeft > 0) {
-            getWorld().get().sendActionBar(Component.text(playersLeft + " players left", NamedTextColor.GREEN));
-        }
-        getWorld().get().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
         this.updateSign();
         return true;
     }
@@ -426,27 +436,34 @@ public final class InstanceImpl implements Instance {
 
     private void updateSign0(org.spongepowered.api.block.entity.BlockEntity sign) {
         Component statusLine;
-        Component headerLine = Component.text("Join Game", NamedTextColor.AQUA);
+        Component headerLine;
         final int playersTotal = this.registeredPlayers();
         switch (this.state) {
             case PRE_END:
+                headerLine = Component.text("Create Game", NamedTextColor.AQUA);
                 statusLine = Component.text("not ready", NamedTextColor.YELLOW);
                 break;
             case IDLE:
+                headerLine = Component.text("Join Game", NamedTextColor.AQUA);
                 statusLine = Component.text("waiting " + playersTotal + "/" + this.spawns(), NamedTextColor.GREEN);
                 break;
             case RUNNING:
+                headerLine = Component.text("Spectate Game", NamedTextColor.AQUA);
                 statusLine = Component.text("running " + playersLeft() + "/" + playersTotal, NamedTextColor.YELLOW);
                 break;
             case CLEANUP:
+                headerLine = Component.text("Spectate Game", NamedTextColor.AQUA);
                 statusLine = Component.text("cleanup " + (playersTotal - playersLeft()) + "/" + playersTotal, NamedTextColor.YELLOW);
                 break;
             default:
+                headerLine = Component.text("Royale", NamedTextColor.AQUA);
                 statusLine = Component.text(this.state.name());
         }
         sign.transform(Keys.SIGN_LINES, lines -> {
             lines.set(0, headerLine);
+            lines.set(1, this.getWorld().flatMap(w -> w.properties().displayName()).orElse(Component.text(this.worldKey.asString())));
             lines.set(2, statusLine);
+            lines.set(3, Component.text(this.instanceType.name()));
             return lines;
         });
     }

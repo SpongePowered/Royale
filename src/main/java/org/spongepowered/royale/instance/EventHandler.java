@@ -89,7 +89,7 @@ public final class EventHandler {
         }
 
         if (instanceOpt.get().isPlayerRegistered(player.uniqueId())) {
-            instanceOpt.get().disqualifyPlayers(Collections.singleton(player));
+            instanceOpt.get().kick(Collections.singleton(player));
             if (instanceOpt.get().isRoundOver()) {
                 if (world.players().isEmpty()) {
                     instanceOpt.get().advanceTo(InstanceImpl.State.FORCE_STOP);
@@ -117,6 +117,7 @@ public final class EventHandler {
 
         if (event instanceof ChangeEntityWorldEvent && !((ChangeEntityWorldEvent) event).originalWorld().equals(((ChangeEntityWorldEvent) event).destinationWorld())) {
             instance.get().disqualifyPlayers(Collections.singleton(player));
+            player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
             return;
         }
 
@@ -243,7 +244,6 @@ public final class EventHandler {
                     }
                     instance.updateSign();
                 } else {
-                    player.sendActionBar(Component.text(String.format("World '%s' isn't up yet! Creating instance...", worldKey.get()), NamedTextColor.RED));
                     sign.transform(Keys.SIGN_LINES, lines -> {
                         lines.set(2, Component.text("creating Instance", NamedTextColor.YELLOW));
                         return lines;
@@ -251,7 +251,7 @@ public final class EventHandler {
 
                     final InstanceType type = Constants.Plugin.INSTANCE_TYPE.get().value(typeKey.get());
                     Royale.getInstance().getInstanceManager().createInstance(worldKey.get(), type, false)
-                            .thenAcceptAsync(InstanceImpl::updateSign, Royale.getInstance().getTaskExecutorService());
+                            .thenAcceptAsync(instance -> instance.link((Sign) sign), Royale.getInstance().getTaskExecutorService());
                 }
             } else {
                 final Optional<ResourceKey> wKey = player.get(RoyaleKeys.WORLD);
