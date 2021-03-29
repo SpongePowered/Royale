@@ -26,21 +26,30 @@ package org.spongepowered.royale.api;
 
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.entity.Sign;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.instance.InstanceType;
+
+import java.util.Collection;
 
 public interface Instance {
 
     boolean addSpawnpoint(Vector3d vector3d);
 
+    boolean addPlayer(ServerPlayer player);
+
     boolean isFull();
 
     InstanceType getType();
+
+    InstanceState getState();
 
     ResourceKey getWorldKey();
 
     boolean link(Sign sign);
 
-    boolean kickAll();
+    boolean disqualifyPlayers(Collection<ServerPlayer> players);
+
+    boolean kick(Collection<ServerPlayer> players);
 
 }

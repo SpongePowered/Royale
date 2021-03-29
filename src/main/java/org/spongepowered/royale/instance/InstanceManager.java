@@ -119,14 +119,7 @@ public final class InstanceManager {
             }
 
             // Move everyone out
-            for (final ServerPlayer player : world.get().players()) {
-                if (instance.isPlayerRegistered(player.uniqueId())) {
-                    this.convertToLobbyPlayer(player);
-                    player.inventory().clear();
-                }
-
-                player.setLocation(ServerLocation.of(lobby.get(), lobby.get().properties().spawnPosition()));
-            }
+            instance.kick(world.get().players());
         }
 
         this.instances.remove(instance.getWorldKey());
@@ -146,10 +139,5 @@ public final class InstanceManager {
 
     public Collection<InstanceImpl> getAll() {
         return Collections.unmodifiableCollection(this.instances.values());
-    }
-
-    private void convertToLobbyPlayer(final ServerPlayer player) {
-        Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
-        Utils.resetPlayer(player);
     }
 }

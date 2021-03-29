@@ -61,6 +61,7 @@ import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.api.RoyaleKeys;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,7 +89,7 @@ public final class EventHandler {
         }
 
         if (instanceOpt.get().isPlayerRegistered(player.uniqueId())) {
-            instanceOpt.get().disqualifyPlayer(player);
+            instanceOpt.get().disqualifyPlayers(Collections.singleton(player));
             if (instanceOpt.get().isRoundOver()) {
                 if (world.players().isEmpty()) {
                     instanceOpt.get().advanceTo(InstanceImpl.State.FORCE_STOP);
@@ -115,7 +116,7 @@ public final class EventHandler {
         }
 
         if (event instanceof ChangeEntityWorldEvent && !((ChangeEntityWorldEvent) event).originalWorld().equals(((ChangeEntityWorldEvent) event).destinationWorld())) {
-            instance.get().disqualifyPlayer(player);
+            instance.get().disqualifyPlayers(Collections.singleton(player));
             return;
         }
 
@@ -132,7 +133,7 @@ public final class EventHandler {
 
         if (instance.isPresent()) {
             if (instance.get().isPlayerRegistered(player.uniqueId())) {
-                instance.get().disqualifyPlayer(player);
+                instance.get().disqualifyPlayers(Collections.singleton(player));
                 event.setCancelled(true);
                 player.offer(Keys.HEALTH, player.maxHealth().get());
                 player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
@@ -232,7 +233,7 @@ public final class EventHandler {
                 final Optional<InstanceImpl> optInstance = Royale.getInstance().getInstanceManager().getInstance(worldKey.get());
                 if (optInstance.isPresent()) {
                     final InstanceImpl instance = optInstance.get();
-                    if (!instance.canRegisterMorePlayers()) {
+                    if (instance.isFull()) {
                         player.sendActionBar(Component.text("World is full!", NamedTextColor.RED));
                     } else {
                         player.sendActionBar(Component.text(String.format("Joining world '%s'", worldKey.get()), NamedTextColor.GREEN));
@@ -277,10 +278,4 @@ public final class EventHandler {
             }
         });
     }
-
-    private void convertToLobbyPlayer(final ServerPlayer player) {
-        player.setScoreboard(Sponge.server().serverScoreboard().orElse(null));
-        Utils.resetPlayer(player);
-    }
-
 }

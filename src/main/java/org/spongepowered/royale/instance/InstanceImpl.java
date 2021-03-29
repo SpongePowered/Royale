@@ -28,7 +28,6 @@ import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.entity.Sign;
@@ -58,6 +57,7 @@ import org.spongepowered.royale.instance.task.StartTask;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -80,8 +80,8 @@ public final class InstanceImpl implements Instance {
     private final Set<UUID> playerDeaths = new HashSet<>();
     private final Set<UUID> tasks = new LinkedHashSet<>();
     private final InstanceScoreboard scoreboard;
+    private final List<ServerLocation> signLoc;
     private State state = State.IDLE;
-    private List<ServerLocation> signLoc;
 
     public InstanceImpl(final ServerWorld world, final InstanceType instanceType) {
         this.worldKey = world.key();
@@ -90,6 +90,7 @@ public final class InstanceImpl implements Instance {
         this.signLoc = new ArrayList<>();
     }
 
+    @Override
     public ResourceKey getWorldKey() {
         return this.worldKey;
     }
@@ -105,14 +106,24 @@ public final class InstanceImpl implements Instance {
     }
 
     @Override
-    public boolean isFull() {
-        return false; //TODO
+    public boolean addPlayer(ServerPlayer player) {
+        if (this.isFull()) {
+            throw new RuntimeException("Instance is full (" + this.unusedSpawns.size() + "/" + this.registeredPlayers.size() + ")");
+        }
+        return this.registeredPlayers.add(player.uniqueId());
     }
 
+    @Override
+    public boolean isFull() {
+        return this.unusedSpawns.isEmpty();
+    }
+
+    @Override
     public InstanceType getType() {
         return this.instanceType;
     }
 
+    @Override
     public State getState() {
         return this.state;
     }
@@ -174,10 +185,6 @@ public final class InstanceImpl implements Instance {
         this.state = state;
     }
 
-    boolean canRegisterMorePlayers() {
-        return this.unusedSpawns.size() != 0;
-    }
-
     public boolean registerPlayer(final Player player) {
         if (this.unusedSpawns.isEmpty()) {
             player.sendMessage(Identity.nil(), Component.text("This instance cannot support any additional players!", NamedTextColor.RED));
@@ -230,19 +237,48 @@ public final class InstanceImpl implements Instance {
                 + "starts."));
     }
 
-    public void disqualifyPlayer(final ServerPlayer player) {
+    @Override
+    public boolean disqualifyPlayers(final Collection<ServerPlayer> players) {
+        for (ServerPlayer player : players) {
+            this.removePlayer(player);
+            this.resetPlayer(player);
+            player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
+        }
+        final int playersLeft = this.registeredPlayers.size() - this.playerDeaths.size();
+        if (playersLeft > 0) {
+            getWorld().get().sendActionBar(Component.text(playersLeft + " players left", NamedTextColor.GREEN));
+        }
+        getWorld().get().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
+        this.updateSign();
+        return true;
+    }
+
+    @Override
+    public boolean kick(Collection<ServerPlayer> players) {
+        disqualifyPlayers(players);
+        for (ServerPlayer player : players) {
+            final Optional<ServerWorld> lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY);
+            if (!lobby.isPresent()) {
+                throw new IllegalStateException("Lobby world was not found!");
+            }
+            Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
+            player.setLocation(ServerLocation.of(lobby.get(), lobby.get().properties().spawnPosition()));
+        }
+        return true;
+    }
+
+    private void removePlayer(final ServerPlayer player) {
         this.scoreboard.killPlayer(player);
         this.playerDeaths.add(player.uniqueId());
         player.inventory().clear();
-        player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
-        final int playersLeft = this.playersLeft();
-        if (playersLeft > 0) {
-            for (Player playerInWorld : player.world().players()) {
-                playerInWorld.sendActionBar(Component.text(playersLeft + " players left", NamedTextColor.GREEN));
-            }
-        }
-        player.world().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
-        this.updateSign();
+    }
+
+    private void resetPlayer(final ServerPlayer player) {
+        player.offer(Keys.HEALTH, 20d);
+        player.offer(Keys.FOOD_LEVEL, 20);
+        player.offer(Keys.SATURATION, 20d);
+        player.offer(Keys.EXHAUSTION, 20d);
+        player.remove(Keys.POTION_EFFECTS);
     }
 
     public int playersLeft() {
@@ -254,7 +290,8 @@ public final class InstanceImpl implements Instance {
     }
 
     private void participate(final ServerPlayer player, final boolean first) {
-        Utils.resetPlayer(player);
+        this.resetPlayer(player);
+        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
 
         if (first) {
             player.inventory().clear();
@@ -384,11 +421,6 @@ public final class InstanceImpl implements Instance {
                 location.blockEntity().ifPresent(this::updateSign0);
             }
         }
-    }
-
-    @Override
-    public boolean kickAll() {
-        return false;
     }
 
     private void updateSign0(org.spongepowered.api.block.entity.BlockEntity sign) {
