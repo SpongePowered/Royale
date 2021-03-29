@@ -263,6 +263,7 @@ public final class InstanceImpl implements Instance {
             }
             Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
             player.setLocation(ServerLocation.of(lobby.get(), lobby.get().properties().spawnPosition()));
+            player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
         }
         return true;
     }
