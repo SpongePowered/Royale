@@ -26,6 +26,7 @@ package org.spongepowered.royale.instance;
 
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.world.SerializationBehavior;
 import org.spongepowered.api.world.server.ServerLocation;
@@ -39,6 +40,7 @@ import org.spongepowered.royale.instance.gen.InstanceMutatorPipeline;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -99,6 +101,12 @@ public final class InstanceManager {
         } else {
             instance.advanceTo(InstanceImpl.State.PRE_END);
         }
+    }
+
+    void restartInstance(final ResourceKey key, InstanceType instanceType, List<ServerLocation> signLoc) {
+        Objects.requireNonNull(key, "key must not be null");
+        this.unloadInstance(key).thenComposeAsync(b -> this.createInstance(key, instanceType, false), Royale.getInstance().getTaskExecutorService())
+                                .thenAcceptAsync(instance -> instance.link(signLoc), Royale.getInstance().getTaskExecutorService());
     }
 
     CompletableFuture<Boolean> unloadInstance(final ResourceKey key) {

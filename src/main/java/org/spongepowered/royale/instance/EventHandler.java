@@ -27,8 +27,6 @@ package org.spongepowered.royale.instance;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.adventure.SpongeComponents;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.block.transaction.Operations;
@@ -62,7 +60,6 @@ import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.api.RoyaleKeys;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 public final class EventHandler {
@@ -142,9 +139,6 @@ public final class EventHandler {
                     list.add(PotionEffect.of(PotionEffectTypes.NIGHT_VISION, 1, 1000000000));
                     return list;
                 });
-                if (instance.get().isRoundOver()) {
-                    instance.get().advanceTo(InstanceImpl.State.PRE_END);
-                }
             }
         }
     }

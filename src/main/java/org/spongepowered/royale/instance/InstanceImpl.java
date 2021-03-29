@@ -258,6 +258,9 @@ public final class InstanceImpl implements Instance {
             getWorld().get().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
         }
         this.updateSign();
+        if (this.isRoundOver()) {
+            this.advanceTo(InstanceImpl.State.PRE_END);
+        }
         return true;
     }
 
@@ -374,6 +377,8 @@ public final class InstanceImpl implements Instance {
                 ).uniqueId());
                 break;
             case POST_END:
+                Royale.getInstance().getInstanceManager().restartInstance(this.worldKey, this.instanceType, this.signLoc);
+                break;
             case FORCE_STOP:
                 Royale.getInstance().getInstanceManager().unloadInstance(this.worldKey).join();
                 break;
@@ -420,6 +425,10 @@ public final class InstanceImpl implements Instance {
         return false;
     }
 
+    public void link(List<ServerLocation> signLoc) {
+        this.signLoc.addAll(signLoc);
+        this.updateSign();
+    }
     public void updateSign() {
         for (ServerLocation location : this.signLoc) {
             if (location.world().isLoaded()) {
