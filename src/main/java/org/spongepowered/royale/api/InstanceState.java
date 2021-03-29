@@ -26,6 +26,10 @@ package org.spongepowered.royale.api;
 
 public interface InstanceState {
 
+    default boolean canAcceptPlayers() {
+        return false;
+    }
+
     default boolean canAnyoneMove() {
         return true;
     }

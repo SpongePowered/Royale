@@ -47,10 +47,11 @@ import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.jvm.Plugin;
+import org.spongepowered.royale.api.InstanceManager;
 import org.spongepowered.royale.api.RoyaleKeys;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.EventHandler;
-import org.spongepowered.royale.instance.InstanceManager;
+import org.spongepowered.royale.instance.InstanceManagerImpl;
 import org.spongepowered.royale.instance.InstanceType;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
@@ -82,7 +83,7 @@ public final class Royale {
     public Royale(final PluginContainer plugin, @ConfigDir(sharedRoot = false) final Path configFile) {
         Royale.INSTANCE = this;
 
-        this.instanceManager = new InstanceManager();
+        this.instanceManager = new InstanceManagerImpl();
         this.plugin = plugin;
         this.configFile = configFile;
         this.options = ConfigurationOptions.defaults()

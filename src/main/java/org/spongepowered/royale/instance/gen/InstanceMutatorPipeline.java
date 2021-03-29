@@ -53,9 +53,7 @@ public final class InstanceMutatorPipeline {
 
     public void mutate(final InstanceImpl instance) {
 
-        final ServerWorld world = instance.getWorld()
-                .orElseThrow(() -> new RuntimeException(String.format("Attempting to mutate instance '%s' but it's world is not loaded!"
-                        , instance.getWorldKey())));
+        final ServerWorld world = instance.world();
 
         final double r = world.border().diameter() / 2;
         final Vector3i min = world.border().center().toInt().sub(r, world.border().center().getY(), r);

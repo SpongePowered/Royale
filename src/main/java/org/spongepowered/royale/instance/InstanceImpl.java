@@ -24,7 +24,6 @@
  */
 package org.spongepowered.royale.instance;
 
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -33,7 +32,6 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.sound.SoundTypes;
-import org.spongepowered.api.entity.living.player.Player;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.item.ItemTypes;
@@ -95,8 +93,8 @@ public final class InstanceImpl implements Instance {
         return this.worldKey;
     }
 
-    public Optional<ServerWorld> getWorld() {
-        return Sponge.server().worldManager().world(this.worldKey);
+    public ServerWorld world() {
+        return Sponge.server().worldManager().world(this.worldKey).orElseThrow(() -> new IllegalStateException("The world of this instance is unloaded"));
     }
 
     @Override
@@ -110,7 +108,45 @@ public final class InstanceImpl implements Instance {
         if (this.isFull()) {
             throw new RuntimeException("Instance is full (" + this.unusedSpawns.size() + "/" + this.registeredPlayers.size() + ")");
         }
-        return this.registeredPlayers.add(player.uniqueId());
+        if (this.state.canAcceptPlayers()) {
+            throw new IllegalStateException("This instance doesn't accept new player");
+        }
+
+        final boolean result = this.registeredPlayers.add(player.uniqueId());
+        if (!result) {
+            throw new IllegalArgumentException("Player is already a registered");
+        }
+
+        final ServerWorld world = Sponge.server().worldManager().world(this.worldKey)
+                .orElseThrow(() -> new RuntimeException("Attempted to spawn a player in an instance for an offline "
+                        + "world!"));
+
+        this.scoreboard.addPlayer(player);
+
+        final Vector3d playerSpawn = this.unusedSpawns.pop();
+        player.setLocation(ServerLocation.of(world, playerSpawn));
+
+        this.playerSpawns.put(player.uniqueId(), playerSpawn);
+
+        if (this.instanceType.getAutomaticStartPlayerCount() == this.registeredPlayers.size()) {
+            try {
+                Royale.getInstance().getInstanceManager().startInstance(this.worldKey);
+            } catch (final UnknownInstanceException e) {
+                e.printStackTrace();
+            }
+        }
+
+        this.participate(player, true);
+        this.updateSign();
+        return true;
+    }
+
+    @Override
+    public boolean addSpectator(ServerPlayer player) {
+        //TODO fix location
+        player.setLocation(ServerLocation.of(this.worldKey, this.world().border().center()));
+        player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
+        return true;
     }
 
     @Override
@@ -136,14 +172,6 @@ public final class InstanceImpl implements Instance {
     @Override
     public State getState() {
         return this.state;
-    }
-
-    public InstanceScoreboard getScoreboard() {
-        return this.scoreboard;
-    }
-
-    private int registeredPlayers() {
-        return this.registeredPlayers.size();
     }
 
     public void advance() {
@@ -183,58 +211,6 @@ public final class InstanceImpl implements Instance {
         this.state = state;
     }
 
-    public boolean registerPlayer(final Player player) {
-        if (this.unusedSpawns.isEmpty()) {
-            player.sendMessage(Identity.nil(), Component.text("This instance cannot support any additional players!", NamedTextColor.RED));
-            return false;
-        }
-
-        this.registeredPlayers.add(player.uniqueId());
-        return true;
-    }
-
-    public void spawnPlayer(final ServerPlayer player) {
-        if (!this.registeredPlayers.contains(player.uniqueId())) {
-            throw new IllegalStateException("Attempted to spawn a player into this round who wasn't registered!");
-        }
-
-        final ServerWorld world = Sponge.server().worldManager().world(this.worldKey)
-                .orElseThrow(() -> new RuntimeException("Attempted to spawn a player in an instance for an offline "
-                        + "world!"));
-
-        // If the player has a consumed spawn and this method is called, we put them back at spawn
-        if (this.playerSpawns.containsKey(player.uniqueId())) {
-            player.setLocation(ServerLocation.of(world, this.playerSpawns.get(player.uniqueId())));
-            return;
-        }
-
-        if (this.unusedSpawns.isEmpty()) {
-            throw new IllegalStateException("No spawn available for player!");
-        }
-
-        final Vector3d playerSpawn = this.unusedSpawns.pop();
-
-        this.scoreboard.addPlayer(player);
-
-        player.setLocation(ServerLocation.of(world, playerSpawn));
-
-        this.playerSpawns.put(player.uniqueId(), playerSpawn);
-
-        final int playerCount = this.instanceType.getAutomaticStartPlayerCount();
-        if (playerCount == this.registeredPlayers.size() && this.state == State.IDLE) {
-            try {
-                Royale.getInstance().getInstanceManager().startInstance(this.worldKey);
-            } catch (final UnknownInstanceException e) {
-                e.printStackTrace();
-            }
-        }
-
-        this.participate(player, true);
-
-        player.sendMessage(Component.text("Welcome to the game. Please stand by while others join. You will not be able to move until the game "
-                + "starts."));
-    }
-
     @Override
     public boolean disqualifyPlayers(final Collection<ServerPlayer> players) {
         if (this.state == State.IDLE) {
@@ -253,9 +229,9 @@ public final class InstanceImpl implements Instance {
             }
             final int playersLeft = this.registeredPlayers.size() - this.playerDeaths.size();
             if (playersLeft > 0) {
-                getWorld().get().sendActionBar(Component.text(playersLeft + " players left", NamedTextColor.GREEN));
+                this.world().sendActionBar(Component.text(playersLeft + " players left", NamedTextColor.GREEN));
             }
-            getWorld().get().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
+            this.world().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
         }
         this.updateSign();
         if (this.isRoundOver()) {
@@ -297,7 +273,7 @@ public final class InstanceImpl implements Instance {
         return this.playerSpawns.size() - this.playerDeaths.size();
     }
 
-    boolean isRoundOver() {
+    private boolean isRoundOver() {
         return this.playerDeaths.size() >= this.playerSpawns.size() - 1;
     }
 
@@ -377,7 +353,15 @@ public final class InstanceImpl implements Instance {
                 ).uniqueId());
                 break;
             case POST_END:
-                Royale.getInstance().getInstanceManager().restartInstance(this.worldKey, this.instanceType, this.signLoc);
+                Royale.getInstance().getInstanceManager().unloadInstance(this.worldKey)
+                        .thenComposeAsync(b -> Royale.getInstance().getInstanceManager().createInstance(this.worldKey, this.instanceType, false), Royale.getInstance().getTaskExecutorService())
+                        .thenAcceptAsync(instance -> {
+                            for (ServerLocation location : this.signLoc) {
+                                location.blockEntity()
+                                        .filter(blockEntity -> blockEntity instanceof Sign)
+                                        .ifPresent(sign -> instance.link((Sign) sign));
+                            }
+                        }, Royale.getInstance().getTaskExecutorService());
                 break;
             case FORCE_STOP:
                 Royale.getInstance().getInstanceManager().unloadInstance(this.worldKey).join();
@@ -396,7 +380,7 @@ public final class InstanceImpl implements Instance {
         if (this == o) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (o == null || this.getClass() != o.getClass()) {
             return false;
         }
         final InstanceImpl instance = (InstanceImpl) o;
@@ -412,24 +396,20 @@ public final class InstanceImpl implements Instance {
                 .toString();
     }
 
-    public int spawns() {
+    private int spawns() {
         return this.registeredPlayers.size() + this.unusedSpawns.size();
     }
 
     @Override
     public boolean link(Sign sign) {
         if (this.signLoc.add(sign.serverLocation())) {
-            updateSign0(sign);
+            this.updateSign0(sign);
             return true;
         }
         return false;
     }
 
-    public void link(Set<ServerLocation> signLoc) {
-        this.signLoc.addAll(signLoc);
-        this.updateSign();
-    }
-    public void updateSign() {
+    void updateSign() {
         for (ServerLocation location : this.signLoc) {
             if (location.world().isLoaded()) {
                 location.blockEntity().ifPresent(this::updateSign0);
@@ -440,7 +420,7 @@ public final class InstanceImpl implements Instance {
     private void updateSign0(org.spongepowered.api.block.entity.BlockEntity sign) {
         Component statusLine;
         Component headerLine;
-        final int playersTotal = this.registeredPlayers();
+        final int playersTotal = this.registeredPlayers.size();
         switch (this.state) {
             case PRE_END:
                 headerLine = Component.text("Create Game", NamedTextColor.AQUA);
@@ -464,7 +444,7 @@ public final class InstanceImpl implements Instance {
         }
         sign.transform(Keys.SIGN_LINES, lines -> {
             lines.set(0, headerLine);
-            lines.set(1, this.getWorld().flatMap(w -> w.properties().displayName()).orElse(Component.text(this.worldKey.asString())));
+            lines.set(1, Component.text(this.worldKey.asString()));
             lines.set(2, statusLine);
             lines.set(3, Component.text(this.instanceType.name()));
             return lines;
@@ -484,6 +464,11 @@ public final class InstanceImpl implements Instance {
             @Override
             public boolean doesCheckRoundStatusOnAdvance() {
                 return false;
+            }
+
+            @Override
+            public boolean canAcceptPlayers() {
+                return true;
             }
         },
         PRE_START {

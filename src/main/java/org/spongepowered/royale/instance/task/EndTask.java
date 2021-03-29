@@ -63,7 +63,7 @@ public final class EndTask extends InstanceTask {
 
         this.handle = task;
 
-        final ServerWorld world = this.getInstance().getWorld().orElse(null);
+        final ServerWorld world = this.getInstance().world();
 
         if (this.winners.isEmpty() || world == null || !world.isLoaded()) {
             this.cancel();

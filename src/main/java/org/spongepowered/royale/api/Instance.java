@@ -27,6 +27,7 @@ package org.spongepowered.royale.api;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.instance.InstanceType;
 
@@ -37,6 +38,8 @@ public interface Instance {
     boolean addSpawnpoint(Vector3d vector3d);
 
     boolean addPlayer(ServerPlayer player);
+
+    boolean addSpectator(ServerPlayer player);
 
     boolean isPlayerRegistered(ServerPlayer player);
 
@@ -50,10 +53,14 @@ public interface Instance {
 
     ResourceKey getWorldKey();
 
+    ServerWorld world();
+
     boolean link(Sign sign);
 
+    //TODO
     boolean disqualifyPlayers(Collection<ServerPlayer> players);
 
+    //TODO
     boolean kick(Collection<ServerPlayer> players);
 
 }

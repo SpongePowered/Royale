@@ -33,6 +33,8 @@ import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
+import org.spongepowered.royale.api.Instance;
+import org.spongepowered.royale.api.InstanceManager;
 import org.spongepowered.royale.instance.exception.InstanceAlreadyExistsException;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 import org.spongepowered.royale.instance.gen.InstanceMutatorPipeline;
@@ -47,11 +49,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-public final class InstanceManager {
+public final class InstanceManagerImpl implements InstanceManager {
 
     private final Map<ResourceKey, InstanceImpl> instances = new HashMap<>();
 
-    public CompletableFuture<InstanceImpl> createInstance(final ResourceKey key, final InstanceType type, final boolean force) {
+    @Override
+    public CompletableFuture<Instance> createInstance(final ResourceKey key, final InstanceType type, final boolean force) {
         Objects.requireNonNull(key, "key must not be null");
         Objects.requireNonNull(type, "type must not be null");
 
@@ -80,6 +83,7 @@ public final class InstanceManager {
         }, Royale.getInstance().getTaskExecutorService());
     }
 
+    @Override
     public void startInstance(final ResourceKey key) throws UnknownInstanceException {
         Objects.requireNonNull(key, "key must not be null");
         final InstanceImpl instance = this.instances.get(key);
@@ -90,6 +94,7 @@ public final class InstanceManager {
         instance.advanceTo(InstanceImpl.State.PRE_START);
     }
 
+    @Override
     public void endInstance(final ResourceKey key, final boolean force) throws UnknownInstanceException {
         Objects.requireNonNull(key, "key must not be null");
         final InstanceImpl instance = this.instances.get(key);
@@ -104,13 +109,8 @@ public final class InstanceManager {
         }
     }
 
-    void restartInstance(final ResourceKey key, InstanceType instanceType, Set<ServerLocation> signLoc) {
-        Objects.requireNonNull(key, "key must not be null");
-        this.unloadInstance(key).thenComposeAsync(b -> this.createInstance(key, instanceType, false), Royale.getInstance().getTaskExecutorService())
-                                .thenAcceptAsync(instance -> instance.link(signLoc), Royale.getInstance().getTaskExecutorService());
-    }
-
-    CompletableFuture<Boolean> unloadInstance(final ResourceKey key) {
+    @Override
+    public CompletableFuture<Boolean> unloadInstance(final ResourceKey key) {
         Objects.requireNonNull(key, "key must not be null");
         final InstanceImpl instance = this.instances.get(key);
         if (instance == null) {
@@ -141,12 +141,14 @@ public final class InstanceManager {
         return CompletableFuture.completedFuture(true);
     }
 
-    public Optional<InstanceImpl> getInstance(final ResourceKey key) {
+    @Override
+    public Optional<Instance> getInstance(final ResourceKey key) {
         Objects.requireNonNull(key, "key must not be null");
         return Optional.ofNullable(this.instances.get(key));
     }
 
-    public Collection<InstanceImpl> getAll() {
+    @Override
+    public Collection<Instance> getAll() {
         return Collections.unmodifiableCollection(this.instances.values());
     }
 }

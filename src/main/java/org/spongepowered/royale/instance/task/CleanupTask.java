@@ -99,7 +99,7 @@ public final class CleanupTask extends InstanceTask {
         this.handle = task;
 
         final ServerWorld world =
-                this.getInstance().getWorld().orElseThrow(() -> new RuntimeException("Attempt made to cleanup an instance whose world is unloaded!"));
+                this.getInstance().world();
 
         final TextComponent append = Component.text("OVERTIME!", NamedTextColor.RED)
                 .append(Component.space())

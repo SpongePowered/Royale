@@ -70,7 +70,7 @@ public final class ProgressTask extends InstanceTask {
     public void accept(final ScheduledTask task) {
         this.handle = task;
 
-        final ServerWorld world = this.getInstance().getWorld().orElse(null);
+        final ServerWorld world = this.getInstance().world();
 
         // Make sure the world is still around and loaded
         if (world != null && world.isLoaded()) {
