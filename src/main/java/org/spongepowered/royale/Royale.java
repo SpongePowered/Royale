@@ -33,7 +33,6 @@ import org.spongepowered.api.command.Command;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.data.DataRegistration;
 import org.spongepowered.api.data.persistence.DataStore;
-import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.lifecycle.RegisterBuilderEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
@@ -41,17 +40,18 @@ import org.spongepowered.api.event.lifecycle.RegisterDataEvent;
 import org.spongepowered.api.event.lifecycle.RegisterRegistryEvent;
 import org.spongepowered.api.event.lifecycle.StartedEngineEvent;
 import org.spongepowered.api.event.lifecycle.StartingEngineEvent;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.api.scheduler.TaskExecutorService;
 import org.spongepowered.api.world.server.WorldManager;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationOptions;
 import org.spongepowered.plugin.PluginContainer;
 import org.spongepowered.plugin.jvm.Plugin;
+import org.spongepowered.royale.api.RoyaleKeys;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.EventHandler;
 import org.spongepowered.royale.instance.InstanceManager;
 import org.spongepowered.royale.instance.InstanceType;
-import org.spongepowered.royale.api.RoyaleKeys;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.gen.InstanceMutator;
 import org.spongepowered.royale.instance.gen.mutator.ChestMutator;
@@ -121,7 +121,7 @@ public final class Royale {
         final ResourceKey datastoreKey = ResourceKey.of(this.plugin, "datastore");
 
         final DataStore dataStore = DataStore.builder().pluginData(datastoreKey)
-                .holder(Sign.class, ServerPlayer.class)
+                .holder(Sign.class, ItemStack.class)
                 .keys(RoyaleKeys.WORLD, RoyaleKeys.TYPE)
                 .build();
 

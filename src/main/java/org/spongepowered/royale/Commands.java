@@ -42,7 +42,10 @@ import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.command.parameter.managed.ValueParameter;
 import org.spongepowered.api.command.parameter.managed.clientcompletion.ClientCompletionType;
 import org.spongepowered.api.command.parameter.managed.clientcompletion.ClientCompletionTypes;
+import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.item.ItemTypes;
+import org.spongepowered.api.item.inventory.ItemStack;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
 import org.spongepowered.royale.instance.InstanceImpl;
@@ -161,24 +164,15 @@ final class Commands {
                     final ServerPlayer player = (ServerPlayer) context.cause().root();
                     final ResourceKey targetWorldKey = context.requireOne(Commands.WORLD_KEY_PARAMETER);
                     final InstanceType type = context.requireOne(Commands.INSTANCE_TYPE_PARAMETER);
-                    player.offer(RoyaleKeys.WORLD, targetWorldKey);
-                    player.offer(RoyaleKeys.TYPE, type.key());
-                    return CommandResult.success();
-                })
-                .build();
-    }
-
-    private static Command.Parameterized unlinkCommand() {
-        return Command.builder()
-                .permission(Constants.Plugin.ID + ".command.unlink")
-                .executor(context -> {
-                    if (!(context.cause().root() instanceof ServerPlayer)) {
-                        throw new CommandException(Component.text("A player needs to be provided if you are not a player!", NamedTextColor.RED));
+                    final ItemStack stack = player.itemInHand(HandTypes.MAIN_HAND);
+                    if (stack.type().isAnyOf(ItemTypes.ACACIA_SIGN, ItemTypes.BIRCH_SIGN, ItemTypes.DARK_OAK_SIGN, ItemTypes.JUNGLE_SIGN, ItemTypes.OAK_SIGN, ItemTypes.SPRUCE_SIGN, ItemTypes.CRIMSON_SIGN, ItemTypes.WARPED_SIGN)) {
+                        stack.offer(RoyaleKeys.WORLD, targetWorldKey);
+                        stack.offer(RoyaleKeys.TYPE, type.key());
+                        player.setItemInHand(HandTypes.MAIN_HAND, stack);
+                        context.sendMessage(Identity.nil(), Component.text("Place down your sign to link it to the instance", NamedTextColor.YELLOW));
+                    } else {
+                        context.sendMessage(Identity.nil(), Component.text("You need to hold a sign in your hand", NamedTextColor.RED));
                     }
-
-                    final ServerPlayer player = (ServerPlayer) context.cause().root();
-                    player.remove(RoyaleKeys.WORLD);
-                    player.remove(RoyaleKeys.TYPE);
                     return CommandResult.success();
                 })
                 .build();
@@ -345,7 +339,6 @@ final class Commands {
                 .addChild(Commands.createCommand(), "create")
                 .addChild(Commands.statusCommand(), "status")
                 .addChild(Commands.linkCommand(), "link")
-                .addChild(Commands.unlinkCommand(), "unlink")
                 .addChild(Commands.startCommand(), "start")
                 .addChild(Commands.endCommand(), "end")
                 .addChild(Commands.joinCommand(), "join")
