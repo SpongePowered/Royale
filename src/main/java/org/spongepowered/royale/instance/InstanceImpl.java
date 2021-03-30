@@ -108,7 +108,7 @@ public final class InstanceImpl implements Instance {
         if (this.isFull()) {
             throw new RuntimeException("Instance is full (" + this.unusedSpawns.size() + "/" + this.registeredPlayers.size() + ")");
         }
-        if (this.state.canAcceptPlayers()) {
+        if (!this.state.canAcceptPlayers()) {
             throw new IllegalStateException("This instance doesn't accept new player");
         }
 
