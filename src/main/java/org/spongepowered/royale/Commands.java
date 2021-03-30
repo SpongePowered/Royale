@@ -152,7 +152,7 @@ final class Commands {
                                 final Optional<ServerWorld> lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY);
                                 if (lobby.isPresent()) {
                                     serverPlayer.setLocation(ServerLocation.of(Constants.Map.Lobby.LOBBY_WORLD_KEY, lobby.get().properties().spawnPosition()));
-                                    serverPlayer.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
+                                    serverPlayer.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
                                 }
                             })));
                     for (Instance instance : Royale.getInstance().getInstanceManager().getAll()) {
