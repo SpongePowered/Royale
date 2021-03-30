@@ -34,8 +34,6 @@ import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
-import org.spongepowered.api.item.ItemTypes;
-import org.spongepowered.api.item.inventory.ItemStackSnapshot;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.server.ServerLocation;
@@ -44,7 +42,6 @@ import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.api.Instance;
-import org.spongepowered.royale.api.InstanceState;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 import org.spongepowered.royale.instance.scoreboard.InstanceScoreboard;
 import org.spongepowered.royale.instance.task.CleanupTask;
@@ -56,6 +53,7 @@ import org.spongepowered.royale.instance.task.StartTask;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -72,7 +70,6 @@ public final class InstanceImpl implements Instance {
 
     private final ResourceKey worldKey;
     private final InstanceType instanceType;
-    private final Set<UUID> registeredPlayers = new HashSet<>();
     private final Deque<Vector3d> unusedSpawns = new ArrayDeque<>();
     private final Map<UUID, Vector3d> playerSpawns = new HashMap<>();
     private final Set<UUID> playerDeaths = new HashSet<>();
@@ -80,6 +77,7 @@ public final class InstanceImpl implements Instance {
     private final InstanceScoreboard scoreboard;
     private final Set<ServerLocation> signLoc;
     private State state = State.IDLE;
+    private UUID winner;
 
     public InstanceImpl(final ServerWorld world, final InstanceType instanceType) {
         this.worldKey = world.key();
@@ -93,6 +91,7 @@ public final class InstanceImpl implements Instance {
         return this.worldKey;
     }
 
+    @Override
     public ServerWorld world() {
         return Sponge.server().worldManager().world(this.worldKey).orElseThrow(() -> new IllegalStateException("The world of this instance is unloaded"));
     }
@@ -106,37 +105,66 @@ public final class InstanceImpl implements Instance {
     @Override
     public boolean addPlayer(ServerPlayer player) {
         if (this.isFull()) {
-            throw new RuntimeException("Instance is full (" + this.unusedSpawns.size() + "/" + this.registeredPlayers.size() + ")");
+            throw new RuntimeException("Instance is full (" + this.unusedSpawns.size() + "/" + this.playerSpawns.size() + ")");
         }
-        if (!this.state.canAcceptPlayers()) {
-            throw new IllegalStateException("This instance doesn't accept new player");
-        }
-
-        final boolean result = this.registeredPlayers.add(player.uniqueId());
-        if (!result) {
-            throw new IllegalArgumentException("Player is already a registered");
+        if (!this.state.canPlayersJoin()) {
+            throw new IllegalStateException("This instance doesn't accept new players");
         }
 
-        final ServerWorld world = Sponge.server().worldManager().world(this.worldKey)
-                .orElseThrow(() -> new RuntimeException("Attempted to spawn a player in an instance for an offline "
-                        + "world!"));
-
-        this.scoreboard.addPlayer(player);
+        final ServerWorld world = this.world();
 
         final Vector3d playerSpawn = this.unusedSpawns.pop();
         player.setLocation(ServerLocation.of(world, playerSpawn));
 
-        this.playerSpawns.put(player.uniqueId(), playerSpawn);
+        final Vector3d previous = this.playerSpawns.putIfAbsent(player.uniqueId(), playerSpawn);
+        if (previous != null) {
+            throw new IllegalArgumentException("Player is already registered");
+        }
 
-        if (this.instanceType.getAutomaticStartPlayerCount() == this.registeredPlayers.size()) {
+        this.scoreboard.addPlayer(player);
+
+        if (this.isFull() || this.instanceType.getAutomaticStartPlayerCount() == this.playerSpawns.size()) {
             try {
                 Royale.getInstance().getInstanceManager().startInstance(this.worldKey);
-            } catch (final UnknownInstanceException e) {
+            } catch (UnknownInstanceException e) {
                 e.printStackTrace();
             }
         }
 
-        this.participate(player, true);
+        this.resetPlayer(player);
+        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
+        this.updateSign();
+        return true;
+    }
+
+    @Override
+    public boolean removePlayer(final ServerPlayer player) {
+        if (!this.isPlayerRegistered(player)) {
+            throw new IllegalArgumentException("Player is not registered");
+        }
+        this.resetPlayer(player);
+        player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
+
+        if (this.state == State.IDLE) {
+            final Vector3d spawn = this.playerSpawns.remove(player.uniqueId());
+            this.unusedSpawns.offer(spawn);
+
+            this.scoreboard.removePlayer(player);
+        } else {
+            this.scoreboard.killPlayer(player);
+            this.playerDeaths.add(player.uniqueId());
+
+            final int playersLeft = this.playerSpawns.size() - this.playerDeaths.size();
+            if (playersLeft > 0) {
+                this.world().sendActionBar(Component.text(playersLeft + " players left", NamedTextColor.GREEN));
+            }
+            this.world().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
+
+            if (this.playerDeaths.size() == this.playerSpawns.size() - 1 && this.winner == null) {
+                this.winner = this.playerSpawns.keySet().stream().filter(uuid -> !this.playerDeaths.contains(uuid)).limit(1).findAny().get();
+                this.advanceTo(State.ENDING);
+            }
+        }
         this.updateSign();
         return true;
     }
@@ -151,7 +179,7 @@ public final class InstanceImpl implements Instance {
 
     @Override
     public boolean isPlayerRegistered(ServerPlayer player) {
-        return this.registeredPlayers.contains(player.uniqueId());
+        return this.playerSpawns.containsKey(player.uniqueId());
     }
 
     @Override
@@ -165,6 +193,11 @@ public final class InstanceImpl implements Instance {
     }
 
     @Override
+    public Optional<UUID> getWinner() {
+        return Optional.ofNullable(this.winner);
+    }
+
+    @Override
     public InstanceType getType() {
         return this.instanceType;
     }
@@ -174,91 +207,9 @@ public final class InstanceImpl implements Instance {
         return this.state;
     }
 
-    public void advance() {
-        final ServerWorld instanceWorld = Sponge.server().worldManager().world(this.worldKey).orElse(null);
-        State next;
-        if (instanceWorld == null) {
-            next = State.FORCE_STOP;
-        } else {
-            next = State.values()[(this.state.ordinal() + 1) % State.values().length];
-            if (next.ordinal() < this.state.ordinal()) {
-                return;
-            }
-        }
-
-        this.advanceTo(next);
-    }
-
-    void advanceTo(State state) {
-        final Optional<ServerWorld> world = Sponge.server().worldManager().world(this.worldKey);
-        if (!world.isPresent()) {
-            this.state = State.FORCE_STOP;
-            Royale.getInstance().getInstanceManager().unloadInstance(this.worldKey).join();
-            return;
-        }
-
-        if (this.state == state) {
-            return;
-        }
-
-        if (state.doesCheckRoundStatusOnAdvance()) {
-            if (this.isRoundOver()) {
-                state = State.PRE_END;
-            }
-        }
-
-        this.onStateAdvance(state);
-        this.state = state;
-    }
-
     @Override
-    public boolean disqualifyPlayers(final Collection<ServerPlayer> players) {
-        if (this.state == State.IDLE) {
-            for (ServerPlayer player : players) {
-                this.registeredPlayers.remove(player.uniqueId());
-                final Vector3d spawn = this.playerSpawns.remove(player.uniqueId());
-                this.unusedSpawns.offer(spawn);
-
-                this.scoreboard.removePlayer(player);
-            }
-        } else {
-            for (ServerPlayer player : players) {
-                this.removePlayer(player);
-                this.resetPlayer(player);
-                player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
-            }
-            final int playersLeft = this.registeredPlayers.size() - this.playerDeaths.size();
-            if (playersLeft > 0) {
-                this.world().sendActionBar(Component.text(playersLeft + " players left", NamedTextColor.GREEN));
-            }
-            this.world().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
-        }
-        this.updateSign();
-        if (this.isRoundOver()) {
-            this.advanceTo(InstanceImpl.State.PRE_END);
-        }
-        return true;
-    }
-
-    @Override
-    public boolean kick(Collection<ServerPlayer> players) {
-        disqualifyPlayers(players);
-        for (ServerPlayer player : players) {
-            final Optional<ServerWorld> lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY);
-            if (!lobby.isPresent()) {
-                throw new IllegalStateException("Lobby world was not found!");
-            }
-            Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
-            player.setLocation(ServerLocation.of(lobby.get(), lobby.get().properties().spawnPosition()));
-            player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
-        }
-        return true;
-    }
-
-    private void removePlayer(final ServerPlayer player) {
-        this.scoreboard.killPlayer(player);
-        this.playerDeaths.add(player.uniqueId());
-        player.inventory().clear();
+    public Collection<UUID> getPlayers() {
+        return Collections.unmodifiableCollection(this.playerSpawns.keySet());
     }
 
     private void resetPlayer(final ServerPlayer player) {
@@ -267,52 +218,66 @@ public final class InstanceImpl implements Instance {
         player.offer(Keys.SATURATION, 20d);
         player.offer(Keys.EXHAUSTION, 20d);
         player.remove(Keys.POTION_EFFECTS);
+        player.inventory().clear();
     }
 
     public int playersLeft() {
         return this.playerSpawns.size() - this.playerDeaths.size();
     }
 
-    private boolean isRoundOver() {
-        return this.playerDeaths.size() >= this.playerSpawns.size() - 1;
+    private int spawns() {
+        return this.playerSpawns.size() + this.unusedSpawns.size();
     }
 
-    private void participate(final ServerPlayer player, final boolean first) {
-        this.resetPlayer(player);
-        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
-
-        if (first) {
-            player.inventory().clear();
-
-            for (final ItemStackSnapshot snapshot : this.instanceType.getDefaultItems()) {
-                if (snapshot.type() == ItemTypes.ELYTRA.get()) {
-                    player.setChest(snapshot.createStack());
-                } else {
-                    player.inventory().offer(snapshot.createStack());
-                }
-            }
+    public void advance() {
+        if (this.state.ordinal() == State.values().length - 1) {
+            throw new IllegalStateException("Can't advance");
         }
+        State next = State.values()[this.state.ordinal() + 1];
+        this.advanceTo(next);
+    }
+
+    void advanceTo(State state) {
+        Royale.getInstance().getPlugin().getLogger().debug("Advancing {} from {} to {}", this.worldKey.formatted(), this.state.name(), state.name());
+        if (this.state == state) {
+            throw new IllegalArgumentException("The instance is already at " + state.name());
+        }
+        if (this.state == State.STOPPED) {
+            throw new IllegalStateException("The instance is stopped");
+        }
+
+        this.onStateAdvance(state);
+        this.state = state;
     }
 
     private void onStateAdvance(final State next) {
-        if (next.doesCancelTasksOnAdvance()) {
-            // Cancel previous tasks when advancing a state. Prevents stale state tasks
-            for (final UUID uuid : this.tasks) {
-                final ScheduledTask task = Sponge.server().scheduler().taskById(uuid).orElse(null);
-                if (task != null) {
-                    if (task.task().consumer() instanceof InstanceTask) {
-                        ((InstanceTask) task.task().consumer()).cancel();
-                    } else {
-                        task.cancel();
-                    }
-                }
+        this.tasks.removeIf(uuid -> {
+            final Optional<ScheduledTask> taskOpt = Sponge.server().scheduler().taskById(uuid);
+            if (!taskOpt.isPresent()) {
+                Royale.getInstance().getPlugin().getLogger().warn("Missing task with UUID {} while advancing to state {}", uuid, next);
+                return true;
             }
 
-            this.tasks.clear();
-        }
+            if (taskOpt.get().isCancelled()) {
+                Royale.getInstance().getPlugin().getLogger().warn("Cancelled task with UUID {} while advancing to state {}", uuid, next);
+                return true;
+            }
+
+            if (!(taskOpt.get().task().consumer() instanceof InstanceTask)) {
+                Royale.getInstance().getPlugin().getLogger().warn("Malformed task with UUID {} while advancing to state {}", uuid, next);
+                return true;
+            }
+
+            final InstanceTask t = ((InstanceTask) taskOpt.get().task().consumer());
+            if (t.shouldStop()) {
+                t.cancel();
+                return true;
+            }
+            return false;
+        });
 
         switch (next) {
-            case PRE_START:
+            case STARTING:
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
                         .plugin(Royale.getInstance().getPlugin())
                         .execute(new StartTask(this))
@@ -321,7 +286,7 @@ public final class InstanceImpl implements Instance {
                         .build()
                 ).uniqueId());
                 break;
-            case POST_START:
+            case RUNNING:
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
                         .plugin(Royale.getInstance().getPlugin())
                         .execute(new ProgressTask(this))
@@ -329,8 +294,6 @@ public final class InstanceImpl implements Instance {
                         .name(Constants.Plugin.ID + " - Progress Countdown - " + this.worldKey)
                         .build()
                 ).uniqueId());
-                break;
-            case RUNNING:
                 break;
             case CLEANUP:
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
@@ -341,7 +304,7 @@ public final class InstanceImpl implements Instance {
                         .build()
                 ).uniqueId());
                 break;
-            case PRE_END:
+            case ENDING:
                 final List<UUID> winners = new ArrayList<>(this.playerSpawns.keySet());
                 winners.removeAll(this.playerDeaths);
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
@@ -352,7 +315,7 @@ public final class InstanceImpl implements Instance {
                         .build()
                 ).uniqueId());
                 break;
-            case POST_END:
+            case STOPPED:
                 Royale.getInstance().getInstanceManager().unloadInstance(this.worldKey)
                         .thenComposeAsync(b -> Royale.getInstance().getInstanceManager().createInstance(this.worldKey, this.instanceType, false), Royale.getInstance().getTaskExecutorService())
                         .thenAcceptAsync(instance -> {
@@ -363,16 +326,13 @@ public final class InstanceImpl implements Instance {
                             }
                         }, Royale.getInstance().getTaskExecutorService());
                 break;
-            case FORCE_STOP:
-                Royale.getInstance().getInstanceManager().unloadInstance(this.worldKey).join();
-                break;
         }
         this.updateSign();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.worldKey);
+        return this.worldKey.hashCode();
     }
 
     @Override
@@ -396,10 +356,6 @@ public final class InstanceImpl implements Instance {
                 .toString();
     }
 
-    private int spawns() {
-        return this.registeredPlayers.size() + this.unusedSpawns.size();
-    }
-
     @Override
     public boolean link(Sign sign) {
         if (this.signLoc.add(sign.serverLocation())) {
@@ -411,18 +367,16 @@ public final class InstanceImpl implements Instance {
 
     void updateSign() {
         for (ServerLocation location : this.signLoc) {
-            if (location.world().isLoaded()) {
-                location.blockEntity().ifPresent(this::updateSign0);
-            }
+            location.worldIfAvailable().flatMap(w -> location.blockEntity()).ifPresent(this::updateSign0);
         }
     }
 
     private void updateSign0(org.spongepowered.api.block.entity.BlockEntity sign) {
         Component statusLine;
         Component headerLine;
-        final int playersTotal = this.registeredPlayers.size();
+        final int playersTotal = this.playerSpawns.size();
         switch (this.state) {
-            case PRE_END:
+            case ENDING:
                 headerLine = Component.text("Create Game", NamedTextColor.AQUA);
                 statusLine = Component.text("not ready", NamedTextColor.YELLOW);
                 break;
@@ -432,11 +386,11 @@ public final class InstanceImpl implements Instance {
                 break;
             case RUNNING:
                 headerLine = Component.text("Spectate Game", NamedTextColor.AQUA);
-                statusLine = Component.text("running " + playersLeft() + "/" + playersTotal, NamedTextColor.YELLOW);
+                statusLine = Component.text("running " + this.playersLeft() + "/" + playersTotal, NamedTextColor.YELLOW);
                 break;
             case CLEANUP:
                 headerLine = Component.text("Spectate Game", NamedTextColor.AQUA);
-                statusLine = Component.text("cleanup " + (playersTotal - playersLeft()) + "/" + playersTotal, NamedTextColor.YELLOW);
+                statusLine = Component.text("cleanup " + (playersTotal - this.playersLeft()) + "/" + playersTotal, NamedTextColor.YELLOW);
                 break;
             default:
                 headerLine = Component.text("Royale", NamedTextColor.AQUA);
@@ -449,74 +403,5 @@ public final class InstanceImpl implements Instance {
             lines.set(3, Component.text(this.instanceType.name()));
             return lines;
         });
-    }
-
-
-
-    public enum State implements InstanceState {
-
-        IDLE {
-            @Override
-            public boolean canAnyoneMove() {
-                return false;
-            }
-
-            @Override
-            public boolean doesCheckRoundStatusOnAdvance() {
-                return false;
-            }
-
-            @Override
-            public boolean canAcceptPlayers() {
-                return true;
-            }
-        },
-        PRE_START {
-            @Override
-            public boolean canAnyoneMove() {
-                return false;
-            }
-        },
-        POST_START {
-            @Override
-            public boolean canAnyoneInteract() {
-                return true;
-            }
-        },
-        RUNNING {
-            @Override
-            public boolean canAnyoneInteract() {
-                return true;
-            }
-
-            @Override
-            public boolean doesCancelTasksOnAdvance() {
-                return false;
-            }
-        },
-        CLEANUP {
-            @Override
-            public boolean canAnyoneInteract() {
-                return true;
-            }
-        },
-        PRE_END {
-            @Override
-            public boolean doesCheckRoundStatusOnAdvance() {
-                return false;
-            }
-        },
-        POST_END {
-            @Override
-            public boolean doesCheckRoundStatusOnAdvance() {
-                return false;
-            }
-        },
-        FORCE_STOP {
-            @Override
-            public boolean doesCheckRoundStatusOnAdvance() {
-                return false;
-            }
-        }
     }
 }

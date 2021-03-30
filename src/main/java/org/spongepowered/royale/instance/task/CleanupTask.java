@@ -58,6 +58,7 @@ import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.instance.InstanceImpl;
+import org.spongepowered.royale.instance.State;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -99,11 +100,11 @@ public final class CleanupTask extends InstanceTask {
         this.handle = task;
 
         final ServerWorld world =
-                this.getInstance().world();
+                this.instance.world();
 
         final TextComponent append = Component.text("OVERTIME!", NamedTextColor.RED)
                 .append(Component.space())
-                .append(Component.text(this.getInstance().playersLeft(), NamedTextColor.GOLD))
+                .append(Component.text(this.instance.playersLeft(), NamedTextColor.GOLD))
                 .append(Component.text(" Players left", NamedTextColor.RED));
         this.bossBar.name(append);
         final float percent = (float) this.roundLengthRemaining * 1f / this.roundLengthTotal;
@@ -115,7 +116,7 @@ public final class CleanupTask extends InstanceTask {
                 if (this.bossBarViewers.add(player.uniqueId())) {
                     player.showBossBar(this.bossBar);
                 }
-                if (!this.getInstance().isPlayerAlive(player)) {
+                if (!this.instance.isPlayerAlive(player)) {
                     continue;
                 }
 
@@ -124,9 +125,9 @@ public final class CleanupTask extends InstanceTask {
                         player.showTitle(this.title);
                     }
 
-                    this.spawnCleanupCrew(world, random, player);
+                    this.spawnCleanupCrew(world, this.random, player);
                 } else {
-                    final ServerLocation explosionLocation = player.serverLocation().add(random.nextInt(4), random.nextInt(4), random.nextInt(4));
+                    final ServerLocation explosionLocation = player.serverLocation().add(this.random.nextInt(4), this.random.nextInt(4), this.random.nextInt(4));
 
                     world.triggerExplosion(Explosion.builder()
                             .canCauseFire(true)
@@ -140,7 +141,7 @@ public final class CleanupTask extends InstanceTask {
         }
 
         this.duration++;
-        this.roundLengthRemaining --;
+        this.roundLengthRemaining--;
     }
 
     private void spawnCleanupCrew(ServerWorld world, Random random, ServerPlayer player) {
@@ -201,7 +202,7 @@ public final class CleanupTask extends InstanceTask {
     private Human customizeHuman(Random random, Human human) {
         final GoalExecutor<Agent> targetGoal = human.goal(GoalExecutorTypes.TARGET.get()).orElse(null);
         targetGoal.addGoal(0, FindNearestAttackableTargetGoal.builder().chance(1).target(ServerPlayer.class)
-                .filter(e -> this.getInstance().isPlayerAlive((ServerPlayer) e)).build(human));
+                .filter(e -> this.instance.isPlayerAlive((ServerPlayer) e)).build(human));
 
         final GoalExecutor<Agent> normalGoal = human.goal(GoalExecutorTypes.NORMAL.get()).orElse(null);
         normalGoal.addGoal(0, SwimGoal.builder().swimChance(0.8f).build(human));
@@ -242,5 +243,10 @@ public final class CleanupTask extends InstanceTask {
             Sponge.server().player(profile).ifPresent(p -> p.hideBossBar(this.bossBar));
         }
         return this.handle.cancel();
+    }
+
+    @Override
+    public boolean shouldStop() {
+        return this.instance.getState() != State.CLEANUP;
     }
 }

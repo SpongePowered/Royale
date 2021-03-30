@@ -28,9 +28,7 @@ import io.leangen.geantyref.TypeToken;
 import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.LinearComponents;
-import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.adventure.SpongeComponents;
@@ -65,7 +63,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 final class Commands {
@@ -108,7 +105,7 @@ final class Commands {
                             .build());
 
                     Royale.getInstance().getInstanceManager().createInstance(targetWorldKey, instanceType, force)
-                            .whenCompleteAsync((instance, throwable) -> {
+                            .whenCompleteAsync((ignored, throwable) -> {
                                 if (throwable != null) {
                                     context.sendMessage(Identity.nil(), Component.text(throwable.getMessage(), NamedTextColor.RED));
                                     Royale.getInstance().getPlugin().getLogger().error(throwable);
@@ -123,10 +120,14 @@ final class Commands {
                                 for (final ServerPlayer player : Sponge.server().onlinePlayers()) {
                                     if (player.world().key().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY)) {
                                         player.sendMessage(Identity.nil(), Component.text().clickEvent(SpongeComponents.executeCallback(commandCause -> {
-                                            final Optional<Instance> inst = Royale.getInstance().getInstanceManager().getInstance(targetWorldKey);
-                                            if (inst.isPresent()) {
+                                            final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(targetWorldKey);
+                                            if (instance.isPresent()) {
+                                                if (instance.get().isFull()) {
+                                                    player.sendMessage(Component.text("Instance is full!"));
+                                                    return;
+                                                }
                                                 final ServerPlayer serverPlayer = (ServerPlayer) commandCause.root();
-                                                if (inst.get().addPlayer(serverPlayer)) {
+                                                if (instance.get().addPlayer(serverPlayer)) {
                                                     player.sendMessage(Component.text("Welcome to the game. Please stand by while others join. You will not be able to move until the game "
                                                             + "starts."));
                                                 }
@@ -250,24 +251,16 @@ final class Commands {
                         .append(Component.text("."))
                         .build())
                 .addParameter(Commands.INSTANCE_KEY_PARAMETER)
-                .addParameter(Commands.FORCE_PARAMETER)
                 .executor(context -> {
                     final ResourceKey worldKey = context.requireOne(Commands.INSTANCE_KEY_PARAMETER);
-                    final boolean force = context.one(Commands.FORCE_PARAMETER).orElse(false);
 
                     context.sendMessage(Identity.nil(), Component.text()
-                            .content(force ? "Forcibly e" : "E")
-                            .append(Component.text("nding round in ["))
+                            .content("Ending round in [")
                             .append(Component.text(worldKey.formatted(), NamedTextColor.GREEN))
                             .append(Component.text("]."))
                             .build());
-
-                    context.sendMessage(Identity.nil(),
-                            Component.text(String.format("World %s was unloaded, but the instance still exists! Ending instance.",
-                                    worldKey),
-                                    NamedTextColor.YELLOW));
                     try {
-                        Royale.getInstance().getInstanceManager().endInstance(worldKey, force);
+                        Royale.getInstance().getInstanceManager().endInstance(worldKey);
                         return CommandResult.success();
                     } catch (final UnknownInstanceException e) {
                         throw new CommandException(Component.text().content("Unable to end round in [")
@@ -304,6 +297,10 @@ final class Commands {
                                     .append(Component.text("] is not a valid instance, is it running?"))
                                     .build());
                     }
+                    if (instance.get().isFull()) {
+                        player.sendMessage(Identity.nil(), Component.text("Instance is full!"));
+                        return CommandResult.empty();
+                    }
 
                     player.sendMessage(Identity.nil(), Component.text().content("Joining [")
                             .append(Component.text(worldKey.formatted(), NamedTextColor.GREEN))
@@ -319,6 +316,7 @@ final class Commands {
                 .build();
     }
 
+    //TODO move to reload event
     private static Command.Parameterized reloadCommand()  {
         return Command.builder()
                 .permission(Constants.Plugin.ID + ".command.reload")

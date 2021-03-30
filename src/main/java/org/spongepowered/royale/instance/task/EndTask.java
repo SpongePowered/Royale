@@ -63,12 +63,12 @@ public final class EndTask extends InstanceTask {
 
         this.handle = task;
 
-        final ServerWorld world = this.getInstance().world();
+        final ServerWorld world = this.instance.world();
 
-        if (this.winners.isEmpty() || world == null || !world.isLoaded()) {
+        if (this.winners.isEmpty()) {
             this.cancel();
 
-            this.getInstance().advance();
+            this.instance.advance();
             return;
         }
 
@@ -123,12 +123,17 @@ public final class EndTask extends InstanceTask {
         this.endLengthRemaining--;
         if (this.endLengthRemaining < 0) {
             this.cancel();
-            this.getInstance().advance();
+            this.instance.advance();
         }
     }
 
     @Override
     public boolean cancel() {
         return this.handle.cancel();
+    }
+
+    @Override
+    public boolean shouldStop() {
+        return this.endLengthRemaining < 0;
     }
 }

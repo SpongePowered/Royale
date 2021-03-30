@@ -58,7 +58,7 @@ public abstract class InstanceMutator implements ResourceKeyed {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.key);
+        return this.key.hashCode();
     }
 
     @Override

@@ -32,6 +32,7 @@ import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -47,7 +48,7 @@ public final class StartTask extends InstanceTask {
     public StartTask(final InstanceImpl instance) {
         super(instance);
 
-        this.startTitles = new LinkedList<>();
+        this.startTitles = new ArrayList<>();
 
         final Title.Times times = Title.Times.of(Duration.ZERO, Duration.ofMillis(600), Duration.ofMillis(400));
 
@@ -70,27 +71,28 @@ public final class StartTask extends InstanceTask {
     public void accept(final ScheduledTask task) {
         this.handle = task;
 
-        final ServerWorld world = this.getInstance().world();
+        final ServerWorld world = this.instance.world();
 
-        // Make sure the world is still around and loaded
-        if (world != null && world.isLoaded()) {
-
-            if (this.seconds >= this.startTitles.size()) {
-                if (this.cancel()) {
-                    this.getInstance().advance();
-                }
-                return;
+        if (this.seconds >= this.startTitles.size()) {
+            if (this.cancel()) {
+                this.instance.advance();
             }
-
-            // Make sure a player ref isn't still here
-            world.players().forEach(player -> player.showTitle(this.startTitles.get(this.seconds)));
-
-            this.seconds++;
+            return;
         }
+
+        // Make sure a player ref isn't still here
+        world.players().forEach(player -> player.showTitle(this.startTitles.get(this.seconds)));
+
+        this.seconds++;
     }
 
     @Override
     public boolean cancel() {
         return this.handle.cancel();
+    }
+
+    @Override
+    public boolean shouldStop() {
+        return this.seconds >= this.startTitles.size();
     }
 }

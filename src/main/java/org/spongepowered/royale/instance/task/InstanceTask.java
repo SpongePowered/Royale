@@ -31,15 +31,13 @@ import java.util.function.Consumer;
 
 public abstract class InstanceTask implements Consumer<ScheduledTask> {
 
-    private final InstanceImpl instance;
+    protected final InstanceImpl instance;
 
     InstanceTask(final InstanceImpl instance) {
         this.instance = instance;
     }
 
-    public final InstanceImpl getInstance() {
-        return this.instance;
-    }
+    public abstract boolean shouldStop();
 
     public abstract boolean cancel();
 }

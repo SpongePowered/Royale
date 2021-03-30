@@ -27,6 +27,7 @@ package org.spongepowered.royale.instance;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.ResourceKey;
+import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.block.transaction.Operations;
@@ -54,13 +55,13 @@ import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Root;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.api.Instance;
 import org.spongepowered.royale.api.RoyaleKeys;
 
-import java.util.Collections;
 import java.util.Optional;
 
 public final class EventHandler {
@@ -87,8 +88,13 @@ public final class EventHandler {
         }
 
         if (instanceOpt.get().isPlayerRegistered(player)) {
-            instanceOpt.get().kick(Collections.singleton(player));
+            instanceOpt.get().removePlayer(player);
         }
+
+        final ServerWorld lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY).orElse(Sponge.server().worldManager().defaultWorld());
+        Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
+        player.setLocation(ServerLocation.of(lobby, lobby.properties().spawnPosition()));
+        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
     }
 
     @Listener(order = Order.LAST)
@@ -107,13 +113,13 @@ public final class EventHandler {
         }
 
         if (event instanceof ChangeEntityWorldEvent && !((ChangeEntityWorldEvent) event).originalWorld().equals(((ChangeEntityWorldEvent) event).destinationWorld())) {
-            instance.get().disqualifyPlayers(Collections.singleton(player));
+            instance.get().removePlayer(player);
             player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
             return;
         }
 
         // If a Player has already spawned, this means they are playing. See if the instance allows movement
-        if (!instance.get().getState().canAnyoneMove()) {
+        if (!instance.get().getState().canPlayersMove()) {
             event.setCancelled(true);
         }
     }
@@ -123,17 +129,17 @@ public final class EventHandler {
         final ServerWorld world = player.world();
         final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
 
-        if (instance.isPresent()) {
-            if (instance.get().isPlayerRegistered(player)) {
-                instance.get().disqualifyPlayers(Collections.singleton(player));
-                event.setCancelled(true);
-                player.offer(Keys.HEALTH, player.maxHealth().get());
-                player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
-                player.transform(Keys.POTION_EFFECTS, list -> {
-                    list.add(PotionEffect.of(PotionEffectTypes.NIGHT_VISION, 1, 1000000000));
-                    return list;
-                });
-            }
+        if (!instance.isPresent()) {
+            return;
+        }
+
+        if (instance.get().isPlayerRegistered(player)) {
+            instance.get().removePlayer(player);
+            event.setCancelled(true);
+            player.transform(Keys.POTION_EFFECTS, list -> {
+                list.add(PotionEffect.of(PotionEffectTypes.NIGHT_VISION, 1, 1000000000));
+                return list;
+            });
         }
     }
 
@@ -154,7 +160,6 @@ public final class EventHandler {
                     final BlockEntity sign = trans.finalReplacement().location().get().blockEntity().get();
                     sign.offer(RoyaleKeys.TYPE, typeKey.get());
                     sign.offer(RoyaleKeys.WORLD, worldKey.get());
-
 
                     final Optional<Instance> instOpt = Royale.getInstance().getInstanceManager().getInstance(worldKey.get());
                     if (instOpt.isPresent()) {
@@ -186,7 +191,7 @@ public final class EventHandler {
         }
 
         final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
-        if (instance.isPresent() && !instance.get().getState().canAnyoneInteract() && instance.get().isPlayerRegistered(player)) {
+        if (instance.isPresent() && !instance.get().getState().canPlayersInteract() && instance.get().isPlayerRegistered(player)) {
             event.transactions(Operations.BREAK.get()).forEach(Transaction::invalidate);
         }
     }
@@ -196,16 +201,14 @@ public final class EventHandler {
         final ServerWorld world = player.world();
         final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(world.key());
 
-        if (instance.isPresent() && !instance.get().getState().canAnyoneInteract() && instance.get().isPlayerRegistered(player)) {
+        if (instance.isPresent() && !instance.get().getState().canPlayersInteract() && instance.get().isPlayerRegistered(player)) {
             event.setCancelled(true);
         }
     }
 
     @Listener
-    public void onChangeSign(ChangeSignEvent event)
-    {
-        if (event.sign().get(RoyaleKeys.WORLD).isPresent())
-        {
+    public void onChangeSign(ChangeSignEvent event) {
+        if (event.sign().get(RoyaleKeys.WORLD).isPresent()) {
             event.setCancelled(true); // Cancel sign change by player if it is a Royale sign
         }
     }
@@ -240,28 +243,6 @@ public final class EventHandler {
                     final InstanceType type = Constants.Plugin.INSTANCE_TYPE.get().value(typeKey.get());
                     Royale.getInstance().getInstanceManager().createInstance(worldKey.get(), type, false)
                             .thenAcceptAsync(instance -> instance.link((Sign) sign), Royale.getInstance().getTaskExecutorService());
-                }
-            } else {
-                final Optional<ResourceKey> wKey = player.get(RoyaleKeys.WORLD);
-                final Optional<ResourceKey> tkey = player.get(RoyaleKeys.TYPE);
-                if (wKey.isPresent() && tkey.isPresent() && player.hasPermission(Constants.Permissions.ADMIN + ".create.sign")) {
-                    sign.offer(RoyaleKeys.WORLD, wKey.get());
-                    sign.offer(RoyaleKeys.TYPE, tkey.get());
-                    sign.transform(Keys.SIGN_LINES, lines -> {
-                        lines.set(0, Component.text(wKey.get().namespace(), NamedTextColor.AQUA));
-                        lines.set(1, Component.text(wKey.get().formatted()));
-                        lines.set(2, Component.empty());
-                        lines.set(3, Component.text(tkey.get().formatted()));
-                        return lines;
-                    });
-                    final Optional<Instance> instOpt = Royale.getInstance().getInstanceManager().getInstance(wKey.get());
-                    if (instOpt.isPresent()) {
-                        instOpt.get().link((Sign) sign);
-                    } else {
-                        final InstanceType type = Constants.Plugin.INSTANCE_TYPE.get().findValue(tkey.get()).get();
-                        Royale.getInstance().getInstanceManager().createInstance(wKey.get(), type, false)
-                                .thenAcceptAsync(instance -> instance.link((Sign) sign), Royale.getInstance().getTaskExecutorService());
-                    }
                 }
             }
         });

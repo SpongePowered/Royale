@@ -26,10 +26,8 @@ package org.spongepowered.royale.instance;
 
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.world.SerializationBehavior;
-import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
@@ -42,11 +40,9 @@ import org.spongepowered.royale.instance.gen.InstanceMutatorPipeline;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public final class InstanceManagerImpl implements InstanceManager {
@@ -71,7 +67,7 @@ public final class InstanceManagerImpl implements InstanceManager {
                 if (!force) {
                     throw new InstanceAlreadyExistsException(key.formatted());
                 }
-                if (previous.getState() != InstanceImpl.State.IDLE) {
+                if (previous.getState() != State.IDLE) {
                     throw new IllegalStateException("Instance is not IDLE");
                 }
                 this.instances.replace(w.key(), instance);
@@ -91,22 +87,18 @@ public final class InstanceManagerImpl implements InstanceManager {
             throw new UnknownInstanceException(key.formatted());
         }
 
-        instance.advanceTo(InstanceImpl.State.PRE_START);
+        instance.advanceTo(State.STARTING);
     }
 
     @Override
-    public void endInstance(final ResourceKey key, final boolean force) throws UnknownInstanceException {
+    public void endInstance(final ResourceKey key) throws UnknownInstanceException {
         Objects.requireNonNull(key, "key must not be null");
         final InstanceImpl instance = this.instances.get(key);
         if (instance == null) {
             throw new UnknownInstanceException(key.formatted());
         }
 
-        if (force) {
-            instance.advanceTo(InstanceImpl.State.FORCE_STOP);
-        } else {
-            instance.advanceTo(InstanceImpl.State.PRE_END);
-        }
+        instance.advanceTo(State.ENDING);
     }
 
     @Override
@@ -117,28 +109,27 @@ public final class InstanceManagerImpl implements InstanceManager {
             return CompletableFuture.completedFuture(true);
         }
 
-        final Optional<ServerWorld> world = Sponge.server().worldManager().world(instance.getWorldKey());
+        final ServerWorld world = instance.world();
 
-        if (world.isPresent()) {
-            final Optional<ServerWorld> lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY);
-            if (!lobby.isPresent()) {
-                final CompletableFuture<Boolean> future = new CompletableFuture<>();
-                future.completeExceptionally(new IllegalStateException("Lobby world was not found!"));
-                return future;
+        final Optional<ServerWorld> lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY);
+        if (!lobby.isPresent()) {
+            final CompletableFuture<Boolean> future = new CompletableFuture<>();
+            future.completeExceptionally(new IllegalStateException("Lobby world was not found!"));
+            return future;
+        }
+
+        // Move everyone out
+        for (ServerPlayer player : world.players()) {
+            if (instance.isPlayerRegistered(player)) {
+                instance.removePlayer(player);
             }
-
-            // Move everyone out
-            instance.kick(world.get().players());
         }
 
         this.instances.remove(instance.getWorldKey());
 
         instance.updateSign();
 
-        if (world.isPresent()) {
-            return Sponge.server().worldManager().unloadWorld(world.get());
-        }
-        return CompletableFuture.completedFuture(true);
+        return Sponge.server().worldManager().unloadWorld(world);
     }
 
     @Override

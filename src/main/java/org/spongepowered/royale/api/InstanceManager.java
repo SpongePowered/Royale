@@ -41,7 +41,7 @@ public interface InstanceManager {
 
     void startInstance(final ResourceKey key) throws UnknownInstanceException;
 
-    void endInstance(final ResourceKey key, final boolean force) throws UnknownInstanceException;
+    void endInstance(final ResourceKey key) throws UnknownInstanceException;
 
     Optional<Instance> getInstance(final ResourceKey key);
 

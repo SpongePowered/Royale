@@ -22,19 +22,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package org.spongepowered.royale.api;
+package org.spongepowered.royale.instance;
 
-public interface InstanceState {
+import org.spongepowered.royale.api.InstanceState;
 
-    default boolean canPlayersJoin() {
-        return false;
-    }
+public enum State implements InstanceState {
 
-    default boolean canPlayersMove() {
-        return false;
-    }
+    IDLE {
+        @Override
+        public boolean canPlayersJoin() {
+            return true;
+        }
+    },
+    STARTING,
+    RUNNING {
+        @Override
+        public boolean canPlayersMove() {
+            return true;
+        }
 
-    default boolean canPlayersInteract() {
-        return false;
-    }
+        @Override
+        public boolean canPlayersInteract() {
+            return true;
+        }
+    },
+    CLEANUP {
+        @Override
+        public boolean canPlayersMove() {
+            return true;
+        }
+
+        @Override
+        public boolean canPlayersInteract() {
+            return true;
+        }
+    },
+    ENDING {
+        @Override
+        public boolean canPlayersMove() {
+            return true;
+        }
+    },
+    STOPPED,
 }

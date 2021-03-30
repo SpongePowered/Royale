@@ -31,6 +31,7 @@ import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.instance.InstanceImpl;
+import org.spongepowered.royale.instance.State;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -70,44 +71,42 @@ public final class ProgressTask extends InstanceTask {
     public void accept(final ScheduledTask task) {
         this.handle = task;
 
-        final ServerWorld world = this.getInstance().world();
+        final ServerWorld world = this.instance.world();
 
-        // Make sure the world is still around and loaded
-        if (world != null && world.isLoaded()) {
-            if (this.getInstance().getState() == InstanceImpl.State.POST_START) {
-                this.getInstance().advance();
-            }
+        final float percent = (float) this.roundLengthRemaining * 1f / this.roundLengthTotal;
+        this.bossBar.progress(percent);
 
-            final float percent = (float) this.roundLengthRemaining * 1f / this.roundLengthTotal;
-            this.bossBar.progress(percent);
+        if (percent < 0.33) {
+            this.bossBar.color(BossBar.Color.RED);
+        } else if (percent < 0.66) {
+            this.bossBar.color(BossBar.Color.YELLOW);
+        } else {
+            this.bossBar.color(BossBar.Color.GREEN);
+        }
 
-            if (percent < 0.33) {
-                this.bossBar.color(BossBar.Color.RED);
-            } else if (percent < 0.66) {
-                this.bossBar.color(BossBar.Color.YELLOW);
-            } else {
-                this.bossBar.color(BossBar.Color.GREEN);
-            }
+        final int seconds = (int) this.roundLengthRemaining % 60;
+        if (this.roundLengthRemaining > 60) {
+            final int minutes = (int) this.roundLengthRemaining / 60;
+            this.bossBar.name(Component.text(String.format("Time remaining: %02d:%02d", minutes, seconds)));
+        } else {
+            this.bossBar.name(Component.text(String.format("Time remaining: %02d", seconds)));
+        }
 
-            final int seconds = (int) this.roundLengthRemaining % 60;
-            if (this.roundLengthRemaining > 60) {
-                final int minutes = (int) this.roundLengthRemaining / 60;
-                this.bossBar.name(Component.text(String.format("Time remaining: %02d:%02d", minutes, seconds)));
-            } else {
-                this.bossBar.name(Component.text(String.format("Time remaining: %02d", seconds)));
-            }
-
-            for (final ServerPlayer player : world.players()) {
-                if (this.bossBarViewers.add(player.uniqueId())) {
-                    player.showBossBar(this.bossBar);
-                }
-            }
-
-            this.roundLengthRemaining--;
-            if (this.roundLengthRemaining < 0) {
-                this.cancel();
-                this.getInstance().advance();
+        for (final ServerPlayer player : world.players()) {
+            if (this.bossBarViewers.add(player.uniqueId())) {
+                player.showBossBar(this.bossBar);
             }
         }
+
+        this.roundLengthRemaining--;
+        if (this.roundLengthRemaining < 0) {
+            this.cancel();
+            this.instance.advance();
+        }
+    }
+
+    @Override
+    public boolean shouldStop() {
+        return this.roundLengthRemaining < 0;
     }
 }

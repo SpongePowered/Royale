@@ -169,7 +169,7 @@ public final class InstanceType implements ResourceKeyed, Nameable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.key);
+        return this.key.hashCode();
     }
 
     @Override

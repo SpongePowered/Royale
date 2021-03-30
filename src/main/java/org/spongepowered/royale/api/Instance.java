@@ -32,12 +32,16 @@ import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.instance.InstanceType;
 
 import java.util.Collection;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface Instance {
 
     boolean addSpawnpoint(Vector3d vector3d);
 
     boolean addPlayer(ServerPlayer player);
+
+    boolean removePlayer(ServerPlayer player);
 
     boolean addSpectator(ServerPlayer player);
 
@@ -46,6 +50,10 @@ public interface Instance {
     boolean isPlayerAlive(ServerPlayer player);
 
     boolean isFull();
+
+    Optional<UUID> getWinner();
+
+    Collection<UUID> getPlayers();
 
     InstanceType getType();
 
@@ -56,11 +64,5 @@ public interface Instance {
     ServerWorld world();
 
     boolean link(Sign sign);
-
-    //TODO
-    boolean disqualifyPlayers(Collection<ServerPlayer> players);
-
-    //TODO
-    boolean kick(Collection<ServerPlayer> players);
 
 }
