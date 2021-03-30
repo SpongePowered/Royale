@@ -125,6 +125,7 @@ public final class Loots {
         Loots.BASIC_FOOD.add(     item(   ItemTypes.BOWL.get(),                 range(1, 3)),   2);
         Loots.BASIC_FOOD.add(     item(   ItemTypes.RED_MUSHROOM.get(),         range(1, 3)),   3);
         Loots.BASIC_FOOD.add(     item(   ItemTypes.BROWN_MUSHROOM.get(),       range(1, 3)),   4);
+        Loots.BASIC_FOOD.add(     item(   ItemTypes.HONEY_BOTTLE.get(),         range(1, 2)),   3);
 
         // high_food
         Loots.HIGH_FOOD.add(      item(   ItemTypes.COOKED_BEEF.get(),          range(1, 2)),   2);
@@ -147,6 +148,7 @@ public final class Loots {
         Loots.BASIC_COMBAT.add(   item(   ItemTypes.LEATHER_CHESTPLATE.get(),   fixed(1)),      1);
         Loots.BASIC_COMBAT.add(   item(   ItemTypes.LEATHER_LEGGINGS.get(),     fixed(1)),      2);
         Loots.BASIC_COMBAT.add(   item(   ItemTypes.LEATHER_BOOTS.get(),        fixed(1)),      3);
+        Loots.BASIC_COMBAT.add(   item(   ItemTypes.TRIDENT.get(),              fixed(1)),      0.5);
 
         // basic_ranged
         Loots.BASIC_RANGED.add(   item(   ItemTypes.BOW.get(),                  fixed(1)),      5);
@@ -162,18 +164,20 @@ public final class Loots {
         Loots.MID_COMBAT.add(     item(   ItemTypes.IRON_AXE.get(),             fixed(1)),      8);
         Loots.MID_COMBAT.add(     item(   ItemTypes.IRON_SWORD.get(),           fixed(1)),      8);
         Loots.MID_COMBAT.add(     item(   ItemTypes.SHIELD.get(),               fixed(1)),      12.5);
-        Loots.MID_COMBAT.add(     item(   ItemTypes.GOLDEN_HELMET.get(),        fixed(1)),      8);
+        Loots.MID_COMBAT.add(     item(   ItemTypes.GOLDEN_HELMET.get(),        fixed(1)),      7);
         Loots.MID_COMBAT.add(     item(   ItemTypes.GOLDEN_CHESTPLATE.get(),    fixed(1)),      2);
         Loots.MID_COMBAT.add(     item(   ItemTypes.GOLDEN_LEGGINGS.get(),      fixed(1)),      6);
-        Loots.MID_COMBAT.add(     item(   ItemTypes.GOLDEN_BOOTS.get(),         fixed(1)),      8);
+        Loots.MID_COMBAT.add(     item(   ItemTypes.GOLDEN_BOOTS.get(),         fixed(1)),      7);
         Loots.MID_COMBAT.add(     item(   ItemTypes.IRON_HELMET.get(),          fixed(1)),      4);
         Loots.MID_COMBAT.add(     item(   ItemTypes.IRON_CHESTPLATE.get(),      fixed(1)),      1);
         Loots.MID_COMBAT.add(     item(   ItemTypes.IRON_LEGGINGS.get(),        fixed(1)),      2);
         Loots.MID_COMBAT.add(     item(   ItemTypes.IRON_BOOTS.get(),           fixed(1)),      4);
+        Loots.MID_COMBAT.add(     item(   ItemTypes.TURTLE_HELMET.get(),        fixed(1)),      8);
 
         // mid_ranged
         Loots.MID_RANGED.add(     item(   ItemTypes.BOW.get(),              fixed(1)),      5);
-        Loots.MID_RANGED.add(     item(   ItemTypes.ARROW.get(),            range(2, 6)),   10);
+        Loots.MID_RANGED.add(     item(   ItemTypes.ARROW.get(),            range(5, 12)),  10);
+        Loots.MID_RANGED.add(     item(   ItemTypes.TRIDENT.get(),          fixed(1)),      2);
         Loots.MID_RANGED.add(item(ItemTypes.LEATHER_CHESTPLATE.get(), fixed(1), false,
                 Component.text("Tough", NamedTextColor.RED),
                 new HashMap<EnchantmentType, VariableAmount>() {{
@@ -195,34 +199,40 @@ public final class Loots {
 
         // rare_items
         Loots.RARE_ITEMS.add(item(ItemTypes.DIAMOND_SWORD.get(), fixed(1), false,
-                Component.text("Flailing ", NamedTextColor.RED).append(Component.text("Sponge", NamedTextColor.YELLOW)),
+                Component.text("Searing ", NamedTextColor.RED).append(Component.text("Sponge", NamedTextColor.YELLOW)),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.FIRE_ASPECT.get(), range(1, 2));
                     put(EnchantmentTypes.KNOCKBACK.get(), range(1, 2));
                 }}), 0.0018);
 
         Loots.RARE_ITEMS.add(item(ItemTypes.SHIELD.get(), fixed(1), true,
-                Component.text("Unbreaking ", NamedTextColor.GRAY).append(Component.text("Sponge", NamedTextColor.YELLOW)),
+                Component.text("Valiant ", NamedTextColor.GRAY).append(Component.text("Sponge", NamedTextColor.YELLOW)),
                 new HashMap<EnchantmentType, VariableAmount>() {{
                     put(EnchantmentTypes.UNBREAKING.get(), range(1, 3));
+                }}), 0.0015);
+        Loots.RARE_ITEMS.add(item(ItemTypes.TRIDENT.get(), fixed(1), true,
+                Component.text("Surfing ", NamedTextColor.AQUA).append(Component.text("Sponge", NamedTextColor.YELLOW)),
+                new HashMap<EnchantmentType, VariableAmount>() {{
+                    put(EnchantmentTypes.RIPTIDE.get(), fixed(1));
                 }}), 0.0018);
-
-        Loots.RARE_ITEMS.add(item(ItemTypes.ELYTRA.get(), fixed(1)), 0.0125);
+        Loots.RARE_ITEMS.add(item(ItemTypes.ELYTRA.get(), fixed(1)), 0.00125);
 
         // weird_items
-        Loots.WEIRD_ITEMS.add(    item(   ItemTypes.SPONGE.get(),           range(1, 6)),   15);
-        Loots.WEIRD_ITEMS.add(    item(   ItemTypes.ROTTEN_FLESH.get(),     range(1, 9)),   6);
-        Loots.WEIRD_ITEMS.add(    item(   ItemTypes.POISONOUS_POTATO.get(), range(1, 3)),   2.5);
+        Loots.WEIRD_ITEMS.add(    item(   ItemTypes.SPONGE.get(),                 range(1, 6)),   15);
+        Loots.WEIRD_ITEMS.add(    item(   ItemTypes.ROTTEN_FLESH.get(),           range(1, 9)),   6);
+        Loots.WEIRD_ITEMS.add(    item(   ItemTypes.POISONOUS_POTATO.get(),       range(1, 3)),   2.5);
+        Loots.WEIRD_ITEMS.add(    item(   ItemTypes.NAUTILUS_SHELL.get(),         fixed(1)),      4);
+        Loots.WEIRD_ITEMS.add(    item(   ItemTypes.TROPICAL_FISH_BUCKET.get(),   fixed(1)),      2);
 
         // basic_potions
 
-        Loots.BASIC_POTIONS.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.FIRE_RESISTANCE.get(),  fixed(1),   range(200, 400)),   6);
-        Loots.BASIC_POTIONS.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.INSTANT_HEALTH.get(),   fixed(1),   fixed(1)),          1);
-        Loots.BASIC_POTIONS.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.NIGHT_VISION.get(),     fixed(1),   range(200, 400)),   3);
+        Loots.BASIC_POTIONS.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.FIRE_RESISTANCE.get(),  fixed(1),   range(200, 400)),   1);
+        Loots.BASIC_POTIONS.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.INSTANT_HEALTH.get(),   fixed(1),   fixed(1)),          3);
+        Loots.BASIC_POTIONS.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.NIGHT_VISION.get(),     fixed(1),   range(200, 400)),   4);
         Loots.BASIC_POTIONS.add(  potion(NORMAL,      fixed(1),       PotionEffectTypes.REGENERATION.get(),     fixed(1),   range(20, 80)),     2);
 
-        Loots.BASIC_POTIONS.add(  potion(SPLASH,      fixed(1),       PotionEffectTypes.HUNGER.get(),           fixed(1),   range(100, 200)),   6);
-        Loots.BASIC_POTIONS.add(  potion(SPLASH,      fixed(1),       PotionEffectTypes.INSTANT_DAMAGE.get(),   fixed(1),   fixed(1)),          1);
+        Loots.BASIC_POTIONS.add(  potion(SPLASH,      fixed(1),       PotionEffectTypes.HUNGER.get(),           fixed(1),   range(100, 200)),   5);
+        Loots.BASIC_POTIONS.add(  potion(SPLASH,      fixed(1),       PotionEffectTypes.INSTANT_DAMAGE.get(),   fixed(1),   fixed(1)),          2);
         Loots.BASIC_POTIONS.add(  potion(SPLASH,      fixed(1),       PotionEffectTypes.SLOWNESS.get(),         fixed(1),   range(60, 200)),    6);
 
         // high_potions
@@ -231,7 +241,7 @@ public final class Loots {
         Loots.HIGH_POTIONS.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.INSTANT_HEALTH.get(),   fixed(1),   fixed(1)),          4   );
         Loots.HIGH_POTIONS.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.INVISIBILITY.get(),     fixed(1),   range(100, 200)),   1   );
         Loots.HIGH_POTIONS.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.JUMP_BOOST.get(),       fixed(1),   range(100, 200)),   4   );
-        Loots.HIGH_POTIONS.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.NIGHT_VISION.get(),     fixed(1),   range(200, 400)),   5   );
+        Loots.HIGH_POTIONS.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.NIGHT_VISION.get(),     fixed(1),   range(200, 400)),   6   );
         Loots.HIGH_POTIONS.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.REGENERATION.get(),     fixed(1),   range(40, 120)),    2   );
         Loots.HIGH_POTIONS.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.REGENERATION.get(),     fixed(2),   range(20, 100)),    0.1 );
         Loots.HIGH_POTIONS.add(   potion(NORMAL,      fixed(1),       PotionEffectTypes.SPEED.get(),            fixed(1),   range(100, 200)),   2   );
