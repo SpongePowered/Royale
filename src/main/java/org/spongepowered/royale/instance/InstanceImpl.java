@@ -44,21 +44,19 @@ import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.api.Instance;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 import org.spongepowered.royale.instance.scoreboard.InstanceScoreboard;
-import org.spongepowered.royale.instance.task.CleanupTask;
+import org.spongepowered.royale.instance.task.OvertimeTask;
 import org.spongepowered.royale.instance.task.EndTask;
 import org.spongepowered.royale.instance.task.InstanceTask;
 import org.spongepowered.royale.instance.task.ProgressTask;
 import org.spongepowered.royale.instance.task.StartTask;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -268,12 +266,8 @@ public final class InstanceImpl implements Instance {
                 return true;
             }
 
-            final InstanceTask t = ((InstanceTask) taskOpt.get().task().consumer());
-            if (t.shouldStop()) {
-                t.cancel();
-                return true;
-            }
-            return false;
+            taskOpt.get().cancel();
+            return true;
         });
 
         switch (next) {
@@ -295,21 +289,19 @@ public final class InstanceImpl implements Instance {
                         .build()
                 ).uniqueId());
                 break;
-            case CLEANUP:
+            case OVERTIME:
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
                         .plugin(Royale.getInstance().getPlugin())
-                        .execute(new CleanupTask(this))
+                        .execute(new OvertimeTask(this))
                         .interval(1, TimeUnit.SECONDS)
-                        .name(Constants.Plugin.ID + " - Cleanup - " + this.worldKey)
+                        .name(Constants.Plugin.ID + " - Overtime - " + this.worldKey)
                         .build()
                 ).uniqueId());
                 break;
             case ENDING:
-                final List<UUID> winners = new ArrayList<>(this.playerSpawns.keySet());
-                winners.removeAll(this.playerDeaths);
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
                         .plugin(Royale.getInstance().getPlugin())
-                        .execute(new EndTask(this, winners))
+                        .execute(new EndTask(this))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - End Countdown - " + this.worldKey)
                         .build()
@@ -388,9 +380,9 @@ public final class InstanceImpl implements Instance {
                 headerLine = Component.text("Spectate Game", NamedTextColor.AQUA);
                 statusLine = Component.text("running " + this.playersLeft() + "/" + playersTotal, NamedTextColor.YELLOW);
                 break;
-            case CLEANUP:
+            case OVERTIME:
                 headerLine = Component.text("Spectate Game", NamedTextColor.AQUA);
-                statusLine = Component.text("cleanup " + (playersTotal - this.playersLeft()) + "/" + playersTotal, NamedTextColor.YELLOW);
+                statusLine = Component.text("overtime " + (playersTotal - this.playersLeft()) + "/" + playersTotal, NamedTextColor.YELLOW);
                 break;
             default:
                 headerLine = Component.text("Royale", NamedTextColor.AQUA);

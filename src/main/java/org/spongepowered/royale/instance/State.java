@@ -46,7 +46,7 @@ public enum State implements InstanceState {
             return true;
         }
     },
-    CLEANUP {
+    OVERTIME {
         @Override
         public boolean canPlayersMove() {
             return true;

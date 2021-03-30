@@ -31,7 +31,6 @@ import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.instance.InstanceImpl;
-import org.spongepowered.royale.instance.State;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -45,12 +44,8 @@ public final class ProgressTask extends InstanceTask {
             BossBar.Color.GREEN,
             BossBar.Overlay.PROGRESS);
 
-    private final Set<UUID> bossBarViewers = new HashSet<>();
-
     private final long roundLengthTotal;
     private long roundLengthRemaining;
-
-    private ScheduledTask handle;
 
     public ProgressTask(final InstanceImpl instance) {
         super(instance);
@@ -60,20 +55,14 @@ public final class ProgressTask extends InstanceTask {
     }
 
     @Override
-    public boolean cancel() {
-        for (final UUID profile : this.bossBarViewers) {
-            Sponge.server().player(profile).ifPresent(p -> p.hideBossBar(this.bossBar));
-        }
-        return this.handle.cancel();
-    }
-
-    @Override
     public void accept(final ScheduledTask task) {
-        this.handle = task;
+        if (this.roundLengthRemaining < 0) {
+            throw new IllegalStateException("Round should be over but the progress task is still running");
+        }
 
         final ServerWorld world = this.instance.world();
 
-        final float percent = (float) this.roundLengthRemaining * 1f / this.roundLengthTotal;
+        final float percent = (float) this.roundLengthRemaining / this.roundLengthTotal;
         this.bossBar.progress(percent);
 
         if (percent < 0.33) {
@@ -92,21 +81,12 @@ public final class ProgressTask extends InstanceTask {
             this.bossBar.name(Component.text(String.format("Time remaining: %02d", seconds)));
         }
 
-        for (final ServerPlayer player : world.players()) {
-            if (this.bossBarViewers.add(player.uniqueId())) {
-                player.showBossBar(this.bossBar);
-            }
-        }
+        world.showBossBar(this.bossBar);
 
         this.roundLengthRemaining--;
-        if (this.roundLengthRemaining < 0) {
-            this.cancel();
+        if (this.roundLengthRemaining == 0) {
+            world.hideBossBar(this.bossBar);
             this.instance.advance();
         }
-    }
-
-    @Override
-    public boolean shouldStop() {
-        return this.roundLengthRemaining < 0;
     }
 }

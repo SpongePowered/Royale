@@ -58,16 +58,12 @@ import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.instance.InstanceImpl;
-import org.spongepowered.royale.instance.State;
 
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
 
-public final class CleanupTask extends InstanceTask {
+public final class OvertimeTask extends InstanceTask {
 
     private final BossBar bossBar = BossBar.bossBar(
             Component.text("OVERTIME!"),
@@ -80,16 +76,11 @@ public final class CleanupTask extends InstanceTask {
             Component.empty(),
             Title.Times.of(Duration.ZERO, Duration.ofSeconds(1), Duration.ofSeconds(2)));
 
-    private ScheduledTask handle;
-    private long duration = 0;
-
-    private final Set<UUID> bossBarViewers = new HashSet<>();
-
     private final long roundLengthTotal;
     private long roundLengthRemaining;
     private final Random random = new Random();
 
-    public CleanupTask(final InstanceImpl instance) {
+    public OvertimeTask(final InstanceImpl instance) {
         super(instance);
         this.roundLengthTotal = 150;
         this.roundLengthRemaining = this.roundLengthTotal;
@@ -97,51 +88,46 @@ public final class CleanupTask extends InstanceTask {
 
     @Override
     public void accept(final ScheduledTask task) {
-        this.handle = task;
-
-        final ServerWorld world =
-                this.instance.world();
+        final ServerWorld world = this.instance.world();
 
         final TextComponent append = Component.text("OVERTIME!", NamedTextColor.RED)
                 .append(Component.space())
                 .append(Component.text(this.instance.playersLeft(), NamedTextColor.GOLD))
                 .append(Component.text(" Players left", NamedTextColor.RED));
         this.bossBar.name(append);
-        final float percent = (float) this.roundLengthRemaining * 1f / this.roundLengthTotal;
+        final float percent = (float) this.roundLengthRemaining / this.roundLengthTotal;
         this.bossBar.progress(Math.min(percent, 1));
 
-        if (world != null && world.isLoaded()) {
+        world.showBossBar(this.bossBar);
 
-            for (final ServerPlayer player : world.players()) {
-                if (this.bossBarViewers.add(player.uniqueId())) {
-                    player.showBossBar(this.bossBar);
+        for (final ServerPlayer player : world.players()) {
+            if (!this.instance.isPlayerAlive(player)) {
+                continue;
+            }
+
+            if (this.roundLengthRemaining != 0) {
+                if (this.roundLengthRemaining == this.roundLengthTotal) {
+                    player.showTitle(this.title);
                 }
-                if (!this.instance.isPlayerAlive(player)) {
-                    continue;
-                }
+                this.spawnCleanupCrew(world, this.random, player);
+            } else {
+                final ServerLocation explosionLocation = player.serverLocation().add(this.random.nextInt(4), this.random.nextInt(4), this.random.nextInt(4));
 
-                if (this.duration < 150) {
-                    if (this.duration == 0) {
-                        player.showTitle(this.title);
-                    }
-
-                    this.spawnCleanupCrew(world, this.random, player);
-                } else {
-                    final ServerLocation explosionLocation = player.serverLocation().add(this.random.nextInt(4), this.random.nextInt(4), this.random.nextInt(4));
-
-                    world.triggerExplosion(Explosion.builder()
-                            .canCauseFire(true)
-                            .shouldBreakBlocks(true)
-                            .shouldPlaySmoke(true)
-                            .radius(8)
-                            .location(explosionLocation)
-                            .build());
-                }
+                world.triggerExplosion(Explosion.builder()
+                        .canCauseFire(true)
+                        .shouldBreakBlocks(true)
+                        .shouldPlaySmoke(true)
+                        .radius(8)
+                        .location(explosionLocation)
+                        .build());
             }
         }
 
-        this.duration++;
         this.roundLengthRemaining--;
+        if (this.roundLengthRemaining == 0) {
+            world.hideBossBar(this.bossBar);
+            this.instance.advance();
+        }
     }
 
     private void spawnCleanupCrew(ServerWorld world, Random random, ServerPlayer player) {
@@ -237,18 +223,5 @@ public final class CleanupTask extends InstanceTask {
         human.offer(Keys.CUSTOM_NAME, Component.text(ranger ? "Ranger" : "Swordsman",
                 ranger ? NamedTextColor.GREEN : NamedTextColor.BLUE));
         return human;
-    }
-
-    @Override
-    public boolean cancel() {
-        for (final UUID profile : this.bossBarViewers) {
-            Sponge.server().player(profile).ifPresent(p -> p.hideBossBar(this.bossBar));
-        }
-        return this.handle.cancel();
-    }
-
-    @Override
-    public boolean shouldStop() {
-        return this.instance.getState() != State.CLEANUP;
     }
 }

@@ -27,6 +27,7 @@ package org.spongepowered.royale.instance.task;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.instance.InstanceImpl;
@@ -34,65 +35,42 @@ import org.spongepowered.royale.instance.InstanceImpl;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 public final class StartTask extends InstanceTask {
 
-    private final List<Title> startTitles;
-
     private int seconds = 0;
-
-    private ScheduledTask handle;
 
     public StartTask(final InstanceImpl instance) {
         super(instance);
-
-        this.startTitles = new ArrayList<>();
-
-        final Title.Times times = Title.Times.of(Duration.ZERO, Duration.ofMillis(600), Duration.ofMillis(400));
-
-        for (long i = instance.getType().getRoundStartLength(); i > 0; i--) {
-
-            this.startTitles.add(Title.title(Component.text(i, NamedTextColor.DARK_RED), Component.empty(), times));
-
-            if (i == 3) {
-                this.startTitles.add(Title.title(Component.text("2", NamedTextColor.RED), Component.empty(), times));
-                this.startTitles.add(Title.title(Component.text("1", NamedTextColor.GOLD), Component.empty(), times));
-                this.startTitles.add(Title.title(instance.getType().getRoundStartTemplate().parse(null, Collections.emptyMap()),
-                        Component.empty(),
-                        times));
-                break;
-            }
-        }
     }
 
     @Override
     public void accept(final ScheduledTask task) {
-        this.handle = task;
-
         final ServerWorld world = this.instance.world();
 
-        if (this.seconds >= this.startTitles.size()) {
-            if (this.cancel()) {
-                this.instance.advance();
-            }
-            return;
+        long remaining = this.instance.getType().getRoundStartLength() - this.seconds;
+        if (remaining < 0) {
+            throw new IllegalStateException("Instance should have already started but the start task is still running");
         }
 
-        // Make sure a player ref isn't still here
-        world.players().forEach(player -> player.showTitle(this.startTitles.get(this.seconds)));
+        final Title.Times times = Title.Times.of(Duration.ZERO, Duration.ofMillis(600), Duration.ofMillis(400));
 
+        if (remaining == 0) {
+            final Component template = this.instance.getType().getRoundStartTemplate().parse(null, Collections.emptyMap());
+            world.showTitle(Title.title(template, Component.empty(), times));
+            this.instance.advance();
+        }
+
+        Title title;
+        if (remaining == 1) {
+            title = Title.title(Component.text("1", NamedTextColor.GOLD), Component.empty(), times);
+        } else if (remaining == 2) {
+            title = Title.title(Component.text("2", NamedTextColor.RED), Component.empty(), times);
+        } else {
+            title = Title.title(Component.text(remaining, NamedTextColor.DARK_RED), Component.empty(), times);
+        }
+        world.showTitle(title);
         this.seconds++;
-    }
-
-    @Override
-    public boolean cancel() {
-        return this.handle.cancel();
-    }
-
-    @Override
-    public boolean shouldStop() {
-        return this.seconds >= this.startTitles.size();
     }
 }

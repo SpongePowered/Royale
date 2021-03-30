@@ -36,8 +36,4 @@ public abstract class InstanceTask implements Consumer<ScheduledTask> {
     InstanceTask(final InstanceImpl instance) {
         this.instance = instance;
     }
-
-    public abstract boolean shouldStop();
-
-    public abstract boolean cancel();
 }
