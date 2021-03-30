@@ -24,10 +24,14 @@
  */
 package org.spongepowered.royale.instance;
 
+import net.kyori.adventure.text.Component;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.Keys;
+import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.world.SerializationBehavior;
+import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
@@ -111,18 +115,18 @@ public final class InstanceManagerImpl implements InstanceManager {
 
         final ServerWorld world = instance.world();
 
-        final Optional<ServerWorld> lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY);
-        if (!lobby.isPresent()) {
-            final CompletableFuture<Boolean> future = new CompletableFuture<>();
-            future.completeExceptionally(new IllegalStateException("Lobby world was not found!"));
-            return future;
-        }
+        final ServerWorld lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY)
+                .orElse(Sponge.server().worldManager().defaultWorld());
 
         // Move everyone out
         for (ServerPlayer player : world.players()) {
             if (instance.isPlayerRegistered(player)) {
                 instance.removePlayer(player);
             }
+            player.sendMessage(Component.text("This instance is unloading. You are being moved to the lobby"));
+            Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
+            player.setLocation(ServerLocation.of(lobby, lobby.properties().spawnPosition()));
+            player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
         }
 
         this.instances.remove(instance.getWorldKey());

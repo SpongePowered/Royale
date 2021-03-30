@@ -114,6 +114,7 @@ public final class EventHandler {
 
         if (event instanceof ChangeEntityWorldEvent && !((ChangeEntityWorldEvent) event).originalWorld().equals(((ChangeEntityWorldEvent) event).destinationWorld())) {
             instance.get().removePlayer(player);
+            Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
             player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
             return;
         }
