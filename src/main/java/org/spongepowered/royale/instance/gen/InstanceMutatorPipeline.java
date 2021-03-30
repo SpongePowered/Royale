@@ -71,7 +71,7 @@ public final class InstanceMutatorPipeline {
         }
 
         for (InstanceMutator mutator : this.mutators) {
-            world.blockEntityStream(min, max, StreamOptions.forceLoadedAndCopied())
+            world.blockEntityStream(min, max, StreamOptions.lazily())
                     .filter(mutator.getBlockEntityPredicate(instance))
                     .flatMap(mutator.getBlockEntityMapper(instance))
                     .apply(VolumeCollectors.applyBlockEntitiesOrRemove(world));
