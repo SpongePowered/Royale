@@ -40,16 +40,20 @@ import org.spongepowered.api.command.parameter.ArgumentReader;
 import org.spongepowered.api.command.parameter.CommandContext;
 import org.spongepowered.api.command.parameter.Parameter;
 import org.spongepowered.api.command.parameter.managed.ValueParameter;
+import org.spongepowered.api.command.parameter.managed.ValueParser;
 import org.spongepowered.api.command.parameter.managed.clientcompletion.ClientCompletionType;
 import org.spongepowered.api.command.parameter.managed.clientcompletion.ClientCompletionTypes;
+import org.spongepowered.api.command.parameter.managed.standard.ResourceKeyedValueParameters;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.type.HandTypes;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.item.ItemTypes;
 import org.spongepowered.api.item.inventory.ItemStack;
+import org.spongepowered.api.world.SerializationBehavior;
 import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.api.world.server.WorldManager;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.royale.api.Instance;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
@@ -78,6 +82,10 @@ final class Commands {
     private static final Parameter.Value<ResourceKey> INSTANCE_KEY_PARAMETER = Parameter.builder(ResourceKey.class)
             .key("instance key")
             .addParser(new InstanceKeyParameter())
+            .build();
+    private static final Parameter.Value<ResourceKey> NEW_WORLD_KEY_PARAMETER = Parameter.builder(ResourceKey.class)
+            .key("new world")
+            .addParser(ResourceKeyedValueParameters.RESOURCE_KEY)
             .build();
 
     private static Command.Parameterized createCommand() {
@@ -179,6 +187,35 @@ final class Commands {
                 })
                 .build();
     }
+
+    private static Command.Parameterized copyCommand() {
+        return Command.builder()
+                .addParameter(Commands.WORLD_KEY_PARAMETER)
+                .addParameter(Commands.NEW_WORLD_KEY_PARAMETER)
+                .permission(Constants.Plugin.ID + ".command.copy")
+                .executor(context -> {
+                    final ResourceKey sourceWorldKey = context.requireOne(Commands.WORLD_KEY_PARAMETER);
+                    final ResourceKey targetWorldKey = context.requireOne(Commands.NEW_WORLD_KEY_PARAMETER);
+                    final WorldManager wm = Sponge.server().worldManager();
+                    if (wm.worldExists(targetWorldKey)) {
+                        return CommandResult.error(Component.text("World already exists: " + targetWorldKey));
+                    }
+                    if (wm.worldExists(sourceWorldKey)) {
+                        wm.copyWorld(sourceWorldKey, targetWorldKey)
+                                .thenComposeAsync(b -> wm.loadProperties(targetWorldKey))
+                                .thenAcceptAsync(opt -> opt.ifPresent(prop -> {
+                            prop.setSerializationBehavior(SerializationBehavior.NONE);
+                            wm.saveProperties(prop);
+                            context.sendMessage(Identity.nil(), Component.text("World copied and set to readonly!"));
+                        }));
+                    } else {
+                        return CommandResult.error(Component.text("World does not exists: " + sourceWorldKey));
+                    }
+                    return CommandResult.success();
+                })
+                .build();
+    }
+
 
     private static Command.Parameterized linkCommand() {
         return Command.builder()
@@ -366,6 +403,7 @@ final class Commands {
                 .addChild(Commands.createCommand(), "create")
                 .addChild(Commands.statusCommand(), "status")
                 .addChild(Commands.linkCommand(), "link")
+                .addChild(Commands.copyCommand(), "copy")
                 .addChild(Commands.startCommand(), "start")
                 .addChild(Commands.endCommand(), "end")
                 .addChild(Commands.joinCommand(), "join")
