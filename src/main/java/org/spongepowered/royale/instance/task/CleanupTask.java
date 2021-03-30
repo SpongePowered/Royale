@@ -165,14 +165,14 @@ public final class CleanupTask extends InstanceTask {
             if (spawnLocation != null) {
                 waterSpawn = playerLocaction.blockType().isAnyOf(BlockTypes.WATER);
                 if (waterSpawn) {
-                    guardian.setLocation(spawnLocation);
+
                     human.remove();
                     if (world.entities(guardian.boundingBox().get()).isEmpty()) {
                         tries--;
                         continue;
                     }
                 } else {
-                    human.setLocation(spawnLocation);
+
                     guardian.remove();
                     if (world.entities(human.boundingBox().get()).isEmpty()) {
                         tries--;
@@ -187,8 +187,10 @@ public final class CleanupTask extends InstanceTask {
         if (spawnLocation != null) {
             if (waterSpawn) {
                 world.spawnEntity(guardian);
+                guardian.setLocation(spawnLocation);
             } else {
                 world.spawnEntity(this.customizeHuman(random, human));
+                human.setLocation(spawnLocation);
             }
         } else {
             // someone tried to be smart
