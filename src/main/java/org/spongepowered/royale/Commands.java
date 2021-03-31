@@ -32,6 +32,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.adventure.SpongeComponents;
+import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.exception.ArgumentParseException;
@@ -309,6 +310,37 @@ final class Commands {
                 .build();
     }
 
+    private static Command.Parameterized unloadCommand() {
+        return Command.builder()
+                .permission(Constants.Plugin.ID + ".command.unload")
+                .shortDescription(Component.text().content("Unloading an ")
+                        .append(Component.text("instance", NamedTextColor.LIGHT_PURPLE))
+                        .append(Component.text("."))
+                        .build())
+                .addParameter(Commands.INSTANCE_KEY_PARAMETER)
+                .executor(context -> {
+                    final ResourceKey worldKey = context.requireOne(Commands.INSTANCE_KEY_PARAMETER);
+
+                    context.sendMessage(Identity.nil(), Component.text()
+                            .content("Unloading instance in [")
+                            .append(Component.text(worldKey.formatted(), NamedTextColor.GREEN))
+                            .append(Component.text("]."))
+                            .build());
+
+                    Royale.getInstance().getInstanceManager().unloadInstance(worldKey)
+                            .thenAcceptAsync(success -> {
+                                if (success) {
+                                    Royale.getInstance().getPlugin().getLogger().info("Instance {} has been unloaded!", worldKey);
+                                } else {
+
+                                    Royale.getInstance().getPlugin().getLogger().info("Unable to unload instance in {}!", worldKey);
+                                }
+                            }, Royale.getInstance().getTaskExecutorService());
+                    return CommandResult.empty();
+                })
+                .build();
+    }
+
     private static Command.Parameterized joinCommand() {
         return Command.builder()
                 .permission(Constants.Plugin.ID + ".command.join")
@@ -406,6 +438,7 @@ final class Commands {
                 .addChild(Commands.copyCommand(), "copy")
                 .addChild(Commands.startCommand(), "start")
                 .addChild(Commands.endCommand(), "end")
+                .addChild(Commands.unloadCommand(), "unload")
                 .addChild(Commands.joinCommand(), "join")
                 .addChild(Commands.reloadCommand(), "reload")
                 .build();

@@ -102,7 +102,7 @@ public final class InstanceManagerImpl implements InstanceManager {
             throw new UnknownInstanceException(key.formatted());
         }
 
-        instance.advanceTo(State.ENDING);
+        instance.advanceTo(State.OVERTIME);
     }
 
     @Override
