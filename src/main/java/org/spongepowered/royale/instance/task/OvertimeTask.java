@@ -82,7 +82,7 @@ public final class OvertimeTask extends InstanceTask {
 
     public OvertimeTask(final InstanceImpl instance) {
         super(instance);
-        this.roundLengthTotal = 150;
+        this.roundLengthTotal = 150; //TODO move to config
         this.roundLengthRemaining = this.roundLengthTotal;
     }
 
@@ -123,11 +123,16 @@ public final class OvertimeTask extends InstanceTask {
             }
         }
 
-        this.roundLengthRemaining--;
-        if (this.roundLengthRemaining == 0) {
-            world.hideBossBar(this.bossBar);
+        if (this.roundLengthRemaining-- == 0) {
             this.instance.advance();
         }
+    }
+
+    @Override
+    public void cleanup() {
+        final ServerWorld world = this.instance.world();
+        world.hideBossBar(this.bossBar);
+        //TODO kill cleanup crew
     }
 
     private void spawnCleanupCrew(ServerWorld world, Random random, ServerPlayer player) {

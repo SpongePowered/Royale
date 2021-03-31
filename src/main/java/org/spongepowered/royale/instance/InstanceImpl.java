@@ -120,8 +120,8 @@ public final class InstanceImpl implements Instance {
         }
 
         this.scoreboard.addPlayer(player);
-
-        if (this.isFull() || this.instanceType.getAutomaticStartPlayerCount() == this.playerSpawns.size()) {
+        final int automaticStartPlayerCount = this.instanceType.getAutomaticStartPlayerCount();
+        if (automaticStartPlayerCount != -1 && (this.isFull() || this.instanceType.getAutomaticStartPlayerCount() == this.playerSpawns.size())) {
             try {
                 Royale.getInstance().getInstanceManager().startInstance(this.worldKey);
             } catch (UnknownInstanceException e) {
@@ -266,6 +266,7 @@ public final class InstanceImpl implements Instance {
                 return true;
             }
 
+            ((InstanceTask) taskOpt.get().task().consumer()).cleanup();
             taskOpt.get().cancel();
             return true;
         });

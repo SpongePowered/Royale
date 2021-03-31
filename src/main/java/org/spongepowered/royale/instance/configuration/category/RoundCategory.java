@@ -42,8 +42,7 @@ public final class RoundCategory extends AbstractConfigurationCategory {
     public List<ItemStackSnapshot> defaultItems = Constants.Map.Round.DEFAULT_ITEMS;
 
     @Setting
-    @Comment("Countdown until round starts (in seconds). Specifying -1 means the round will start the moment the instance starts. Default"
-            + " (" + Constants.Map.Round.DEFAULT_START_LENGTH + ").")
+    @Comment("Countdown until round starts (in seconds). Default (" + Constants.Map.Round.DEFAULT_START_LENGTH + ").")
     public long start = Constants.Map.Round.DEFAULT_START_LENGTH;
 
     @Setting

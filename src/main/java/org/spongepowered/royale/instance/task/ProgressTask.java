@@ -45,22 +45,31 @@ public final class ProgressTask extends InstanceTask {
             BossBar.Overlay.PROGRESS);
 
     private final long roundLengthTotal;
+    private final boolean infinite;
     private long roundLengthRemaining;
 
     public ProgressTask(final InstanceImpl instance) {
         super(instance);
-
         this.roundLengthTotal = instance.getType().getRoundLength();
-        this.roundLengthRemaining = this.roundLengthTotal;
+        this.infinite = this.roundLengthTotal == -1;
+        this.roundLengthRemaining = this.infinite ? Long.MAX_VALUE : this.roundLengthTotal;
     }
 
     @Override
     public void accept(final ScheduledTask task) {
+        final ServerWorld world = this.instance.world();
+
+        if (this.infinite) {
+            this.bossBar.progress(1);
+            this.bossBar.color(BossBar.Color.GREEN);
+            this.bossBar.name(Component.text("Time remaining: --")); //TODO
+            world.showBossBar(this.bossBar);
+            return;
+        }
+
         if (this.roundLengthRemaining < 0) {
             throw new IllegalStateException("Round should be over but the progress task is still running");
         }
-
-        final ServerWorld world = this.instance.world();
 
         final float percent = (float) this.roundLengthRemaining / this.roundLengthTotal;
         this.bossBar.progress(percent);
@@ -83,10 +92,14 @@ public final class ProgressTask extends InstanceTask {
 
         world.showBossBar(this.bossBar);
 
-        this.roundLengthRemaining--;
-        if (this.roundLengthRemaining == 0) {
-            world.hideBossBar(this.bossBar);
+        if (this.roundLengthRemaining-- == 0) {
             this.instance.advance();
         }
+    }
+
+    @Override
+    public void cleanup() {
+        final ServerWorld world = this.instance.world();
+        world.hideBossBar(this.bossBar);
     }
 }

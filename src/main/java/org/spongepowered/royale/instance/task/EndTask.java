@@ -39,24 +39,29 @@ import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.InstanceImpl;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public final class EndTask extends InstanceTask {
 
+    private final boolean mustStopManually;
     private final long endLengthTotal;
     private long endLengthRemaining;
 
     public EndTask(final InstanceImpl instance) {
         super(instance);
         this.endLengthTotal = instance.getType().getRoundEndLength();
-        this.endLengthRemaining = this.endLengthTotal;
+        this.mustStopManually = this.endLengthTotal == -1;
+        this.endLengthRemaining = this.mustStopManually ? Long.MAX_VALUE : this.endLengthTotal;
     }
 
     @Override
     public void accept(final ScheduledTask task) {
         final ServerWorld world = this.instance.world();
+
+        if (this.mustStopManually) {
+            return;
+        }
 
         if (this.endLengthRemaining < 0) {
             throw new IllegalStateException("End phase should be over but the end task is still running");
@@ -105,8 +110,7 @@ public final class EndTask extends InstanceTask {
             Royale.getInstance().getPlugin().getLogger().info("Round finished in {}!", this.instance.getWorldKey());
         }
 
-        this.endLengthRemaining--;
-        if (this.endLengthRemaining == 0) {
+        if (this.endLengthRemaining-- == 0) {
             this.instance.advance();
         }
     }
