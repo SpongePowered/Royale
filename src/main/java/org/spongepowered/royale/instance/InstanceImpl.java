@@ -167,6 +167,9 @@ public final class InstanceImpl implements Instance {
 
     @Override
     public boolean addSpectator(ServerPlayer player) {
+        if (this.isPlayerAlive(player)) {
+            throw new IllegalArgumentException("Player is still alive!");
+        }
         //TODO fix location
         player.setLocation(ServerLocation.of(this.worldKey, this.world().border().center()));
         player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
