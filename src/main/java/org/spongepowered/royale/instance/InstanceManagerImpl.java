@@ -115,19 +115,10 @@ public final class InstanceManagerImpl implements InstanceManager {
 
         final ServerWorld world = instance.world();
 
-        final ServerWorld lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY)
-                .orElse(Sponge.server().worldManager().defaultWorld());
+        instance.setUnloading(true);
 
         // Move everyone out
-        for (ServerPlayer player : world.players()) {
-            if (instance.isPlayerRegistered(player)) {
-                instance.removePlayer(player);
-            }
-            player.sendMessage(Component.text("This instance is unloading. You are being moved to the lobby"));
-            Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
-            player.setLocation(ServerLocation.of(lobby, lobby.properties().spawnPosition()));
-            player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
-        }
+        instance.kickAll();
 
         this.instances.remove(instance.getWorldKey());
 

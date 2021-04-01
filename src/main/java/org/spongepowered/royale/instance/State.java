@@ -30,6 +30,11 @@ public enum State implements InstanceState {
 
     IDLE {
         @Override
+        public boolean canPlayersLeave() {
+            return true;
+        }
+
+        @Override
         public boolean canPlayersJoin() {
             return true;
         }
@@ -58,6 +63,11 @@ public enum State implements InstanceState {
         }
     },
     ENDING {
+        @Override
+        public boolean canPlayersLeave() {
+            return true;
+        }
+
         @Override
         public boolean canPlayersMove() {
             return true;

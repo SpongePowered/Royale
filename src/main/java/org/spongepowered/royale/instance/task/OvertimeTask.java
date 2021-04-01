@@ -110,16 +110,6 @@ public final class OvertimeTask extends InstanceTask {
                     player.showTitle(this.title);
                 }
                 this.spawnCleanupCrew(world, this.random, player);
-            } else {
-                final ServerLocation explosionLocation = player.serverLocation().add(this.random.nextInt(4), this.random.nextInt(4), this.random.nextInt(4));
-
-                world.triggerExplosion(Explosion.builder()
-                        .canCauseFire(true)
-                        .shouldBreakBlocks(true)
-                        .shouldPlaySmoke(true)
-                        .radius(8)
-                        .location(explosionLocation)
-                        .build());
             }
         }
 

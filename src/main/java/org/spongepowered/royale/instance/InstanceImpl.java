@@ -42,7 +42,6 @@ import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.api.Instance;
-import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 import org.spongepowered.royale.instance.scoreboard.InstanceScoreboard;
 import org.spongepowered.royale.instance.task.OvertimeTask;
 import org.spongepowered.royale.instance.task.EndTask;
@@ -76,6 +75,7 @@ public final class InstanceImpl implements Instance {
     private final Set<ServerLocation> signLoc;
     private State state = State.IDLE;
     private UUID winner;
+    private boolean unloading;
 
     public InstanceImpl(final ServerWorld world, final InstanceType instanceType) {
         this.worldKey = world.key();
@@ -108,24 +108,21 @@ public final class InstanceImpl implements Instance {
         if (!this.state.canPlayersJoin()) {
             throw new IllegalStateException("This instance doesn't accept new players");
         }
+        if (this.isPlayerRegistered(player)) {
+            throw new IllegalArgumentException("Player is already registered");
+        }
 
         final ServerWorld world = this.world();
 
         final Vector3d playerSpawn = this.unusedSpawns.pop();
         player.setLocation(ServerLocation.of(world, playerSpawn));
-
-        final Vector3d previous = this.playerSpawns.putIfAbsent(player.uniqueId(), playerSpawn);
-        if (previous != null) {
-            throw new IllegalArgumentException("Player is already registered");
-        }
+        this.playerSpawns.put(player.uniqueId(), playerSpawn);
 
         this.scoreboard.addPlayer(player);
         final int automaticStartPlayerCount = this.instanceType.getAutomaticStartPlayerCount();
         if (automaticStartPlayerCount != -1 && (this.isFull() || this.instanceType.getAutomaticStartPlayerCount() == this.playerSpawns.size())) {
-            try {
-                Royale.getInstance().getInstanceManager().startInstance(this.worldKey);
-            } catch (UnknownInstanceException e) {
-                e.printStackTrace();
+            if (this.state == State.IDLE) {
+                this.advance();
             }
         }
 
@@ -143,10 +140,9 @@ public final class InstanceImpl implements Instance {
         this.resetPlayer(player);
         player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
 
-        if (this.state == State.IDLE) {
+        if (this.state.canPlayersLeave()) {
             final Vector3d spawn = this.playerSpawns.remove(player.uniqueId());
             this.unusedSpawns.offer(spawn);
-
             this.scoreboard.removePlayer(player);
         } else {
             this.scoreboard.killPlayer(player);
@@ -158,9 +154,11 @@ public final class InstanceImpl implements Instance {
             }
             this.world().playSound(Sound.sound(SoundTypes.ENTITY_GHAST_HURT, Sound.Source.NEUTRAL, 0.5f, 0.7f));
 
-            if (this.playerDeaths.size() == this.playerSpawns.size() - 1 && this.winner == null) {
-                this.winner = this.playerSpawns.keySet().stream().filter(uuid -> !this.playerDeaths.contains(uuid)).limit(1).findAny().get();
-                this.advanceTo(State.ENDING);
+            if (this.state != State.ENDING) {
+                if (this.winner == null && this.playerDeaths.size() == this.playerSpawns.size() - 1) {
+                    this.winner = this.playerSpawns.keySet().stream().filter(uuid -> !this.playerDeaths.contains(uuid)).limit(1).findAny().get();
+                    this.advanceTo(State.ENDING);
+                }
             }
         }
         this.updateSign();
@@ -172,6 +170,7 @@ public final class InstanceImpl implements Instance {
         //TODO fix location
         player.setLocation(ServerLocation.of(this.worldKey, this.world().border().center()));
         player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
+        //TODO night vision ?
         return true;
     }
 
@@ -208,6 +207,21 @@ public final class InstanceImpl implements Instance {
     @Override
     public Collection<UUID> getPlayers() {
         return Collections.unmodifiableCollection(this.playerSpawns.keySet());
+    }
+
+    public void kickAll() {
+        final ServerWorld lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY)
+                .orElse(Sponge.server().worldManager().defaultWorld());
+        this.stopTasks();
+
+        for (ServerPlayer player : this.world().players()) {
+            player.sendMessage(Component.text("This instance is unloading. You are being moved to the lobby"));
+            this.scoreboard.removePlayer(player);
+            Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
+            player.setLocation(ServerLocation.of(lobby, lobby.properties().spawnPosition()));
+            this.resetPlayer(player);
+            player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
+        }
     }
 
     private void resetPlayer(final ServerPlayer player) {
@@ -249,28 +263,7 @@ public final class InstanceImpl implements Instance {
     }
 
     private void onStateAdvance(final State next) {
-        this.tasks.removeIf(uuid -> {
-            final Optional<ScheduledTask> taskOpt = Sponge.server().scheduler().taskById(uuid);
-            if (!taskOpt.isPresent()) {
-                Royale.getInstance().getPlugin().getLogger().warn("Missing task with UUID {} while advancing to state {}", uuid, next);
-                return true;
-            }
-
-            if (taskOpt.get().isCancelled()) {
-                Royale.getInstance().getPlugin().getLogger().warn("Cancelled task with UUID {} while advancing to state {}", uuid, next);
-                return true;
-            }
-
-            if (!(taskOpt.get().task().consumer() instanceof InstanceTask)) {
-                Royale.getInstance().getPlugin().getLogger().warn("Malformed task with UUID {} while advancing to state {}", uuid, next);
-                return true;
-            }
-
-            ((InstanceTask) taskOpt.get().task().consumer()).cleanup();
-            taskOpt.get().cancel();
-            return true;
-        });
-
+        this.stopTasks();
         switch (next) {
             case STARTING:
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
@@ -309,6 +302,7 @@ public final class InstanceImpl implements Instance {
                 ).uniqueId());
                 break;
             case STOPPED:
+                this.unloading = true;
                 Royale.getInstance().getInstanceManager().unloadInstance(this.worldKey)
                         .thenComposeAsync(b -> Royale.getInstance().getInstanceManager().createInstance(this.worldKey, this.instanceType, false), Royale.getInstance().getTaskExecutorService())
                         .thenAcceptAsync(instance -> {
@@ -321,6 +315,30 @@ public final class InstanceImpl implements Instance {
                 break;
         }
         this.updateSign();
+    }
+
+    private void stopTasks() {
+        this.tasks.removeIf(uuid -> {
+            final Optional<ScheduledTask> taskOpt = Sponge.server().scheduler().taskById(uuid);
+            if (!taskOpt.isPresent()) {
+                Royale.getInstance().getPlugin().getLogger().warn("Missing task with UUID {} while in state {}", uuid, this.state);
+                return true;
+            }
+
+            if (taskOpt.get().isCancelled()) {
+                Royale.getInstance().getPlugin().getLogger().warn("Cancelled task with UUID {} while in state {}", uuid, this.state);
+                return true;
+            }
+
+            if (!(taskOpt.get().task().consumer() instanceof InstanceTask)) {
+                Royale.getInstance().getPlugin().getLogger().warn("Malformed task with UUID {} while in state {}", uuid, this.state);
+                return true;
+            }
+
+            ((InstanceTask) taskOpt.get().task().consumer()).cleanup();
+            taskOpt.get().cancel();
+            return true;
+        });
     }
 
     @Override
@@ -347,6 +365,10 @@ public final class InstanceImpl implements Instance {
                 .add("type", this.instanceType)
                 .add("state", this.state)
                 .toString();
+    }
+
+    public void setUnloading(boolean unloading) {
+        this.unloading = unloading;
     }
 
     @Override

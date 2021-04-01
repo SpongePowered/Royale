@@ -26,6 +26,10 @@ package org.spongepowered.royale.api;
 
 public interface InstanceState {
 
+    default boolean canPlayersLeave() {
+        return false;
+    }
+
     default boolean canPlayersJoin() {
         return false;
     }
