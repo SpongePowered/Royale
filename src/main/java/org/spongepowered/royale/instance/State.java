@@ -50,6 +50,11 @@ public enum State implements InstanceState {
         public boolean canPlayersInteract() {
             return true;
         }
+
+        @Override
+        public boolean canPlayersTakeDamage() {
+            return true;
+        }
     },
     OVERTIME {
         @Override
@@ -59,6 +64,11 @@ public enum State implements InstanceState {
 
         @Override
         public boolean canPlayersInteract() {
+            return true;
+        }
+
+        @Override
+        public boolean canPlayersTakeDamage() {
             return true;
         }
     },

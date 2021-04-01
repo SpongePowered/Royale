@@ -41,4 +41,8 @@ public interface InstanceState {
     default boolean canPlayersInteract() {
         return false;
     }
+
+    default boolean canPlayersTakeDamage() {
+        return false;
+    }
 }
