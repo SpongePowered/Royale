@@ -83,7 +83,7 @@ public final class ProgressTask extends InstanceTask {
         }
 
         final int seconds = (int) this.roundLengthRemaining % 60;
-        if (this.roundLengthRemaining > 60) {
+        if (this.roundLengthRemaining >= 60) {
             final int minutes = (int) this.roundLengthRemaining / 60;
             this.bossBar.name(Component.text(String.format("Time remaining: %02d:%02d", minutes, seconds)));
         } else {
