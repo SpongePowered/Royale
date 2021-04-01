@@ -24,6 +24,7 @@
  */
 package org.spongepowered.royale.instance;
 
+import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.ResourceKey;
@@ -31,6 +32,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.block.transaction.Operations;
+import org.spongepowered.api.command.exception.CommandException;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.type.HandTypes;
@@ -53,15 +55,20 @@ import org.spongepowered.api.event.entity.MoveEntityEvent;
 import org.spongepowered.api.event.filter.Getter;
 import org.spongepowered.api.event.filter.cause.First;
 import org.spongepowered.api.event.filter.cause.Root;
+import org.spongepowered.api.event.lifecycle.RefreshGameEvent;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.api.Instance;
 import org.spongepowered.royale.api.RoyaleKeys;
+import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
+import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 
+import java.nio.file.Path;
 import java.util.Optional;
 
 public final class EventHandler {
@@ -257,6 +264,25 @@ public final class EventHandler {
                             .thenAcceptAsync(instance -> instance.link((Sign) sign), Royale.getInstance().getTaskExecutorService());
                 }
             }
+        });
+    }
+
+    @Listener
+    public void onRefresh(final RefreshGameEvent event) {
+        Constants.Plugin.INSTANCE_TYPE.get().stream().forEach(instanceType -> {
+            final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(instanceType.key().value() + ".conf");
+            final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
+                    InstanceTypeConfiguration.class, Royale.getInstance().getConfigurationOptions(), configPath);
+
+            try {
+                adapter.load();
+            } catch (final ConfigurateException e) {
+                Royale.getInstance().getPlugin().getLogger().error("Unable to load configuration for instance type [" + instanceType.key().formatted() + "].");
+            }
+
+            instanceType.injectFromConfig(adapter.getConfig());
+
+            Royale.getInstance().getPlugin().getLogger().info("Reloaded configuration for instance type [" + instanceType.key().formatted() + "].");
         });
     }
 }

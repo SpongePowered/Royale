@@ -418,44 +418,6 @@ final class Commands {
                 .build();
     }
 
-    //TODO move to reload event
-    private static Command.Parameterized reloadCommand()  {
-        return Command.builder()
-                .permission(Constants.Plugin.ID + ".command.reload")
-                .shortDescription(Component.text()
-                        .content("Reloads the configuration of an ")
-                        .append(Component.text("instance type", NamedTextColor.LIGHT_PURPLE))
-                        .append(Component.text("."))
-                        .build())
-                .addParameter(Commands.INSTANCE_TYPE_PARAMETER)
-                .executor(context -> {
-                    final InstanceType instanceType = context.requireOne(Commands.INSTANCE_TYPE_PARAMETER);
-                    final Path configPath = Constants.Map.INSTANCE_TYPES_FOLDER.resolve(instanceType.key().value() + ".conf");
-                    final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
-                            InstanceTypeConfiguration.class, Royale.getInstance().getConfigurationOptions(), configPath);
-
-                    try {
-                        adapter.load();
-                    } catch (final ConfigurateException e) {
-                        throw new CommandException(
-                                Component.text().content("Unable to load configuration for instance type [")
-                                    .append(Component.text(instanceType.key().formatted(), NamedTextColor.LIGHT_PURPLE))
-                                    .append(Component.text("]."))
-                                    .build());
-                    }
-
-                    instanceType.injectFromConfig(adapter.getConfig());
-
-                    context.sendMessage(Identity.nil(), Component.text().content("Reloaded configuration for instance type [")
-                            .append(Component.text(instanceType.key().formatted(), NamedTextColor.LIGHT_PURPLE))
-                            .append(Component.text("]."))
-                            .build());
-
-                    return CommandResult.success();
-                })
-                .build();
-    }
-
     static Command.Parameterized rootCommand() {
         return Command.builder()
                 .permission(Constants.Plugin.ID + ".command.root")
@@ -474,7 +436,6 @@ final class Commands {
                 .addChild(Commands.unloadCommand(), "unload")
                 .addChild(Commands.joinCommand(), "join")
                 .addChild(Commands.spectateCommand(), "spectate")
-                .addChild(Commands.reloadCommand(), "reload")
                 .build();
     }
 
