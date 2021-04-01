@@ -385,6 +385,39 @@ final class Commands {
                 .build();
     }
 
+    private static Command.Parameterized spectateCommand() {
+        return Command.builder()
+                .permission(Constants.Plugin.ID + ".command.spectate")
+                .shortDescription(Component.text()
+                        .content("Spectate an ")
+                        .append(Component.text("instance", NamedTextColor.LIGHT_PURPLE))
+                        .append(Component.text("."))
+                        .build())
+                .addParameter(Commands.INSTANCE_KEY_PARAMETER)
+                .executor(context -> {
+                    if (!(context.cause().root() instanceof ServerPlayer)) {
+                        throw new CommandException(Component.text("A player needs to be provided if you are not a player!", NamedTextColor.RED));
+                    }
+
+                    final ServerPlayer player = (ServerPlayer) context.cause().root();
+                    final ResourceKey worldKey = context.requireOne(Commands.INSTANCE_KEY_PARAMETER);
+
+                    final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(worldKey);
+                    if (!instance.isPresent()) {
+                        throw new CommandException(
+                                Component.text().content("Instance [")
+                                        .append(Component.text(worldKey.formatted(), NamedTextColor.GREEN))
+                                        .append(Component.text("] is not a valid instance, is it running?"))
+                                        .build());
+                    }
+
+                    instance.get().addSpectator(player);
+
+                    return CommandResult.success();
+                })
+                .build();
+    }
+
     //TODO move to reload event
     private static Command.Parameterized reloadCommand()  {
         return Command.builder()
@@ -440,6 +473,7 @@ final class Commands {
                 .addChild(Commands.endCommand(), "end")
                 .addChild(Commands.unloadCommand(), "unload")
                 .addChild(Commands.joinCommand(), "join")
+                .addChild(Commands.spectateCommand(), "spectate")
                 .addChild(Commands.reloadCommand(), "reload")
                 .build();
     }
