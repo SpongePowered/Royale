@@ -164,6 +164,7 @@ public final class OvertimeTask extends InstanceTask {
 
         if (spawnLocation != null) {
             if (waterSpawn) {
+                guardian.offer(Keys.POTION_EFFECTS, Arrays.asList(PotionEffect.of(PotionEffectTypes.SPEED, 2, 10000)));
                 world.spawnEntity(guardian);
                 guardian.setLocation(spawnLocation);
             } else {
@@ -174,7 +175,7 @@ public final class OvertimeTask extends InstanceTask {
         // someone tried to be smart
         final Silverfish silverfish = world.createEntity(EntityTypes.SILVERFISH, location);
         silverfish.offer(Keys.HEALTH, 200.0);
-        silverfish.offer(Keys.POTION_EFFECTS, Arrays.asList(PotionEffect.of(PotionEffectTypes.POISON, 1, 100)));
+        silverfish.offer(Keys.POTION_EFFECTS, Arrays.asList(PotionEffect.of(PotionEffectTypes.POISON, 1, 100), PotionEffect.of(PotionEffectTypes.STRENGTH, 1, 100)));
         world.spawnEntity(silverfish);
     }
 
