@@ -278,7 +278,7 @@ public final class InstanceImpl implements Instance {
         if (this.state == State.STOPPED) {
             throw new IllegalStateException("The instance is stopped");
         }
-        if (this.state == State.STARTING && this.playerSpawns.size() == 1) {
+        if (this.state == State.STARTING && this.playerSpawns.size() <= 1) {
             state = State.ENDING;
         }
 
