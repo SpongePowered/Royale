@@ -418,6 +418,47 @@ final class Commands {
                 .build();
     }
 
+    private static Command.Parameterized leaveCommand() {
+        return Command.builder()
+                .permission(Constants.Plugin.ID + ".command.leave")
+                .shortDescription(Component.text()
+                        .content("Leave an ")
+                        .append(Component.text("instance", NamedTextColor.LIGHT_PURPLE))
+                        .append(Component.text("."))
+                        .build())
+                .executor(context -> {
+                    if (!(context.cause().root() instanceof ServerPlayer)) {
+                        throw new CommandException(Component.text("A player needs to be provided if you are not a player!", NamedTextColor.RED));
+                    }
+
+                    final ServerPlayer player = (ServerPlayer) context.cause().root();
+                    final ResourceKey worldKey = player.world().key();
+
+                    final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(worldKey);
+                    if (!instance.isPresent()) {
+                        throw new CommandException(
+                                Component.text().content("Instance [")
+                                        .append(Component.text(worldKey.formatted(), NamedTextColor.GREEN))
+                                        .append(Component.text("] is not a valid instance, is it running?"))
+                                        .build());
+                    }
+
+                    if (instance.get().isPlayerAlive(player)) {
+                        instance.get().removePlayer(player);
+                    } else {
+                        instance.get().removeSpectator(player);
+                    }
+
+                    final ServerWorld lobby = Sponge.server().worldManager().world(Constants.Map.Lobby.LOBBY_WORLD_KEY).orElse(Sponge.server().worldManager().defaultWorld());
+                    Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
+                    player.setLocation(ServerLocation.of(lobby, lobby.properties().spawnPosition()));
+                    player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
+
+                    return CommandResult.success();
+                })
+                .build();
+    }
+
     static Command.Parameterized rootCommand() {
         return Command.builder()
                 .permission(Constants.Plugin.ID + ".command.root")
@@ -436,6 +477,7 @@ final class Commands {
                 .addChild(Commands.unloadCommand(), "unload")
                 .addChild(Commands.joinCommand(), "join")
                 .addChild(Commands.spectateCommand(), "spectate")
+                .addChild(Commands.leaveCommand(), "leave")
                 .build();
     }
 
