@@ -65,11 +65,7 @@ import java.util.Random;
 
 public final class OvertimeTask extends InstanceTask {
 
-    private final BossBar bossBar = BossBar.bossBar(
-            Component.text("OVERTIME!"),
-            0.0f,
-            BossBar.Color.RED,
-            BossBar.Overlay.PROGRESS);
+    private final BossBar bossBar;
 
     private final Title title = Title.title(
             Component.text("Survive!", NamedTextColor.RED),
@@ -80,8 +76,9 @@ public final class OvertimeTask extends InstanceTask {
     private long roundLengthRemaining;
     private final Random random = new Random();
 
-    public OvertimeTask(final InstanceImpl instance) {
+    public OvertimeTask(final InstanceImpl instance, BossBar bossBar) {
         super(instance);
+        this.bossBar = bossBar;
         this.roundLengthTotal = 150; //TODO move to config
         this.roundLengthRemaining = this.roundLengthTotal;
     }
@@ -173,13 +170,12 @@ public final class OvertimeTask extends InstanceTask {
                 world.spawnEntity(this.customizeHuman(random, human));
                 human.setLocation(spawnLocation);
             }
-        } else {
-            // someone tried to be smart
-            final Silverfish silverfish = world.createEntity(EntityTypes.SILVERFISH, location);
-            silverfish.offer(Keys.HEALTH, 200.0);
-            silverfish.offer(Keys.POTION_EFFECTS, Arrays.asList(PotionEffect.of(PotionEffectTypes.POISON, 1, 100)));
-            world.spawnEntity(silverfish);
         }
+        // someone tried to be smart
+        final Silverfish silverfish = world.createEntity(EntityTypes.SILVERFISH, location);
+        silverfish.offer(Keys.HEALTH, 200.0);
+        silverfish.offer(Keys.POTION_EFFECTS, Arrays.asList(PotionEffect.of(PotionEffectTypes.POISON, 1, 100)));
+        world.spawnEntity(silverfish);
     }
 
     private Human customizeHuman(Random random, Human human) {

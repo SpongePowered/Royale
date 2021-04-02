@@ -24,6 +24,7 @@
  */
 package org.spongepowered.royale.instance;
 
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -31,6 +32,8 @@ import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.data.Keys;
+import org.spongepowered.api.effect.potion.PotionEffect;
+import org.spongepowered.api.effect.potion.PotionEffectTypes;
 import org.spongepowered.api.effect.sound.SoundTypes;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
@@ -43,9 +46,9 @@ import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.api.Instance;
 import org.spongepowered.royale.instance.scoreboard.InstanceScoreboard;
-import org.spongepowered.royale.instance.task.OvertimeTask;
 import org.spongepowered.royale.instance.task.EndTask;
 import org.spongepowered.royale.instance.task.InstanceTask;
+import org.spongepowered.royale.instance.task.OvertimeTask;
 import org.spongepowered.royale.instance.task.ProgressTask;
 import org.spongepowered.royale.instance.task.StartTask;
 
@@ -76,6 +79,7 @@ public final class InstanceImpl implements Instance {
     private State state = State.IDLE;
     private UUID winner;
     private boolean unloading;
+    private BossBar bossBar = BossBar.bossBar(Component.text("Royale"), 0.0f, BossBar.Color.GREEN, BossBar.Overlay.PROGRESS);
 
     public InstanceImpl(final ServerWorld world, final InstanceType instanceType) {
         this.worldKey = world.key();
@@ -170,10 +174,23 @@ public final class InstanceImpl implements Instance {
         if (this.isPlayerAlive(player)) {
             throw new IllegalArgumentException("Player is still alive!");
         }
-        //TODO fix location
-        player.setLocation(ServerLocation.of(this.worldKey, this.world().border().center()));
+        player.setLocation(ServerLocation.of(this.worldKey, this.world().border().center()).asHighestLocation());
         player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
-        //TODO night vision ?
+        player.transform(Keys.POTION_EFFECTS, list -> {
+            list.add(PotionEffect.of(PotionEffectTypes.NIGHT_VISION, 1, 1000000));
+            return list;
+        });
+        return true;
+    }
+
+    @Override
+    public boolean removeSpectator(ServerPlayer player) {
+        player.hideBossBar(bossBar);
+        player.offer(Keys.GAME_MODE, GameModes.SURVIVAL.get());
+        player.transform(Keys.POTION_EFFECTS, list -> {
+            list.removeIf(pe -> pe.type().equals(PotionEffectTypes.NIGHT_VISION.get()));
+            return list;
+        });
         return true;
     }
 
@@ -234,6 +251,7 @@ public final class InstanceImpl implements Instance {
         player.offer(Keys.EXHAUSTION, 20d);
         player.remove(Keys.POTION_EFFECTS);
         player.inventory().clear();
+        player.hideBossBar(this.bossBar);
     }
 
     public int playersLeft() {
@@ -263,9 +281,12 @@ public final class InstanceImpl implements Instance {
 
         this.onStateAdvance(state);
         this.state = state;
+        this.updateSign();
     }
 
     private void onStateAdvance(final State next) {
+
+
         this.stopTasks();
         switch (next) {
             case STARTING:
@@ -280,7 +301,7 @@ public final class InstanceImpl implements Instance {
             case RUNNING:
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
                         .plugin(Royale.getInstance().getPlugin())
-                        .execute(new ProgressTask(this))
+                        .execute(new ProgressTask(this, bossBar))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Progress Countdown - " + this.worldKey)
                         .build()
@@ -289,7 +310,7 @@ public final class InstanceImpl implements Instance {
             case OVERTIME:
                 this.tasks.add(Sponge.server().scheduler().submit(Task.builder()
                         .plugin(Royale.getInstance().getPlugin())
-                        .execute(new OvertimeTask(this))
+                        .execute(new OvertimeTask(this, bossBar))
                         .interval(1, TimeUnit.SECONDS)
                         .name(Constants.Plugin.ID + " - Overtime - " + this.worldKey)
                         .build()
@@ -317,7 +338,6 @@ public final class InstanceImpl implements Instance {
                         }, Royale.getInstance().getTaskExecutorService());
                 break;
         }
-        this.updateSign();
     }
 
     private void stopTasks() {
@@ -395,12 +415,16 @@ public final class InstanceImpl implements Instance {
         final int playersTotal = this.playerSpawns.size();
         switch (this.state) {
             case ENDING:
-                headerLine = Component.text("Create Game", NamedTextColor.AQUA);
-                statusLine = Component.text("not ready", NamedTextColor.YELLOW);
+                headerLine = Component.text("Royale", NamedTextColor.AQUA);
+                statusLine = Component.text("purging", NamedTextColor.YELLOW);
                 break;
             case IDLE:
                 headerLine = Component.text("Join Game", NamedTextColor.AQUA);
                 statusLine = Component.text("waiting " + playersTotal + "/" + this.spawns(), NamedTextColor.GREEN);
+                break;
+            case STARTING:
+                headerLine = Component.text("Join Game", NamedTextColor.AQUA);
+                statusLine = Component.text("starting " + playersTotal + "/" + this.spawns(), NamedTextColor.GREEN);
                 break;
             case RUNNING:
                 headerLine = Component.text("Spectate Game", NamedTextColor.AQUA);

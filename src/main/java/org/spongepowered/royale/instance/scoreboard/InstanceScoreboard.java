@@ -123,8 +123,10 @@ public final class InstanceScoreboard {
 
     public void removePlayer(final ServerPlayer player) {
         final PlayerData data = this.playerData.remove(player.uniqueId());
-        data.team.unregister();
-        this.objective.removeScore(data.score);
+        if (data != null) {
+            data.team.unregister();
+            this.objective.removeScore(data.score);
+        }
         this.sortScoreboard();
         Sponge.server().serverScoreboard().ifPresent(player::setScoreboard);
     }

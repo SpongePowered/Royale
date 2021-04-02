@@ -24,7 +24,6 @@
  */
 package org.spongepowered.royale.instance;
 
-import net.kyori.adventure.identity.Identity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.spongepowered.api.ResourceKey;
@@ -32,7 +31,6 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.block.entity.BlockEntity;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.block.transaction.Operations;
-import org.spongepowered.api.command.exception.CommandException;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.data.type.HandTypes;
@@ -116,6 +114,9 @@ public final class EventHandler {
 
         // We only care about registered players
         if (!instance.get().isPlayerRegistered(player)) {
+            if (event instanceof ChangeEntityWorldEvent && !((ChangeEntityWorldEvent) event).originalWorld().equals(((ChangeEntityWorldEvent) event).destinationWorld())) {
+                instance.get().removeSpectator(player);
+            }
             return;
         }
 
@@ -248,10 +249,15 @@ public final class EventHandler {
                         player.sendActionBar(Component.text("World is full!", NamedTextColor.RED));
                     } else {
                         player.sendActionBar(Component.text(String.format("Joining world '%s'", worldKey.get()), NamedTextColor.GREEN));
-                        if (instance.addPlayer(player)) {
-                            player.sendMessage(Component.text("Welcome to the game. Please stand by while others join. You will not be able to move until the game "
-                                    + "starts."));
+                        if (instance.getState().canPlayersJoin()) {
+                            if (instance.addPlayer(player)) {
+                                player.sendMessage(Component.text("Welcome to the game. Please stand by while others join. You will not be able to move until the game "
+                                        + "starts."));
+                            }
+                        } else {
+                            instance.addSpectator(player);
                         }
+
                     }
                 } else {
                     sign.transform(Keys.SIGN_LINES, lines -> {

@@ -26,30 +26,20 @@ package org.spongepowered.royale.instance.task;
 
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.instance.InstanceImpl;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
 public final class ProgressTask extends InstanceTask {
 
-    private final BossBar bossBar = BossBar.bossBar(
-            Component.text("Time remaining"),
-            0.0f,
-            BossBar.Color.GREEN,
-            BossBar.Overlay.PROGRESS);
-
+    private final BossBar bossBar;
     private final long roundLengthTotal;
     private final boolean infinite;
     private long roundLengthRemaining;
 
-    public ProgressTask(final InstanceImpl instance) {
+    public ProgressTask(final InstanceImpl instance, BossBar bossBar) {
         super(instance);
+        this.bossBar = bossBar;
         this.roundLengthTotal = instance.getType().getRoundLength();
         this.infinite = this.roundLengthTotal == -1;
         this.roundLengthRemaining = this.infinite ? Long.MAX_VALUE : this.roundLengthTotal;

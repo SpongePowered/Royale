@@ -45,6 +45,8 @@ public interface Instance {
 
     boolean addSpectator(ServerPlayer player);
 
+    boolean removeSpectator(ServerPlayer player);
+
     boolean isPlayerRegistered(ServerPlayer player);
 
     boolean isPlayerAlive(ServerPlayer player);
