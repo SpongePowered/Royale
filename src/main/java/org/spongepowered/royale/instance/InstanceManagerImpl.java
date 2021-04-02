@@ -90,6 +90,9 @@ public final class InstanceManagerImpl implements InstanceManager {
         if (instance == null) {
             throw new UnknownInstanceException(key.formatted());
         }
+        if (instance.getState() != State.IDLE) {
+            throw new IllegalStateException("Can't start the instace while in " + instance.getState());
+        }
 
         instance.advanceTo(State.STARTING);
     }
@@ -100,6 +103,9 @@ public final class InstanceManagerImpl implements InstanceManager {
         final InstanceImpl instance = this.instances.get(key);
         if (instance == null) {
             throw new UnknownInstanceException(key.formatted());
+        }
+        if (instance.getState() != State.RUNNING) {
+            throw new IllegalStateException("this instance is not running (" + instance.getState() + ")");
         }
 
         instance.advanceTo(State.OVERTIME);
