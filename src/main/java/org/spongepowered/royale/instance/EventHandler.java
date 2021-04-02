@@ -245,6 +245,7 @@ public final class EventHandler {
                 final Optional<Instance> optInstance = Royale.getInstance().getInstanceManager().getInstance(worldKey.get());
                 if (optInstance.isPresent()) {
                     final Instance instance = optInstance.get();
+                    instance.link(((Sign) sign));
                     if (instance.isFull()) {
                         player.sendActionBar(Component.text("World is full!", NamedTextColor.RED));
                     } else {
