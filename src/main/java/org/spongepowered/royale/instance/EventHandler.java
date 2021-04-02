@@ -155,7 +155,7 @@ public final class EventHandler {
     @Listener
     public void onDamagePlayer(final DamageEntityEvent event, @First DamageSource source, @Getter("entity") final ServerPlayer player) {
         final ServerWorld world = player.world();
-        if (world.key().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY) && source.type() == DamageTypes.VOID.get()) {
+        if (world.key().equals(Constants.Map.Lobby.LOBBY_WORLD_KEY) && source.type() != DamageTypes.VOID.get()) {
             event.setCancelled(true);
             return;
         }
