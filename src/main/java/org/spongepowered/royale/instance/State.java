@@ -39,7 +39,12 @@ public enum State implements InstanceState {
             return true;
         }
     },
-    STARTING,
+    STARTING {
+        @Override
+        public boolean canPlayersJoin() {
+            return true;
+        }
+    },
     RUNNING {
         @Override
         public boolean canPlayersMove() {
