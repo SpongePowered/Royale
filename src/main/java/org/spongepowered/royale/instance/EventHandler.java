@@ -284,12 +284,12 @@ public final class EventHandler {
             try {
                 adapter.load();
             } catch (final ConfigurateException e) {
-                Royale.getInstance().getPlugin().getLogger().error("Unable to load configuration for instance type [" + instanceType.key().formatted() + "].");
+                Royale.getInstance().getPlugin().logger().error("Unable to load configuration for instance type [" + instanceType.key().formatted() + "].");
             }
 
             instanceType.injectFromConfig(adapter.getConfig());
 
-            Royale.getInstance().getPlugin().getLogger().info("Reloaded configuration for instance type [" + instanceType.key().formatted() + "].");
+            Royale.getInstance().getPlugin().logger().info("Reloaded configuration for instance type [" + instanceType.key().formatted() + "].");
         });
     }
 }

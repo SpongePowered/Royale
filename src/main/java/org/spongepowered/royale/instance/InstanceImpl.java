@@ -271,7 +271,7 @@ public final class InstanceImpl implements Instance {
     }
 
     void advanceTo(State state) {
-        Royale.getInstance().getPlugin().getLogger().debug("Advancing {} from {} to {}", this.worldKey.formatted(), this.state.name(), state.name());
+        Royale.getInstance().getPlugin().logger().debug("Advancing {} from {} to {}", this.worldKey.formatted(), this.state.name(), state.name());
         if (this.state == state) {
             throw new IllegalArgumentException("The instance is already at " + state.name());
         }
@@ -345,19 +345,19 @@ public final class InstanceImpl implements Instance {
 
     private void stopTasks() {
         this.tasks.removeIf(uuid -> {
-            final Optional<ScheduledTask> taskOpt = Sponge.server().scheduler().taskById(uuid);
+            final Optional<ScheduledTask> taskOpt = Sponge.server().scheduler().findTask(uuid);
             if (!taskOpt.isPresent()) {
-                Royale.getInstance().getPlugin().getLogger().warn("Missing task with UUID {} while in state {}", uuid, this.state);
+                Royale.getInstance().getPlugin().logger().warn("Missing task with UUID {} while in state {}", uuid, this.state);
                 return true;
             }
 
             if (taskOpt.get().isCancelled()) {
-                Royale.getInstance().getPlugin().getLogger().warn("Cancelled task with UUID {} while in state {}", uuid, this.state);
+                Royale.getInstance().getPlugin().logger().warn("Cancelled task with UUID {} while in state {}", uuid, this.state);
                 return true;
             }
 
             if (!(taskOpt.get().task().consumer() instanceof InstanceTask)) {
-                Royale.getInstance().getPlugin().getLogger().warn("Malformed task with UUID {} while in state {}", uuid, this.state);
+                Royale.getInstance().getPlugin().logger().warn("Malformed task with UUID {} while in state {}", uuid, this.state);
                 return true;
             }
 

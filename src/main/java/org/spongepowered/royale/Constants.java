@@ -77,8 +77,8 @@ public final class Constants {
                 }
             }
 
-            DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.getInstance().getPlugin().getMetadata().getId(), "chest"));
-            DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.getInstance().getPlugin().getMetadata().getId(), "player_spawn"));
+            DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.getInstance().getPlugin().metadata().id(), "chest"));
+            DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.getInstance().getPlugin().metadata().id(), "player_spawn"));
 
             DEFAULT_MAP_MUTATORS.add(Sponge.server().registries().registry(Plugin.INSTANCE_MUTATOR).findValue(ResourceKey.of(Plugin.ID, "chest")).get());
             DEFAULT_MAP_MUTATORS.add(Sponge.server().registries().registry(Plugin.INSTANCE_MUTATOR).findValue(ResourceKey.of(Plugin.ID, "player_spawn")).get());

@@ -167,7 +167,7 @@ public final class Royale {
                 })
                 .whenCompleteAsync((result, exception) -> {
                     if (exception != null) {
-                        this.plugin.getLogger().fatal(exception);
+                        this.plugin.logger().fatal(exception);
                         Sponge.server().shutdown();
                     }
                 }, Royale.getInstance().getTaskExecutorService());
@@ -192,7 +192,7 @@ public final class Royale {
                 try {
                     adapter.load();
                 } catch (final IOException e) {
-                    this.plugin.getLogger().error("Failed to load configuration for path [{}]!", path, e);
+                    this.plugin.logger().error("Failed to load configuration for path [{}]!", path, e);
                     continue;
                 }
 
@@ -202,7 +202,7 @@ public final class Royale {
                         .from(adapter.getConfig())
                         .build();
 
-                this.plugin.getLogger().info("Registered instance type '{}'", newType.key());
+                this.plugin.logger().info("Registered instance type '{}'", newType.key());
                 defaultTypes.put(ResourceKey.of(this.plugin, instanceId), newType);
                 createDefaults = false;
             }
@@ -217,7 +217,7 @@ public final class Royale {
                     .name("Last Man Standing")
                     .build();
             defaultTypes.put(ResourceKey.of(this.plugin, "last_man_standin"), defaultType);
-            this.plugin.getLogger().info("Registered instance type '{}'", defaultType.key());
+            this.plugin.logger().info("Registered instance type '{}'", defaultType.key());
 
             final MappedConfigurationAdapter<InstanceTypeConfiguration> adapter = new MappedConfigurationAdapter<>(
                     InstanceTypeConfiguration.class, this.options, Constants.Map.INSTANCE_TYPES_FOLDER.resolve(defaultType.key().value() +

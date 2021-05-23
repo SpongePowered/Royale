@@ -69,7 +69,7 @@ public final class EndTask extends InstanceTask {
 
         final Optional<UUID> winnerOpt = this.instance.getWinner();
         if (!winnerOpt.isPresent()) {
-            Royale.getInstance().getPlugin().getLogger().warn("{} ended without a winner", this.instance.getWorldKey().formatted());
+            Royale.getInstance().getPlugin().logger().warn("{} ended without a winner", this.instance.getWorldKey().formatted());
             this.instance.advance();
             return;
         }
@@ -107,7 +107,7 @@ public final class EndTask extends InstanceTask {
                 }
             }
 
-            Royale.getInstance().getPlugin().getLogger().info("Round finished in {}!", this.instance.getWorldKey());
+            Royale.getInstance().getPlugin().logger().info("Round finished in {}!", this.instance.getWorldKey());
         }
 
         if (this.endLengthRemaining-- == 0) {

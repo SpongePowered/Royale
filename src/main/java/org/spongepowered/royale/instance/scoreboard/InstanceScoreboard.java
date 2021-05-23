@@ -71,15 +71,15 @@ public final class InstanceScoreboard {
                         .criterion(Criteria.DUMMY).build();
 
         // Instance type
-        this.instanceTypeScore = this.objective.scoreOrCreate(Component.text(instance.getType().name(), NamedTextColor.RED));
+        this.instanceTypeScore = this.objective.findOrCreateScore(Component.text(instance.getType().name(), NamedTextColor.RED));
         this.instanceTypeScore.setScore(0);
 
         // Dashes
-        this.dashesScore = this.objective.scoreOrCreate(Component.text("----------------"));
+        this.dashesScore = this.objective.findOrCreateScore(Component.text("----------------"));
         this.dashesScore.setScore(0);
 
         // Empty line
-        this.emptyLineScore = this.objective.scoreOrCreate(Component.empty());
+        this.emptyLineScore = this.objective.findOrCreateScore(Component.empty());
         this.emptyLineScore.setScore(0);
 
         this.scoreboard.addObjective(this.objective);
@@ -93,7 +93,7 @@ public final class InstanceScoreboard {
     }
 
     public void addPlayer(final ServerPlayer player) {
-        final Score score = this.objective.scoreOrCreate(Component.text(player.name(), NamedTextColor.DARK_GREEN));
+        final Score score = this.objective.findOrCreateScore(Component.text(player.name(), NamedTextColor.DARK_GREEN));
         score.setScore(1);
 
         final Team team = Team.builder().name(player.name()).build();
@@ -113,7 +113,7 @@ public final class InstanceScoreboard {
 
         final PlayerData data = this.playerData.get(player.uniqueId());
         this.objective.removeScore(data.score);
-        final Score score = this.objective.scoreOrCreate(Component.text(player.name(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH ));
+        final Score score = this.objective.findOrCreateScore(Component.text(player.name(), NamedTextColor.GRAY, TextDecoration.STRIKETHROUGH ));
         score.setScore(0);
         data.score = score;
         data.dead = true;

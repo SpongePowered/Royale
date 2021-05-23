@@ -53,7 +53,7 @@ public final class PlayerSpawnMutator extends SignMutator {
             world.removeBlockEntity(x, y, z);
 
             instance.addSpawnpoint(new Vector3d(x + 0.5, y + 0.0125, z + 0.5));
-            Royale.getInstance().getPlugin().getLogger().info("Found player spawn at {}x, {}y, {}z.", x, y, z);
+            Royale.getInstance().getPlugin().logger().info("Found player spawn at {}x, {}y, {}z.", x, y, z);
             return Optional.empty();
         };
     }

@@ -56,14 +56,14 @@ public final class InstanceMutatorPipeline {
         final ServerWorld world = instance.world();
 
         final double r = world.border().diameter() / 2;
-        final Vector3i min = world.border().center().toInt().sub(r, world.border().center().getY(), r);
-        final Vector3i max = world.border().center().toInt().add(r, world.maximumHeight() - world.border().center().getY(), r);
+        final Vector3i min = world.border().center().toInt().sub(r, world.border().center().y(), r);
+        final Vector3i max = world.border().center().toInt().add(r, world.maximumHeight() - world.border().center().y(), r);
 
         for (final InstanceMutator mutator : this.mutators) {
-            Royale.getInstance().getPlugin().getLogger().info("Mutating instance [{}] with mutator [{}]...", instance.getWorldKey(), mutator.key());
+            Royale.getInstance().getPlugin().logger().info("Mutating instance [{}] with mutator [{}]...", instance.getWorldKey(), mutator.key());
         }
 
-        Royale.getInstance().getPlugin().getLogger().info("[Mutator] Performing pass for instance {} - {} blocks total.", instance.getWorldKey(),
+        Royale.getInstance().getPlugin().logger().info("[Mutator] Performing pass for instance {} - {} blocks total.", instance.getWorldKey(),
                 world.border().diameter() * world.border().diameter());
 
         for (InstanceMutator instanceMutator : this.mutators) {
@@ -77,7 +77,7 @@ public final class InstanceMutatorPipeline {
                     .apply(VolumeCollectors.applyBlockEntitiesOrRemove(world));
         }
 
-        Royale.getInstance().getPlugin().getLogger().info("[Mutator] Done.");
+        Royale.getInstance().getPlugin().logger().info("[Mutator] Done.");
     }
 
     @Override

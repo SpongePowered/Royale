@@ -34,6 +34,7 @@ import org.spongepowered.api.Sponge;
 import org.spongepowered.api.adventure.SpongeComponents;
 import org.spongepowered.api.block.entity.Sign;
 import org.spongepowered.api.command.Command;
+import org.spongepowered.api.command.CommandCompletion;
 import org.spongepowered.api.command.CommandResult;
 import org.spongepowered.api.command.exception.ArgumentParseException;
 import org.spongepowered.api.command.exception.CommandException;
@@ -117,7 +118,7 @@ final class Commands {
                             .whenCompleteAsync((ignored, throwable) -> {
                                 if (throwable != null) {
                                     context.sendMessage(Identity.nil(), Component.text(throwable.getMessage(), NamedTextColor.RED));
-                                    Royale.getInstance().getPlugin().getLogger().error(throwable);
+                                    Royale.getInstance().getPlugin().logger().error(throwable);
                                     return;
                                 }
                                 context.sendMessage(Identity.nil(),
@@ -330,10 +331,10 @@ final class Commands {
                     Royale.getInstance().getInstanceManager().unloadInstance(worldKey)
                             .thenAcceptAsync(success -> {
                                 if (success) {
-                                    Royale.getInstance().getPlugin().getLogger().info("Instance {} has been unloaded!", worldKey);
+                                    Royale.getInstance().getPlugin().logger().info("Instance {} has been unloaded!", worldKey);
                                 } else {
 
-                                    Royale.getInstance().getPlugin().getLogger().info("Unable to unload instance in {}!", worldKey);
+                                    Royale.getInstance().getPlugin().logger().info("Unable to unload instance in {}!", worldKey);
                                 }
                             }, Royale.getInstance().getTaskExecutorService());
                     return CommandResult.empty();
@@ -484,10 +485,11 @@ final class Commands {
     private static class WorldKeyParameter implements ValueParameter<ResourceKey> {
 
         @Override
-        public List<String> complete(final CommandContext context, final String currentInput) {
+        public List<CommandCompletion> complete(final CommandContext context, final String currentInput) {
             return Sponge.server().worldManager().worldKeys().stream()
                     .map(ResourceKey::formatted)
                     .filter(x -> x.startsWith(currentInput.toLowerCase(Locale.ROOT)))
+                    .map(CommandCompletion::of)
                     .collect(Collectors.toList());
         }
 
@@ -511,10 +513,11 @@ final class Commands {
     private static class InstanceKeyParameter implements ValueParameter<ResourceKey> {
 
         @Override
-        public List<String> complete(final CommandContext context, final String currentInput) {
+        public List<CommandCompletion> complete(final CommandContext context, final String currentInput) {
             return Royale.getInstance().getInstanceManager().getAll().stream().map(Instance::getWorldKey)
                     .map(ResourceKey::formatted)
                     .filter(x -> x.startsWith(currentInput.toLowerCase(Locale.ROOT)))
+                    .map(CommandCompletion::of)
                     .collect(Collectors.toList());
         }
 

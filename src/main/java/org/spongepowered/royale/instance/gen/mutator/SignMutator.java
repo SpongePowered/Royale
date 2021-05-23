@@ -55,7 +55,7 @@ abstract class SignMutator extends InstanceMutator {
             final Sign sign = (Sign) blockEntity;
             if (!SpongeComponents.plainSerializer().serialize(sign.lines().get(0)).equalsIgnoreCase(this.signId)) {
                 if (SpongeComponents.plainSerializer().serialize(sign.lines().get(1)).equalsIgnoreCase(this.signId)) {
-                    Royale.getInstance().getPlugin().getLogger().error("Found mismatched sign at {}x {}y {}z!", x, y, z);
+                    Royale.getInstance().getPlugin().logger().error("Found mismatched sign at {}x {}y {}z!", x, y, z);
                 } else {
                     return false;
                 }
