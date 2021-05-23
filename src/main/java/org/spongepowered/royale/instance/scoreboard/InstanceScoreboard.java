@@ -83,7 +83,7 @@ public final class InstanceScoreboard {
         this.emptyLineScore.setScore(0);
 
         this.scoreboard.addObjective(this.objective);
-        this.scoreboard.updateDisplaySlot(this.objective, DisplaySlots.SIDEBAR_TEAM_NO_COLOR);
+        this.scoreboard.updateDisplaySlot(this.objective, DisplaySlots.SIDEBAR);
 
         this.sortScoreboard();
     }

@@ -25,19 +25,14 @@
 package org.spongepowered.royale.api;
 
 import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.block.entity.Sign;
-import org.spongepowered.api.data.DataRegistration;
 import org.spongepowered.api.data.Key;
-import org.spongepowered.api.data.persistence.DataStore;
 import org.spongepowered.api.data.value.Value;
-import org.spongepowered.api.event.lifecycle.RegisterDataEvent;
-import org.spongepowered.api.util.TypeTokens;
 import org.spongepowered.royale.Royale;
 
 public final class RoyaleKeys {
 
-    public static final Key<Value<ResourceKey>> WORLD = Key.builder().key(ResourceKey.of(Royale.getInstance().getPlugin(), "world")).type(TypeTokens.RESOURCE_KEY_VALUE_TOKEN).build();
+    public static final Key<Value<ResourceKey>> WORLD = Key.builder().key(ResourceKey.of(Royale.getInstance().getPlugin(), "world")).elementType(ResourceKey.class).build();
 
-    public static final Key<Value<ResourceKey>> TYPE = Key.builder().key(ResourceKey.of(Royale.getInstance().getPlugin(), "type")).type(TypeTokens.RESOURCE_KEY_VALUE_TOKEN).build();
+    public static final Key<Value<ResourceKey>> TYPE = Key.builder().key(ResourceKey.of(Royale.getInstance().getPlugin(), "type")).elementType(ResourceKey.class).build();
 
 }
