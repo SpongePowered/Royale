@@ -3,9 +3,9 @@ import org.spongepowered.plugin.metadata.PluginDependency
 
 plugins {
     `java-library`
-    id("org.spongepowered.gradle.plugin") version "1.0.2"
-    id("org.cadixdev.licenser") version "0.5.0"
-    id("com.github.johnrengelman.shadow") version "6.1.0"
+    id("org.spongepowered.gradle.plugin") version "1.1.0"
+    id("org.cadixdev.licenser") version "0.6.0"
+    id("com.github.johnrengelman.shadow") version "7.0.0"
 
 }
 
@@ -86,15 +86,15 @@ tasks {
 }
 
 license {
-    (this as ExtensionAware).extra.apply {
+    properties {
         this["name"] = project.properties["name"]
         this["organization"] = project.properties["organization"]
         this["url"] = project.properties["url"]
     }
-    header = project.file("HEADER.txt")
+    header(project.file("HEADER.txt"))
 
     include("**/*.java")
-    newLine = false
+    newLine(false)
 }
 
 
