@@ -56,6 +56,7 @@ import org.spongepowered.api.world.SerializationBehavior;
 import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.server.WorldManager;
+import org.spongepowered.api.world.server.storage.ServerWorldProperties;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.royale.api.Instance;
 import org.spongepowered.royale.configuration.MappedConfigurationAdapter;
@@ -64,6 +65,7 @@ import org.spongepowered.royale.api.RoyaleKeys;
 import org.spongepowered.royale.instance.configuration.InstanceTypeConfiguration;
 import org.spongepowered.royale.instance.exception.UnknownInstanceException;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -460,6 +462,54 @@ final class Commands {
                 .build();
     }
 
+    private static Command.Parameterized editCommand() {
+        return Command.builder()
+                .permission(Constants.Plugin.ID + ".command.edit")
+                .addParameter(Commands.WORLD_KEY_PARAMETER)
+                .shortDescription(Component.text()
+                        .content("Allows editing a royale world")
+                        .build())
+                .executor(context -> {
+                    final ResourceKey targetWorldKey = context.requireOne(Commands.WORLD_KEY_PARAMETER);
+                    final Optional<Instance> instance = Royale.getInstance().getInstanceManager().getInstance(targetWorldKey);
+                    if (instance.isPresent()) {
+                        throw new CommandException(
+                                Component.text().content("Instance [")
+                                        .append(Component.text(targetWorldKey.formatted(), NamedTextColor.GREEN))
+                                        .append(Component.text("] is currently active instance."))
+                                        .build());
+                    }
+
+                    final WorldManager wm = Sponge.server().worldManager();
+                    final ServerWorld worldToEdit = wm.world(targetWorldKey).orElse(null);
+                    final ServerWorldProperties properties = worldToEdit.properties();
+                    final SerializationBehavior serializationBehavior = properties.serializationBehavior();
+                    switch (serializationBehavior) {
+                        case AUTOMATIC:
+                        case AUTOMATIC_METADATA_ONLY:
+                        case MANUAL:
+                        case MANUAL_METADATA_ONLY:
+                            try {
+                                worldToEdit.save();
+                                context.sendMessage(Identity.nil(), Component.text("Saved world"));
+                            } catch (IOException e) {
+                                context.sendMessage(Identity.nil(), Component.text("Exception while saving!"));
+                            }
+                            properties.setSerializationBehavior(SerializationBehavior.NONE);
+                            wm.saveProperties(properties);
+                            context.sendMessage(Identity.nil(), Component.text("World is now readonly!"));
+                            break;
+                        case NONE:
+                            properties.setSerializationBehavior(SerializationBehavior.MANUAL);
+                            wm.saveProperties(properties);
+                            context.sendMessage(Identity.nil(), Component.text("World can now be modified!"));
+                            break;
+                    }
+                    return CommandResult.success();
+                })
+                .build();
+    }
+
     static Command.Parameterized rootCommand() {
         return Command.builder()
                 .permission(Constants.Plugin.ID + ".command.root")
@@ -479,6 +529,7 @@ final class Commands {
                 .addChild(Commands.joinCommand(), "join")
                 .addChild(Commands.spectateCommand(), "spectate")
                 .addChild(Commands.leaveCommand(), "leave")
+                .addChild(Commands.editCommand(), "edit")
                 .build();
     }
 
