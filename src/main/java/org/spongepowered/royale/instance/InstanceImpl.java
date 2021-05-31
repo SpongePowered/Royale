@@ -41,6 +41,7 @@ import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.world.server.ServerLocation;
 import org.spongepowered.api.world.server.ServerWorld;
+import org.spongepowered.math.vector.Vector2d;
 import org.spongepowered.math.vector.Vector3d;
 import org.spongepowered.royale.Constants;
 import org.spongepowered.royale.Royale;
@@ -174,7 +175,8 @@ public final class InstanceImpl implements Instance {
         if (this.isPlayerAlive(player)) {
             throw new IllegalArgumentException("Player is still alive!");
         }
-        player.setLocation(ServerLocation.of(this.worldKey, this.world().border().center()).asHighestLocation());
+        final Vector2d center = this.world().border().center();
+        player.setLocation(ServerLocation.of(this.worldKey, center.x(), 0, center.y()).asHighestLocation());
         player.offer(Keys.GAME_MODE, GameModes.SPECTATOR.get());
         player.transform(Keys.POTION_EFFECTS, list -> {
             list.add(PotionEffect.of(PotionEffectTypes.NIGHT_VISION, 1, 1000000));

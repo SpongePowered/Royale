@@ -27,6 +27,7 @@ package org.spongepowered.royale.instance.gen;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.api.world.volume.stream.StreamOptions;
 import org.spongepowered.api.world.volume.stream.VolumeCollectors;
+import org.spongepowered.math.vector.Vector2i;
 import org.spongepowered.math.vector.Vector3i;
 import org.spongepowered.royale.Royale;
 import org.spongepowered.royale.instance.InstanceImpl;
@@ -56,8 +57,10 @@ public final class InstanceMutatorPipeline {
         final ServerWorld world = instance.world();
 
         final double r = world.border().diameter() / 2;
-        final Vector3i min = world.border().center().toInt().sub(r, world.border().center().y(), r);
-        final Vector3i max = world.border().center().toInt().add(r, world.maximumHeight() - world.border().center().y(), r);
+
+        final Vector2i center = world.border().center().toInt();
+        final Vector3i min = new Vector3i(center.x() - r, 0, center.y() - r);
+        final Vector3i max = new Vector3i(center.x() + r, world.maximumHeight(), center.y() + r);
 
         for (final InstanceMutator mutator : this.mutators) {
             Royale.getInstance().getPlugin().logger().info("Mutating instance [{}] with mutator [{}]...", instance.getWorldKey(), mutator.key());
