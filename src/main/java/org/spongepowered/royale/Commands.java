@@ -482,8 +482,9 @@ final class Commands {
 
                     final WorldManager wm = Sponge.server().worldManager();
                     final Optional<ServerWorldProperties> wp = wm.loadProperties(targetWorldKey).join();
-                    if (wp.isPresent()) {
-                        final ServerWorldProperties properties = wp.get();
+                    final Optional<ServerWorld> worldToEdit = wm.world(targetWorldKey);
+                    if (wp.isPresent() || worldToEdit.isPresent()) {
+                        final ServerWorldProperties properties = wp.orElse(worldToEdit.get().properties());
                         final SerializationBehavior serializationBehavior = properties.serializationBehavior();
                         switch (serializationBehavior) {
                             case AUTOMATIC:
@@ -491,7 +492,6 @@ final class Commands {
                             case MANUAL:
                             case MANUAL_METADATA_ONLY:
                                 try {
-                                    final Optional<ServerWorld> worldToEdit = wm.world(targetWorldKey);
                                     if (worldToEdit.isPresent()) {
                                         worldToEdit.get().save();
                                         context.sendMessage(Identity.nil(), Component.text("Saved world"));
@@ -509,6 +509,9 @@ final class Commands {
                             case NONE:
                                 properties.setSerializationBehavior(SerializationBehavior.MANUAL);
                                 wm.saveProperties(properties);
+                                if (!worldToEdit.isPresent()) {
+                                    wm.loadWorld(targetWorldKey);
+                                }
                                 context.sendMessage(Identity.nil(), Component.text("World can now be modified!"));
                                 break;
                         }
