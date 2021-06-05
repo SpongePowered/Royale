@@ -222,7 +222,7 @@ public final class Loots {
         Loots.WEIRD_ITEMS.add(    item(   ItemTypes.ROTTEN_FLESH.get(),           range(1, 9)),   6);
         Loots.WEIRD_ITEMS.add(    item(   ItemTypes.POISONOUS_POTATO.get(),       range(1, 3)),   2.5);
         Loots.WEIRD_ITEMS.add(    item(   ItemTypes.NAUTILUS_SHELL.get(),         fixed(1)),      4);
-        Loots.WEIRD_ITEMS.add(    item(   ItemTypes.TROPICAL_FISH_BUCKET.get(),   fixed(1)),      2);
+        Loots.WEIRD_ITEMS.add(    item(   ItemTypes.PUFFERFISH.get(),             fixed(1)),      2);
 
         // basic_potions
 
