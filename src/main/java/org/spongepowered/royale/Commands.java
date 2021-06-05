@@ -484,7 +484,7 @@ final class Commands {
                     final Optional<ServerWorldProperties> wp = wm.loadProperties(targetWorldKey).join();
                     final Optional<ServerWorld> worldToEdit = wm.world(targetWorldKey);
                     if (wp.isPresent() || worldToEdit.isPresent()) {
-                        final ServerWorldProperties properties = wp.orElse(worldToEdit.get().properties());
+                        final ServerWorldProperties properties = wp.orElseGet(() -> worldToEdit.get().properties());
                         final SerializationBehavior serializationBehavior = properties.serializationBehavior();
                         switch (serializationBehavior) {
                             case AUTOMATIC:
