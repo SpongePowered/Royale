@@ -26,7 +26,6 @@ package org.spongepowered.royale.instance.gen.mutator;
 
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.adventure.SpongeComponents;
 import org.spongepowered.api.block.BlockState;
 import org.spongepowered.api.block.BlockTypes;
 import org.spongepowered.api.block.entity.BlockEntity;
