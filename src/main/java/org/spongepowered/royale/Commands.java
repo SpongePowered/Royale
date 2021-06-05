@@ -481,30 +481,41 @@ final class Commands {
                     }
 
                     final WorldManager wm = Sponge.server().worldManager();
-                    final ServerWorld worldToEdit = wm.world(targetWorldKey).orElse(null);
-                    final ServerWorldProperties properties = worldToEdit.properties();
-                    final SerializationBehavior serializationBehavior = properties.serializationBehavior();
-                    switch (serializationBehavior) {
-                        case AUTOMATIC:
-                        case AUTOMATIC_METADATA_ONLY:
-                        case MANUAL:
-                        case MANUAL_METADATA_ONLY:
-                            try {
-                                worldToEdit.save();
-                                context.sendMessage(Identity.nil(), Component.text("Saved world"));
-                            } catch (IOException e) {
-                                context.sendMessage(Identity.nil(), Component.text("Exception while saving!"));
-                            }
-                            properties.setSerializationBehavior(SerializationBehavior.NONE);
-                            wm.saveProperties(properties);
-                            context.sendMessage(Identity.nil(), Component.text("World is now readonly!"));
-                            break;
-                        case NONE:
-                            properties.setSerializationBehavior(SerializationBehavior.MANUAL);
-                            wm.saveProperties(properties);
-                            context.sendMessage(Identity.nil(), Component.text("World can now be modified!"));
-                            break;
+                    final Optional<ServerWorldProperties> wp = wm.loadProperties(targetWorldKey).join();
+                    if (wp.isPresent()) {
+                        final ServerWorldProperties properties = wp.get();
+                        final SerializationBehavior serializationBehavior = properties.serializationBehavior();
+                        switch (serializationBehavior) {
+                            case AUTOMATIC:
+                            case AUTOMATIC_METADATA_ONLY:
+                            case MANUAL:
+                            case MANUAL_METADATA_ONLY:
+                                try {
+                                    final Optional<ServerWorld> worldToEdit = wm.world(targetWorldKey);
+                                    if (worldToEdit.isPresent()) {
+                                        worldToEdit.get().save();
+                                        context.sendMessage(Identity.nil(), Component.text("Saved world"));
+                                    } else {
+                                        wm.loadWorld(targetWorldKey);
+                                        context.sendMessage(Identity.nil(), Component.text("Loading world"));
+                                    }
+                                } catch (IOException e) {
+                                    context.sendMessage(Identity.nil(), Component.text("Exception while saving!"));
+                                }
+                                properties.setSerializationBehavior(SerializationBehavior.NONE);
+                                wm.saveProperties(properties);
+                                context.sendMessage(Identity.nil(), Component.text("World is now readonly!"));
+                                break;
+                            case NONE:
+                                properties.setSerializationBehavior(SerializationBehavior.MANUAL);
+                                wm.saveProperties(properties);
+                                context.sendMessage(Identity.nil(), Component.text("World can now be modified!"));
+                                break;
+                        }
+                    } else {
+                        context.sendMessage(Identity.nil(), Component.text("World properties not found!"));
                     }
+
                     return CommandResult.success();
                 })
                 .build();
