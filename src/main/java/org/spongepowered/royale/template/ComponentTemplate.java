@@ -65,7 +65,7 @@ public final class ComponentTemplate {
             final String entry = matcher.group("token"); // entire thing needed for template matching
             final String placeholder = matcher.group("placeholder");
             try {
-                final Optional<PlaceholderParser> parser = Sponge.game().registries().registry(RegistryTypes.PLACEHOLDER_PARSER).findValue(ResourceKey.resolve(placeholder));
+                final Optional<PlaceholderParser> parser = Sponge.game().registry(RegistryTypes.PLACEHOLDER_PARSER).findValue(ResourceKey.resolve(placeholder));
                 if (parser.isPresent()) {
                     mapBuilder.put(entry, new ParserContextPair(parser.get(), matcher.group("arg")));
                 } else {

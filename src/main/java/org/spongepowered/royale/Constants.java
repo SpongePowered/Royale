@@ -55,8 +55,8 @@ public final class Constants {
 
     public static final class Plugin {
         public static final String ID = "royale";
-        public static final DefaultedRegistryType<InstanceMutator> INSTANCE_MUTATOR = RegistryType.of(RegistryRoots.SPONGE, ResourceKey.of(Plugin.ID, "instance_mutator")).asDefaultedType(() -> Sponge.server().registries());
-        public static final DefaultedRegistryType<InstanceType> INSTANCE_TYPE = RegistryType.of(RegistryRoots.SPONGE, ResourceKey.of(Plugin.ID, "instance_type")).asDefaultedType(() -> Sponge.server().registries());
+        public static final DefaultedRegistryType<InstanceMutator> INSTANCE_MUTATOR = RegistryType.of(RegistryRoots.SPONGE, ResourceKey.of(Plugin.ID, "instance_mutator")).asDefaultedType(Sponge::server);
+        public static final DefaultedRegistryType<InstanceType> INSTANCE_TYPE = RegistryType.of(RegistryRoots.SPONGE, ResourceKey.of(Plugin.ID, "instance_type")).asDefaultedType(Sponge::server);
     }
 
     public static final class Map {
@@ -80,8 +80,8 @@ public final class Constants {
             DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.getInstance().getPlugin().metadata().id(), "chest"));
             DEFAULT_MAP_MUTATOR_IDS.add(ResourceKey.of(Royale.getInstance().getPlugin().metadata().id(), "player_spawn"));
 
-            DEFAULT_MAP_MUTATORS.add(Sponge.server().registries().registry(Plugin.INSTANCE_MUTATOR).findValue(ResourceKey.of(Plugin.ID, "chest")).get());
-            DEFAULT_MAP_MUTATORS.add(Sponge.server().registries().registry(Plugin.INSTANCE_MUTATOR).findValue(ResourceKey.of(Plugin.ID, "player_spawn")).get());
+            DEFAULT_MAP_MUTATORS.add(Sponge.server().registry(Plugin.INSTANCE_MUTATOR).findValue(ResourceKey.of(Plugin.ID, "chest")).get());
+            DEFAULT_MAP_MUTATORS.add(Sponge.server().registry(Plugin.INSTANCE_MUTATOR).findValue(ResourceKey.of(Plugin.ID, "player_spawn")).get());
         }
 
         private Map() {

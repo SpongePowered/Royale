@@ -77,7 +77,7 @@ final class Commands {
 
     private static final Parameter.Value<InstanceType> INSTANCE_TYPE_PARAMETER =
             Parameter.registryElement(TypeToken.get(InstanceType.class),
-                    Constants.Plugin.INSTANCE_TYPE.asDefaultedType(() -> Sponge.server().registries())).key("instanceType").build();
+                    Constants.Plugin.INSTANCE_TYPE.asDefaultedType(Sponge::server)).key("instanceType").build();
     private static final Parameter.Value<Boolean> FORCE_PARAMETER = Parameter.bool().key("force").optional().build();
     private static final Parameter.Value<ResourceKey> WORLD_KEY_PARAMETER = Parameter.builder(ResourceKey.class)
             .key("world key")
@@ -339,7 +339,7 @@ final class Commands {
                                     Royale.getInstance().getPlugin().logger().info("Unable to unload instance in {}!", worldKey);
                                 }
                             }, Royale.getInstance().getTaskExecutorService());
-                    return CommandResult.empty();
+                    return CommandResult.success();
                 })
                 .build();
     }
@@ -371,7 +371,7 @@ final class Commands {
                     }
                     if (instance.get().isFull()) {
                         player.sendMessage(Identity.nil(), Component.text("Instance is full!"));
-                        return CommandResult.empty();
+                        return CommandResult.success();
                     }
 
                     player.sendMessage(Identity.nil(), Component.text().content("Joining [")

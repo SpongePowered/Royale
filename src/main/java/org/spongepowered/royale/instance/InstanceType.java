@@ -126,7 +126,7 @@ public final class InstanceType implements ResourceKeyed, Nameable {
         this.name = value.general.name;
         this.nameTemplate = value.general.nameTemplate;
         this.mutatorPipeline.getMutators().clear();
-        value.general.mapMutators.stream().map(k -> Sponge.server().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(k).get())
+        value.general.mapMutators.stream().map(k -> Sponge.server().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(k).get())
                 .forEach(this.mutatorPipeline.getMutators()::add);
         this.defaultItems.clear();
         this.defaultItems.addAll(value.round.defaultItems);
@@ -223,7 +223,7 @@ public final class InstanceType implements ResourceKeyed, Nameable {
             this.name = value.general.name;
             this.nameTemplate = value.general.nameTemplate;
             this.mutators = value.general.mapMutators.stream()
-                    .map(x -> Sponge.server().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(x)
+                    .map(x -> Sponge.server().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(x)
                             .orElseThrow(() -> new IllegalArgumentException("Unknown mutator " + x)))
                     .collect(Collectors.toSet());
             this.defaultItems = new LinkedList<>(value.round.defaultItems);
@@ -317,7 +317,7 @@ public final class InstanceType implements ResourceKeyed, Nameable {
 
         public Builder mutator(final ResourceKey key) {
             Objects.requireNonNull(key);
-            final Optional<InstanceMutator> mutator = Sponge.server().registries().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(key);
+            final Optional<InstanceMutator> mutator = Sponge.server().registry(Constants.Plugin.INSTANCE_MUTATOR).findValue(key);
             mutator.ifPresent(instanceMutator -> this.mutators.add(instanceMutator));
             return this;
         }

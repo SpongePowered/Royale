@@ -30,9 +30,11 @@ import net.kyori.adventure.text.LinearComponents;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.particle.ParticleEffect;
 import org.spongepowered.api.effect.particle.ParticleTypes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.profile.GameProfile;
 import org.spongepowered.api.scheduler.ScheduledTask;
 import org.spongepowered.api.world.server.ServerWorld;
 import org.spongepowered.royale.Royale;
@@ -76,9 +78,12 @@ public final class EndTask extends InstanceTask {
 
         // First tick, kickoff end sequence
         if (this.endLengthTotal == this.endLengthRemaining) {
+
+            // Find ServerPlayer -> cached GameProfile -> Unknown
             final Optional<ServerPlayer> winner = Sponge.server().player(winnerOpt.get());
-            final Component name = winner.map(pl -> pl.displayName().get())
-                    .orElseGet(() -> Sponge.server().userManager().find(winnerOpt.get()).map(user -> Component.text(user.name())).orElse(Component.text("Unknown")));
+            final Component name = winner.flatMap(p -> p.get(Keys.DISPLAY_NAME))
+                    .orElse(Sponge.server().gameProfileManager().cache().findById(winnerOpt.get()).flatMap(GameProfile::name).map(Component::text)
+                            .orElse(Component.text("Unknown")));
 
             winner.ifPresent(player -> player.spawnParticles(ParticleEffect.builder()
                             .type(ParticleTypes.FIREWORK)
